@@ -54,8 +54,10 @@ h3{font-size:16px;margin-bottom:8px;font-weight:600}
 <script>
 var DATA = {};
 </script>
-<script src="cards_data.js"></script>
+<script src="cards_dp600.js"></script>
+<script src="cards_dp700.js"></script>
 <script>
+DATA['DP-600']=DP600_DATA;DATA['DP-700']=DP700_DATA;
 var currentView='home',currentCert=null,currentModule=null,expandedTopics={};
 
 function render(){
@@ -106,6 +108,8 @@ html+='<div class="section-header">Core Concept</div>';
 html+='<div class="section-content open"><p>'+topic.core+'</p></div>';
 html+='<div class="section-header">Technical Specifications</div>';
 html+='<div class="section-content open">'+topic.tech+'</div>';
+if(topic.archLogic){html+='<div class="section-header">Architectural Logic</div><div class="section-content open"><p>'+topic.archLogic+'</p></div>';}
+if(topic.workflow){html+='<div class="section-header">Implementation Workflow</div><div class="section-content open">'+topic.workflow+'</div>';}
 html+='<div class="section-header">Exam Gotchas &amp; Distinctions</div>';
 html+='<div class="section-content open">'+topic.gotchas+'</div>';
 html+='</div></div></div>';}
