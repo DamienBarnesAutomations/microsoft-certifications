@@ -2166,6 +2166,7 @@ function finishTest() {
   localStorage.setItem('fabricTestHistory', JSON.stringify(state.testHistory));
 
   document.getElementById('res-review').classList.add('hidden');
+  reviewAnswers();
 }
 
 function reviewAnswers() {
