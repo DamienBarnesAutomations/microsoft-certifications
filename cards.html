@@ -92,8 +92,8 @@ function renderTopics(query){
 var cert=DATA[currentCert],mods=Object.keys(cert.modules),mod=cert.modules[mods[currentModule]],app=document.getElementById('app'),html='';
 var names=Object.keys(mod.topics);
 for(var i=0;i<names.length;i++){
-var name=names[i],topic=mod.topics[name],preview=topic.core.substring(0,120)+'...';
-if(query&&name.toLowerCase().indexOf(query.toLowerCase())===-1&&topic.core.toLowerCase().indexOf(query.toLowerCase())===-1)continue;
+var name=names[i],topic=mod.topics[name],preview=(topic.core || "").substring(0,120)+'...';
+if(query&&name.toLowerCase().indexOf(query.toLowerCase())===-1&&topic.core&&topic.core.toLowerCase().indexOf(query.toLowerCase())===-1)continue;
 var isOpen=expandedTopics[name];
 html+='<div class="card" style="margin-bottom:12px;cursor:default;padding:0;overflow:hidden">';
 html+='<div style="padding:16px 20px;cursor:pointer" onclick="toggleTopic(\''+name.replace(/'/g,"\\'")+'\')">';
@@ -105,14 +105,11 @@ if(!isOpen)html+='<div class="topic-preview">'+preview+'</div>';
 html+='</div>';
 html+='<div class="section-content '+(isOpen?'open':'')+'">';
 html+='<div class="topic-detail">';
-html+='<div class="section-header">Core Concept</div>';
-html+='<div class="section-content open"><p>'+topic.core+'</p></div>';
-html+='<div class="section-header">Technical Specifications</div>';
-html+='<div class="section-content open">'+topic.tech+'</div>';
-if(topic.archLogic){html+='<div class="section-header">Architectural Logic</div><div class="section-content open"><p>'+topic.archLogic+'</p></div>';}
-if(topic.workflow){html+='<div class="section-header">Implementation Workflow</div><div class="section-content open">'+topic.workflow+'</div>';}
-html+='<div class="section-header">Exam Gotchas &amp; Distinctions</div>';
-html+='<div class="section-content open">'+topic.gotchas+'</div>';
+for (var key in topic) {
+  if (key === 'core') continue;
+  html += '<div class="section-header">' + key + '</div>';
+  html += '<div class="section-content open">' + topic[key] + '</div>';
+}
 html+='</div></div></div>';}
 app.innerHTML=html;}
 
