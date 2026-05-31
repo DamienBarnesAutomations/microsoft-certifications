@@ -189,10 +189,7 @@ function updateModules(){
 function updateModuleCount(){
   const cert=document.getElementById('cert-select').value;
   const mod=document.getElementById('module-select').value;
-  let pool=[];
-  if(cert==='dp600')pool=DP600_QUESTIONS;
-  else if(cert==='dp700')pool=DP700_QUESTIONS;
-  else pool=[...DP600_QUESTIONS,...DP700_QUESTIONS];
+  let pool=getPool(cert);
   if(mod!=='all'){
     const[certKey,modNum]=mod.split('_');
     pool=pool.filter(q=>q.cert===certKey.toUpperCase()&&q.module===parseInt(modNum));
@@ -1983,8 +1980,485 @@ const DP700_QUESTIONS = [
   {"text":"Query insights in Fabric data warehouse retains historical query data for how long?","options":["7 days","15 minutes","30 days","90 days"],"correct":2,"cert":"DP700","module":4},
   {"text":"You want to mask the Email column in a Customers table so nonprivileged users see only the first letter and '.com' suffix. Which Dynamic Data Masking function should you apply?","options":["default()","email()","partial(1, '@contoso.com', 4)","random(0, 9999)"],"correct":1,"cert":"DP700","module":4},
   {"text":"You implement Row-Level Security with a filter predicate on a Sales table. A user runs a SELECT query. What happens if the predicate function returns false for certain rows?","options":["The rows are returned with NULL values","The rows are excluded from the query results entirely","An error is returned to the user","The rows are returned but marked as restricted"],"correct":1,"cert":"DP700","module":4},
-  {"text":"You need to restrict access to the MedicalHistory column in a Patients table so only Doctors and Nurses can view it. Which approach should you use?","options":["Row-level security on the table","Column-level security with DENY SELECT on the column for other roles","Dynamic data masking with default function","Create separate views for each role"],"correct":1,"cert":"DP700","module":4}
+  {"text":"You need to restrict access to the MedicalHistory column in a Patients table so only Doctors and Nurses can view it. Which approach should you use?","options":["Row-level security on the table","Column-level security with DENY SELECT on the column for other roles","Dynamic data masking with default function","Create separate views for each role"],"correct":1,"cert":"DP700","module":4},
+  {
+    "module": 1,
+    "text": "You need to orchestrate a multi‑step ETL pipeline that extracts data from Azure Blob Storage, transforms it with Spark, and loads it into a lakehouse. Which Fabric service should you use to define and schedule this workflow?",
+    "options": ["Dataflow Gen2", "Pipeline", "Notebook", "Activator"],
+    "correct": 1
+  },
+  {
+    "module": 1,
+    "text": "A data engineer wants to run a Spark notebook that reads a large CSV file but must limit memory usage. Which Spark configuration is the BEST way to control memory consumption?",
+    "options": ["spark.driver.memory", "spark.sql.shuffle.partitions", "spark.memory.fraction", "spark.executor.cores"],
+    "correct": 2
+  },
+  {
+    "module": 1,
+    "text": "In a Dataflow Gen2, you notice that after adding a custom column the query folding is lost. What is the most likely reason?",
+    "options": ["Custom column uses a non‑foldable function", "Dataflow has reached its row limit", "Dataflow is set to Manual Refresh", "The source does not support folding"],
+    "correct": 0
+  },
+  {
+    "module": 1,
+    "text": "You need to process streaming data from Azure Event Hubs and write the results to a KQL database in real time. Which combination provides the lowest latency?",
+    "options": ["Eventstream → Activator → KQL", "Eventstream → Pipeline → KQL", "Dataflow Gen2 → Lakehouse → KQL", "Notebook → Eventstream → KQL"],
+    "correct": 0
+  },
+  {
+    "module": 1,
+    "text": "A notebook uses Spark Structured Streaming with a foreachBatch sink to write to a lakehouse. Which setting ensures exactly‑once semantics?",
+    "options": ["checkpointLocation", "outputMode = Append", "trigger = ProcessingTime('5 minutes')", "spark.sql.streaming.allowMultipleContexts"],
+    "correct": 0
+  },
+  {
+    "module": 1,
+    "text": "Which of the following statements about Dataflows Gen2 is FALSE?",
+    "options": [
+      "They support query folding when possible.",
+      "They can be scheduled independently of pipelines.",
+      "They automatically duplicate data to a warehouse.",
+      "They can write directly to Delta tables."
+    ],
+    "correct": 2
+  },
+  {
+    "module": 1,
+    "text": "You have a Dataflow Gen2 that reads from a REST API with pagination. Which Power Query function helps retrieve all pages efficiently?",
+    "options": ["List.Generate", "Table.Combine", "Json.Document", "Web.Contents with relativePath"],
+    "correct": 0
+  },
+  {
+    "module": 1,
+    "text": "A pipeline needs to pass a runtime value to a Spark notebook as a parameter. Which activity type should you use?",
+    "options": ["Copy Data", "Notebook", "Data Flow", "Stored Procedure"],
+    "correct": 1
+  },
+  {
+    "module": 1,
+    "text": "You must enforce schema validation on incoming JSON files before they are written to the bronze layer. Which tool provides the most flexible validation?",
+    "options": ["Dataflow Gen2 with Power Query M", "Notebook with Spark", "Eventstream with mapping", "Pipeline with Data Flow activity"],
+    "correct": 1
+  },
+  {
+    "module": 1,
+    "text": "When configuring an Eventstream, which destination supports both KQL queries and T‑SQL access?",
+    "options": ["Lakehouse (Delta)", "KQL database", "Warehouse", "Eventhouse"],
+    "correct": 2
+  },
+  {
+    "module": 2,
+    "text": "You need to add a new column to a Delta table that must be populated with default values for existing rows without rewriting the entire table. What is the recommended approach?",
+    "options": [
+      "ALTER TABLE ADD COLUMN with DEFAULT",
+      "Create a new table with the column and swap",
+      "Use UPDATE with SET on the new column",
+      "Recreate the table using CTAS"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 2,
+    "text": "A bronze Delta table has millions of small files. Which command will improve read performance the most?",
+    "options": ["VACUUM", "OPTIMIZE", "REPAIR", "DESCRIBE HISTORY"],
+    "correct": 1
+  },
+  {
+    "module": 2,
+    "text": "You must ensure a Delta table can be time‑travelled to a point 12 days ago. Which setting must you adjust?",
+    "options": ["VACUUM retention period", "Delta lake versioning to 30 days", "Enable streaming checkpoint", "Set table property 'retentionHours'"],
+    "correct": 0
+  },
+  {
+    "module": 2,
+    "text": "When partitioning a Delta table by a date column, which practice yields the best query performance for range queries on recent data?",
+    "options": [
+      "Partition by year only",
+      "Partition by year‑month‑day",
+      "No partitioning; rely on file size",
+      "Partition by a high‑cardinality string"
+    ],
+    "correct": 1
+  },
+  {
+    "module": 2,
+    "text": "You need to merge incremental updates from a staging Delta table into a production Delta table. Which Delta command guarantees idempotency?",
+    "options": [
+      "MERGE INTO target USING source ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT ...",
+      "INSERT OVERWRITE target SELECT * FROM source",
+      "UPDATE target SET ... FROM source",
+      "APPEND mode in Spark write"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 2,
+    "text": "Which of the following is NOT a valid reason to use the gold layer in a Medallion architecture?",
+    "options": [
+      "To store curated, business‑ready data",
+      "To hold raw, unvalidated data",
+      "To provide fast query performance for reporting",
+      "To enforce schema and data quality"
+    ],
+    "correct": 1
+  },
+  {
+    "module": 2,
+    "text": "You have a Delta table with a large number of columns but only a few are used in most queries. Which optimization can reduce I/O?",
+    "options": [
+      "Create a columnstore index",
+      "Enable V‑Order on frequently accessed columns",
+      "Set file format to CSV",
+      "Disable transaction log"
+    ],
+    "correct": 1
+  },
+  {
+    "module": 2,
+    "text": "A lakehouse contains both managed and external Delta tables. Which statement best describes the difference?",
+    "options": [
+      "Managed tables store data in OneLake; external tables reference data outside OneLake.",
+      "Managed tables support ACID; external tables do not.",
+      "Managed tables can only be created via notebooks; external tables via pipelines.",
+      "There is no functional difference."
+    ],
+    "correct": 0
+  },
+  {
+    "module": 2,
+    "text": "You need to move data from a bronze Delta table to silver while applying schema enforcement. Which tool provides the most straightforward solution?",
+    "options": ["Dataflow Gen2 with schema mapping", "Spark notebook with DataFrame API", "Pipeline Copy Data activity", "Activator"],
+    "correct": 0
+  },
+  {
+    "module": 2,
+    "text": "Which command can be used to retrieve a specific version of a Delta table as of 3 hours ago?",
+    "options": ["SELECT * FROM table VERSION AS OF 3", "SELECT * FROM table TIMESTAMP AS OF ...", "SELECT * FROM table AS OF TIME 3h", "SELECT * FROM table AT VERSION 3"],
+    "correct": 1
+  },
+  {
+    "module": 3,
+    "text": "A Real‑Time Dashboard must display the latest metric value within 5 seconds of arrival. Which Fabric component should you configure to achieve this latency?",
+    "options": ["Eventstream with low‑latency sink", "KQL database with Update policy", "Activator with threshold alert", "Pipeline with scheduled trigger"],
+    "correct": 1
+  },
+  {
+    "module": 3,
+    "text": "Which of the following KQL functions provides an approximate distinct count with sub‑second performance on large data sets?",
+    "options": ["dcount()", "approx_count_distinct()", "summarize count_distinct()", "count_distinct_hll()"],
+    "correct": 1
+  },
+  {
+    "module": 3,
+    "text": "You need to trigger an email when a metric in a KQL database exceeds 1000 units for 3 consecutive minutes. Which Fabric feature should you use?",
+    "options": ["Activator", "Eventstream policy", "Real‑Time Dashboard alert", "Pipeline with Wait activity"],
+    "correct": 0
+  },
+  {
+    "module": 3,
+    "text": "Which statement about a materialized view in a KQL database is TRUE?",
+    "options": [
+      "It stores pre‑computed results and updates incrementally.",
+      "It is refreshed on a fixed schedule only.",
+      "It cannot be joined with other tables.",
+      "It replaces the underlying base table."
+    ],
+    "correct": 0
+  },
+  {
+    "module": 3,
+    "text": "A Data Engineer wants to transform streaming data without building a pipeline. Which feature allows on‑the‑fly transformation of ingested data?",
+    "options": ["Update policy", "Stored function", "Materialized view", "Activator"],
+    "correct": 0
+  },
+  {
+    "module": 3,
+    "text": "Which of the following is NOT a valid source for an Eventstream?",
+    "options": ["Azure Event Hubs", "Azure Data Explorer", "Azure Blob Storage", "Kafka"],
+    "correct": 1
+  },
+  {
+    "module": 3,
+    "text": "You need to create a threshold‑based alert on a streaming metric that fires a Teams message. Which Activator action type should you select?",
+    "options": ["Email", "Teams", "Power Automate", "Azure Function"],
+    "correct": 1
+  },
+  {
+    "module": 3,
+    "text": "Which component supports both KQL queries and a T‑SQL subset in Fabric?",
+    "options": ["Lakehouse SQL analytics endpoint", "KQL Queryset", "Eventhouse", "Real‑Time Dashboard"],
+    "correct": 0
+  },
+  {
+    "module": 3,
+    "text": "You want to query a KQL database but need to ensure data is masked for privacy. Which feature can you use to automatically mask sensitive columns?",
+    "options": ["Update policy", "Dynamic data masking", "Materialized view", "Stored function"],
+    "correct": 1
+  },
+  {
+    "module": 3,
+    "text": "A Real‑Time Dashboard must use the editor’s identity for data access. Which authorization method should be chosen?",
+    "options": ["Pass‑through identity", "Dashboard editor’s identity", "Service principal", "Shared access signature"],
+    "correct": 1
+  },
+  {
+    "module": 4,
+    "text": "You are designing a dimensional model for sales data. Which schema type reduces data redundancy but may increase JOIN complexity?",
+    "options": ["Star schema", "Snowflake schema", "Galaxy schema", "Fact constellation"],
+    "correct": 1
+  },
+  {
+    "module": 4,
+    "text": "A fact table stores 10 billion rows. Which indexing strategy in a Fabric warehouse provides the best query performance for ad‑hoc filters on a few columns?",
+    "options": ["B‑tree index on filtered columns", "Columnstore index", "Hash index", "Full‑text index"],
+    "correct": 1
+  },
+  {
+    "module": 4,
+    "text": "You need to preserve full history of product attributes. Which Slowly Changing Dimension type should you implement?",
+    "options": ["SCD Type 0", "SCD Type 1", "SCD Type 2", "SCD Type 3"],
+    "correct": 2
+  },
+  {
+    "module": 4,
+    "text": "Which of the following is a valid reason to use a bridge table in a dimensional model?",
+    "options": [
+      "To resolve many‑to‑many relationships",
+      "To store aggregated facts",
+      "To replace a dimension table",
+      "To enforce row‑level security"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 4,
+    "text": "You have a measure that calculates year‑over‑year growth. Which DAX function is essential for comparing the same period last year?",
+    "options": ["SAMEPERIODLASTYEAR", "DATEADD", "PREVIOUSYEAR", "PARALLELPERIOD"],
+    "correct": 0
+  },
+  {
+    "module": 4,
+    "text": "A warehouse query is slow because the optimizer cannot use an appropriate index. Which hint can you add to a T‑SQL statement to force index usage?",
+    "options": ["WITH (INDEX(index_name))", "FORCESEEK", "USE HINT('INDEX')", "OPTIMIZE FOR"],
+    "correct": 0
+  },
+  {
+    "module": 4,
+    "text": "Which statement about user‑defined aggregations in a semantic model is FALSE?",
+    "options": [
+      "They improve performance for pre‑aggregated queries.",
+      "They require the model to be in Import mode.",
+      "They can be defined at the measure level.",
+      "They are stored in the warehouse."
+    ],
+    "correct": 1
+  },
+  {
+    "module": 4,
+    "text": "You need to rank products by sales within each category. Which DAX pattern correctly respects the category context?",
+    "options": [
+      "RANKX(ALL(DimProduct), [Total Sales])",
+      "RANKX(ALLSELECTED(DimProduct[Category]), [Total Sales])",
+      "RANKX(FILTER(ALL(DimProduct), DimProduct[Category] = EARLIER(DimProduct[Category])), [Total Sales])",
+      "RANKX(VALUES(DimProduct[Category]), [Total Sales])"
+    ],
+    "correct": 2
+  },
+  {
+    "module": 4,
+    "text": "A measure uses CALCULATE with a date filter but loses external slicer context. Which function should be added to preserve the slicer filters?",
+    "options": ["KEEPFILTERS", "ALL", "REMOVEFILTERS", "FILTER"],
+    "correct": 0
+  },
+  {
+    "module": 4,
+    "text": "Which of the following is TRUE about the HIGH CONCURRENCY mode for Spark in Fabric?",
+    "options": [
+      "Each notebook runs in a separate session.",
+      "Spark sessions are shared across users.",
+      "It requires a custom Spark pool.",
+      "It disables autoscaling."
+    ],
+    "correct": 1
+  },
+  {
+    "module": 4,
+    "text": "You need to model a many‑to‑many relationship between sales and promotions without double counting. Which configuration is required?",
+    "options": [
+      "Bidirectional cross‑filter on both sides",
+      "Set relationship to Single direction",
+      "Enable 'Apply security filter in both directions'",
+      "Use a bridge table"
+    ],
+    "correct": 3
+  },
+  {
+    "module": 5,
+    "text": "You must enforce column‑level security on a salary column in a warehouse. Which T‑SQL statement is the correct way to deny access to a specific role?",
+    "options": [
+      "DENY SELECT ON Employees(Salary) TO [FinanceRole]",
+      "REVOKE SELECT ON Employees FROM [FinanceRole]",
+      "DENY UPDATE ON Employees(Salary) TO [FinanceRole]",
+      "ALTER TABLE Employees DISABLE COLUMN Salary"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 5,
+    "text": "A CI/CD pipeline needs to automatically promote items from a dev workspace to prod after successful validation. Which Fabric feature should be used?",
+    "options": ["Deployment pipelines", "Git integration", "REST API", "Workspace apps"],
+    "correct": 0
+  },
+  {
+    "module": 5,
+    "text": "Which role can manage workspace settings and assign permissions in a Fabric workspace?",
+    "options": ["Admin", "Member", "Contributor", "Viewer"],
+    "correct": 0
+  },
+  {
+    "module": 5,
+    "text": "You want to give a service principal read‑only access to a specific lakehouse table. Which permission should you grant?",
+    "options": [
+      "GRANT SELECT ON TableName TO [ServicePrincipal]",
+      "GRANT READ TO [ServicePrincipal]",
+      "ADD MEMBER ServicePrincipal TO [ReaderRole]",
+      "DENY UPDATE ON TableName TO [ServicePrincipal]"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 5,
+    "text": "Which of the following is NOT a valid action type in Activator?",
+    "options": ["Email", "Teams", "Power Automate", "Azure Function"],
+    "correct": 3
+  },
+  {
+    "module": 5,
+    "text": "You need to schedule a pipeline to run every 15 minutes. Which trigger type should you configure?",
+    "options": [
+      "Scheduled trigger with recurrence of 15 minutes",
+      "Event‑driven trigger on blob creation",
+      "Manual trigger only",
+      "Dataflow refresh trigger"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 5,
+    "text": "A warehouse query fails because the user lacks permission to view query insights. Which permission must be added?",
+    "options": [
+      "VIEW SERVER STATE",
+      "MONITOR QUERY INSIGHTS",
+      "READ DATABASE",
+      "ADMINISTER DATABASE BULK OPERATIONS"
+    ],
+    "correct": 1
+  },
+  {
+    "module": 5,
+    "text": "When using the COPY INTO statement to load Parquet files from ADLS, which authentication methods are supported?",
+    "options": [
+      "SQL authentication only",
+      "Managed identity or SAS token",
+      "Windows authentication",
+      "OAuth 2.0 client credentials"
+    ],
+    "correct": 1
+  },
+  {
+    "module": 5,
+    "text": "Which function safely incorporates user input into a dynamic SQL string in a Fabric warehouse?",
+    "options": ["QUOTENAME", "CONCAT", "STRING_AGG", "FORMATMESSAGE"],
+    "correct": 0
+  },
+  {
+    "module": 5,
+    "text": "You need to mask email addresses in a column. Which dynamic data masking function should you use?",
+    "options": ["email()", "partial()", "random()", "default()"],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "Which component should you use to automatically detect when a streaming metric exceeds a threshold and send a Teams notification?",
+    "options": ["Activator", "Eventstream policy", "Pipeline with condition", "Real‑Time Dashboard alert"],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "Activator can invoke which of the following as an action?",
+    "options": ["Email", "Teams message", "Power Automate flow", "All of the above"],
+    "correct": 3
+  },
+  {
+    "module": 6,
+    "text": "You need to run a custom script when a KQL table’s row count exceeds 1 M. Which Activator action type is most appropriate?",
+    "options": ["Azure Function", "Email", "Power Automate", "Teams"],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "Which of the following statements about Activator is FALSE?",
+    "options": [
+      "It can only be triggered by Eventstream metrics.",
+      "It supports thresholds based on aggregates.",
+      "It can call a Power Automate flow.",
+      "It can send notifications via Teams."
+    ],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "A threshold alert must be evaluated over a sliding window of 10 minutes. Which configuration in Activator enables this behavior?",
+    "options": [
+      "Windowed aggregation in the condition",
+      "Polling interval of 10 minutes",
+      "Fixed time‑range query",
+      "No configuration needed; default is sliding window"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "You want Activator to execute a stored procedure in a warehouse when a condition is met. Which action type should you select?",
+    "options": ["Email", "Teams", "Power Automate", "Azure Function"],
+    "correct": 2
+  },
+  {
+    "module": 6,
+    "text": "Which component provides the ability to trigger Activator based on a KQL query result?",
+    "options": ["Update policy", "Materialized view", "Eventstream", "Dashboard alert"],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "You need to have Activator send a message to a Slack channel. Which action type should you use?",
+    "options": ["Email", "Teams", "Power Automate", "Custom webhook via Azure Function"],
+    "correct": 3
+  },
+  {
+    "module": 6,
+    "text": "Which of the following is a valid use case for Activator?",
+    "options": [
+      "Detecting when a streaming metric exceeds a threshold and sending an email",
+      "Transforming data in a lakehouse",
+      "Running a nightly warehouse backup",
+      "Building a Power BI report"
+    ],
+    "correct": 0
+  },
+  {
+    "module": 6,
+    "text": "When configuring an Activator alert, which field defines the condition to evaluate?",
+    "options": ["Expression", "Threshold", "Metric", "Action"],
+    "correct": 0
+  }
 ];
+
+function getPool(cert) {
+  if (cert === 'dp600') return DP600_QUESTIONS.map(q => ({...q, cert: 'DP600'}));
+  if (cert === 'dp700') return DP700_QUESTIONS.map(q => ({...q, cert: 'DP700'}));
+  return [...DP600_QUESTIONS.map(q => ({...q, cert: 'DP600'})), ...DP700_QUESTIONS.map(q => ({...q, cert: 'DP700'}))];
+}
 ;
 
 let state = {
@@ -2025,10 +2499,7 @@ function startTest() {
   const cert = document.getElementById('cert-select').value;
   const mod = document.getElementById('module-select').value;
   const countVal = document.getElementById('count-select').value;
-  let pool = [];
-  if (cert === 'dp600') pool = [...DP600_QUESTIONS];
-  else if (cert === 'dp700') pool = [...DP700_QUESTIONS];
-  else pool = [...DP600_QUESTIONS, ...DP700_QUESTIONS];
+  let pool = getPool(cert);
 
   if (mod !== 'all') {
     const [certKey, modNum] = mod.split('_');
