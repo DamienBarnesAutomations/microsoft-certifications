@@ -2762,7 +2762,246 @@ const DP700_QUESTIONS = [
     ],
     "correct": 0,
     "explanation": "Activator actions have a throttling period (cooldown) that limits how often the same action can trigger for the same object, e.g., once per 24 hours."
+  },
+  {
+    "module": 1,
+    "text": "Which of the following best describes a Spark Environment in Microsoft Fabric?",
+    "options": [
+      "A container for notebook code and execution history",
+      "A combination of a runtime, custom libraries, Spark properties, and resource files attached to a workspace or notebook",
+      "A managed Spark pool with predefined node sizes",
+      "A built‑in MLFlow tracking server for experiments"
+    ],
+    "correct": 1,
+    "explanation": "A Spark Environment defines the runtime version, custom libraries (PyPI, jar), Spark configuration properties, and resource files. It can be attached to a workspace or specific notebook, ensuring consistent execution across sessions."
+  },
+  {
+    "module": 1,
+    "text": "Which of the following describes the purpose of query folding in Dataflows Gen2?",
+    "options": [
+      "Combining multiple dataflows into a single query",
+      "Pushing transformation steps back to the source system for execution",
+      "Splitting a large dataflow into smaller parallel queries",
+      "Creating a materialized view of the dataflow output"
+    ],
+    "correct": 1,
+    "explanation": "Query folding means that Power Query transforms (e.g., filter, join, group by) are translated into the source system's native query language (SQL, OData, etc.) and executed there, reducing the amount of data pulled into the dataflow."
+  },
+  {
+    "module": 1,
+    "text": "Which of the following describes the role of the driver in a Spark pool?",
+    "options": [
+      "Executes data processing tasks on worker nodes",
+      "Coordinates the distributed job, schedules tasks, and collects results",
+      "Manages storage of Delta tables in OneLake",
+      "Provides autoscaling decisions based on workload"
+    ],
+    "correct": 1,
+    "explanation": "The driver runs on the head node and coordinates the execution of Spark jobs, schedules tasks on executors, and collects results. Executors on worker nodes perform the actual data processing."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following describes a shortcut in a Fabric lakehouse?",
+    "options": [
+      "A physical copy of external data stored in OneLake",
+      "A metadata reference to data in another location without copying",
+      "A compressed version of Delta table files",
+      "A temporary link that expires after 30 days"
+    ],
+    "correct": 1,
+    "explanation": "A shortcut is a zero‑copy metadata reference to data stored externally (e.g., ADLS Gen2, AWS S3) or in another lakehouse. It appears as local data but no data movement occurs until read."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following describes V‑Order optimization for Delta tables?",
+    "options": [
+      "A write‑time optimization that reorders Parquet data to accelerate read performance with about 15% write overhead",
+      "A compression algorithm that reduces storage by 50%",
+      "An indexing feature for high‑cardinality columns",
+      "A method to encrypt data at rest"
+    ],
+    "correct": 0,
+    "explanation": "V‑Order reorganizes data within Parquet files at write time to enable faster scanning (Verti‑Scan) by Fabric engines. It adds approximately 15% overhead to writes but significantly improves read performance."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following describes the transaction log in Delta Lake?",
+    "options": [
+      "A JSON file stored in the `_delta_log` folder that records every change to the table",
+      "A Parquet file that stores the current table schema",
+      "A system table that logs user access history",
+      "A copy of the entire table for disaster recovery"
+    ],
+    "correct": 0,
+    "explanation": "The Delta transaction log is a series of JSON files in the `_delta_log` directory. Each file records atomic changes (add/remove files, schema updates, etc.) and is the source of truth for ACID properties and time travel."
+  },
+  {
+    "module": 3,
+    "text": "Which of the following describes a materialized view in a KQL database?",
+    "options": [
+      "A view that runs the query every time and caches results for 1 hour",
+      "A precomputed aggregation that consists of a materialized part and a delta part, updated incrementally",
+      "A static snapshot that must be manually refreshed",
+      "A synonym for a stored function"
+    ],
+    "correct": 1,
+    "explanation": "A KQL materialized view has two parts: the materialized part (historical precomputed results) and the delta part (new data not yet materialized). Queries combine both for fresh results, and a background process merges delta into the materialized part."
+  },
+  {
+    "module": 3,
+    "text": "Which of the following describes an Eventhouse?",
+    "options": [
+      "A visual designer for streaming transformations",
+      "A container for one or more KQL databases optimized for append‑only time‑series data",
+      "A real‑time dashboard builder",
+      "A pipeline that routes streaming data to multiple destinations"
+    ],
+    "correct": 1,
+    "explanation": "Eventhouse is a high‑performance analytics engine that stores KQL databases. It automatically partitions data by ingestion time and is ideal for logs, IoT, and telemetry data."
+  },
+  {
+    "module": 3,
+    "text": "Which of the following describes the purpose of a derived stream in Eventstream?",
+    "options": [
+      "To create a copy of a stream for backup purposes",
+      "To branch a stream and apply filters or transformations for content‑based routing",
+      "To merge two or more streams into one",
+      "To convert a batch stream into a real‑time stream"
+    ],
+    "correct": 1,
+    "explanation": "A derived stream is a child branch of an Eventstream that can have its own transformations and destinations. It enables content‑based routing (e.g., temperature > 100 goes to alerts stream, others to lakehouse)."
+  },
+  {
+    "module": 4,
+    "text": "Which of the following describes a surrogate key in a dimension table?",
+    "options": [
+      "A business key from the source system",
+      "A system‑generated unique identifier with no business meaning",
+      "A foreign key referencing the fact table",
+      "A composite key made of two or more natural keys"
+    ],
+    "correct": 1,
+    "explanation": "A surrogate key is an artificial identifier (usually an auto‑incrementing integer) assigned to each row in a dimension table. It is independent of source system keys and is used to handle SCD changes and ensure uniqueness."
+  },
+  {
+    "module": 4,
+    "text": "Which of the following describes a snowflake schema?",
+    "options": [
+      "A fact table surrounded by denormalized dimension tables",
+      "A normalized dimensional model where dimension tables are further normalized into sub‑dimensions",
+      "A schema with multiple fact tables sharing common dimensions",
+      "A single table containing both facts and dimensions"
+    ],
+    "correct": 1,
+    "explanation": "A snowflake schema normalizes dimension tables (e.g., Product → Subcategory → Category) to reduce redundancy. This results in more JOINs but can save storage and simplify maintenance of hierarchical attributes."
+  },
+  {
+    "module": 4,
+    "text": "Which of the following describes Direct Lake mode in a Power BI semantic model?",
+    "options": [
+      "Data is imported into the semantic model and fully cached",
+      "The semantic model reads Delta Parquet files directly from OneLake without a refresh",
+      "The semantic model sends live queries to a SQL database",
+      "Data is cached for 24 hours and then expires"
+    ],
+    "correct": 1,
+    "explanation": "Direct Lake mode allows Power BI to read Delta Parquet files directly from OneLake. It combines the speed of import mode (no per‑query scanning) with the freshness of DirectQuery (no scheduled refresh)."
+  },
+  {
+    "module": 5,
+    "text": "Which of the following describes a Fabric domain?",
+    "options": [
+      "A security boundary that restricts workspace access to specific users",
+      "A logical grouping of workspaces for governance and delegated administration",
+      "A container for Fabric capacities",
+      "A replacement for workspaces in large organizations"
+    ],
+    "correct": 1,
+    "explanation": "Domains organize workspaces into logical groups (e.g., Finance, Sales) and allow domain admins to delegate governance settings such as certification and data lineage policies. They do not control access."
+  },
+  {
+    "module": 5,
+    "text": "Which of the following describes the Fabric Monitor Hub?",
+    "options": [
+      "A tool to view capacity utilization across the tenant",
+      "A centralized interface to track job executions (pipelines, dataflows, Spark jobs) and view detailed run logs",
+      "A dashboard for auditing user access to items",
+      "A workspace for monitoring Power BI report usage"
+    ],
+    "correct": 1,
+    "explanation": "The Monitor Hub shows the status, start/end times, and details of Fabric job executions. You can drill into failures, retry runs, and view Spark logs. It is the primary operational monitoring tool."
+  },
+  {
+    "module": 5,
+    "text": "Which of the following describes the purpose of a deployment pipeline in Fabric?",
+    "options": [
+      "To synchronize workspace content with a Git repository",
+      "To promote content (e.g., lakehouses, reports) between stages (Dev → Test → Prod) using zero‑copy cloning and deployment rules",
+      "To automate the creation of Fabric capacities",
+      "To deploy Fabric items to external cloud providers"
+    ],
+    "correct": 1,
+    "explanation": "Deployment pipelines allow you to assign workspaces to stages and then promote items from one stage to the next. Deployment rules can swap connection strings (e.g., Dev lakehouse → Prod lakehouse) automatically."
+  },
+  {
+    "module": 6,
+    "text": "Which of the following describes an Activator business object?",
+    "options": [
+      "A collection of events that share the same timestamp",
+      "A real‑world entity (e.g., a sensor, package, device) identified by a unique field from an eventstream",
+      "A rule that triggers an action when a condition is met",
+      "A destination where activated events are stored"
+    ],
+    "correct": 1,
+    "explanation": "In Activator, an object is created from an eventstream by choosing a unique identifier field (e.g., PackageId). Each unique ID becomes a separate object that can be monitored independently with its own properties and rules."
+  },
+  {
+    "module": 6,
+    "text": "Which of the following describes the step size in an Activator rule?",
+    "options": [
+      "The amount of historical data included in the summarization",
+      "How often the rule recalculates the condition",
+      "The delay before an action is triggered",
+      "The number of times the condition must be true before firing"
+    ],
+    "correct": 1,
+    "explanation": "Step size defines the evaluation frequency. For example, window size = 10 minutes, step size = 5 minutes means the rule recalculates every 5 minutes using the last 10 minutes of data."
+  },
+  {
+    "module": 6,
+    "text": "Which of the following describes missing data detection in Activator?",
+    "options": [
+      "Triggering when a value exceeds a threshold",
+      "Triggering when a value changes by a specified amount",
+      "Triggering when no events are received for an object within a defined time period",
+      "Triggering when a value falls outside a defined range"
+    ],
+    "correct": 2,
+    "explanation": "Missing data detection is used to identify sensor failures or communication drops. It triggers if an expected event does not arrive within the configured window (e.g., no temperature reading for 30 minutes)."
+  },
+  {
+    "module": 1,
+    "text": "Which of the following best describes a control flow activity in a Fabric pipeline?",
+    "options": [
+      "An activity that moves data from a source to a destination",
+      "An activity that transforms data using Spark or Dataflows",
+      "An activity that manages branching, looping, and variable handling (e.g., ForEach, If Condition, Until)",
+      "An activity that deletes data after processing"
+    ],
+    "correct": 2,
+    "explanation": "Control flow activities include ForEach, If Condition, Until, Set Variable, and Wait. They orchestrate execution logic but do not move or transform data directly."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following describes the Silver layer in a Medallion architecture?",
+    "options": [
+      "Raw, unaltered data as ingested",
+      "Validated, cleansed, and standardized data serving as the central repository",
+      "Aggregated, business‑ready data for reporting",
+      "Data stored only in KQL databases for real‑time queries"
+    ],
+    "correct": 1,
+    "explanation": "The Silver layer contains data that has been validated, deduplicated, type‑cast, and enriched with basic business logic. It is the authoritative source for cleaned data before aggregation into Gold."
   }
-
 ];
 
