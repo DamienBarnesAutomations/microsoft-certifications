@@ -311,6 +311,12 @@ function selectOption(idx) {
     if (i === idx) o.classList.add('selected');
   });
 
+  if (idx !== correct && q.explanation) {
+    const box = document.getElementById('q-explain-box');
+    box.innerHTML = '<strong>Explanation:</strong> ' + q.explanation;
+    box.classList.remove('hidden');
+  }
+
   document.getElementById('btn-skip').classList.add('hidden');
   document.getElementById('btn-next').classList.remove('hidden');
   document.getElementById('btn-next').textContent = state.current < state.questions.length - 1 ? 'Next' : 'Finish';
@@ -373,6 +379,7 @@ function finishTest() {
       chosen: a,
       correct: state.questions[i].correct,
       options: state.questions[i].options,
+      explanation: state.questions[i].explanation || '',
       isCorrect: a === state.questions[i].correct
     }))
   };
@@ -402,6 +409,9 @@ function reviewAnswers() {
       else style += 'color:#666;';
       html += `<div style="${style}">${letters[j]}. ${opt}</div>`;
     });
+    if (a.explanation) {
+      html += `<div style="margin-top:10px;padding:10px 12px;background:#1e2540;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;font-size:.82rem;color:#bbb;line-height:1.5">${a.explanation}</div>`;
+    }
     html += '</div>';
   });
   html += '</div>';
@@ -460,6 +470,9 @@ function reviewHistory(id) {
       else style += 'color:#666;';
       html += `<div style="${style}">${letters[j]}. ${opt}</div>`;
     });
+    if (a.explanation) {
+      html += `<div style="margin-top:10px;padding:10px 12px;background:#1e2540;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;font-size:.82rem;color:#bbb;line-height:1.5">${a.explanation}</div>`;
+    }
     html += '</div>';
   });
   html += '<div style="text-align:center;margin-top:12px"><button class="btn btn-secondary" onclick="showSetup()">Back to Menu</button></div></div>';
