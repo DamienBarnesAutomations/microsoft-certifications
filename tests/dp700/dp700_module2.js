@@ -552,6 +552,198 @@
     ],
     "correct": 2,
     "explanation": "The native execution engine is a vectorized processing engine that runs Spark operations directly on lakehouse infrastructure, significantly improving query performance on large Parquet or Delta datasets. V-Order and OptimizeWrite are write-time optimizations. High concurrency mode shares Spark sessions across users."
+  },
+  {
+    "module": 2,
+    "text": "A Fabric workspace needs to be configured so that a team member can view and read items but cannot create or modify them. Which workspace role should be assigned?",
+    "options": [
+      "Admin",
+      "Member",
+      "Contributor",
+      "Viewer"
+    ],
+    "correct": 3,
+    "explanation": "Fabric workspaces have four roles: Admin (full control), Member (modify and share), Contributor (modify existing items), and Viewer (read-only). Viewer is the correct role for read-only access. There is no Owner role in Fabric."
+  },
+  {
+    "module": 2,
+    "text": "You need to ingest a CSV file and a Parquet file into a lakehouse using the Load to Table option in the lakehouse explorer. What must you do for a JSON file that also needs to be ingested?",
+    "options": [
+      "Use Load to Table, which supports JSON as well",
+      "Convert the JSON file to CSV first, then use Load to Table",
+      "Use a Notebook or Dataflow Gen2 instead for the JSON file",
+      "Rename the file extension to .csv and use Load to Table"
+    ],
+    "correct": 2,
+    "explanation": "Load to Table only supports CSV and Parquet files. JSON files require a Notebook or Dataflow Gen2 for ingestion. Converting to CSV or renaming would not make the JSON format compatible."
+  },
+  {
+    "module": 2,
+    "text": "On which Azure storage technology is Microsoft OneLake built?",
+    "options": [
+      "Azure Blob Storage",
+      "Azure Data Lake Storage Gen2",
+      "Azure Data Lake Storage Gen1",
+      "Azure NetApp Files"
+    ],
+    "correct": 1,
+    "explanation": "OneLake is built on top of Azure Data Lake Storage Gen2 (ADLS Gen2). It uses Delta-Parquet as its default format for enabling efficient analytical queries."
+  },
+  {
+    "module": 2,
+    "text": "You need to reference a complete schema from another lakehouse in the same Fabric workspace without copying data. Which feature should you use?",
+    "options": [
+      "An external table pointing to the schema",
+      "A schema shortcut",
+      "A Dataflow Gen2 that reads the schema",
+      "A Copy Data activity in a pipeline"
+    ],
+    "correct": 1,
+    "explanation": "Schema shortcuts extend the shortcut concept to reference schema-level objects from other OneLake locations. Unlike external tables (which point to individual tables), schema shortcuts provide access to all objects within a schema without copying data."
+  },
+  {
+    "module": 2,
+    "text": "A Fabric lakehouse has two primary folders. What best describes the purpose of the Files folder?",
+    "options": [
+      "Stores Delta Lake tables with full ACID transaction support",
+      "Stores raw or semi-structured data in native formats without schema enforcement",
+      "Stores only compressed Parquet files for optimized querying",
+      "Stores pre-aggregated views for Power BI reporting"
+    ],
+    "correct": 1,
+    "explanation": "The Files folder stores raw or semi-structured data in its original format (CSV, JSON, Parquet, images, etc.) without schema enforcement. It provides flexibility for staging and transformation. The Tables folder holds Delta tables with ACID support."
+  },
+  {
+    "module": 2,
+    "text": "You attempt to write a DataFrame with a mismatched schema to an existing Delta table that has a defined schema. What happens?",
+    "options": [
+      "The write succeeds and the schema automatically evolves to accommodate the new columns",
+      "The write fails because Delta Lake enforces schema on write by default",
+      "The write succeeds but columns that do not match are silently dropped",
+      "The write succeeds and creates a separate version with the alternate schema"
+    ],
+    "correct": 1,
+    "explanation": "Delta Lake enforces schema on write by default. If the incoming data schema does not match the table schema (column names, data types, nullability), the write operation fails. This prevents data corruption from schema drift."
+  },
+  {
+    "module": 2,
+    "text": "You need to programmatically read metadata of a Delta table directly from its storage path without using Spark SQL. Which Delta Lake API should you use?",
+    "options": [
+      "DataFrameReader.format(\"delta\").load()",
+      "DeltaTable.forPath(spark, \"/path/to/table\")",
+      "SparkSession.sql(\"DESCRIBE DETAIL path\")",
+      "DeltaLake.describe(\"/path/to/table\")"
+    ],
+    "correct": 1,
+    "explanation": "DeltaTable.forPath(spark, path) provides programmatic access to a Delta table's metadata, schema, and operations directly from its storage path. DataFrameReader loads data for querying, not metadata. Spark SQL uses a different approach. DeltaLake.describe is not a valid API."
+  },
+  {
+    "module": 2,
+    "text": "You configure a Delta table as a streaming sink in Spark Structured Streaming. Which option is required for fault tolerance and recovery?",
+    "options": [
+      "triggerInterval",
+      "checkpointLocation",
+      "outputMode",
+      "watermark"
+    ],
+    "correct": 1,
+    "explanation": "When using Delta as a streaming sink, checkpointLocation is mandatory. It stores the progress of the stream so that if the stream fails, it can resume from where it left off. triggerInterval, outputMode, and watermark are optional configurations."
+  },
+  {
+    "module": 2,
+    "text": "You apply V-Order optimization when writing data to a Delta table. Which statement about read performance is true?",
+    "options": [
+      "All Parquet-compatible query engines benefit equally from V-Order",
+      "Only Fabric engines with VertiScan (Power BI, SQL endpoint) benefit from the read optimization",
+      "Only Spark engines benefit from the V-Order read optimization",
+      "V-Order only benefits writes; it does not improve read performance"
+    ],
+    "correct": 1,
+    "explanation": "V-Order is a write-time optimization that reorders data specifically for the VertiScan engine used by Power BI and the SQL analytics endpoint. Third-party Parquet readers can still read the data but do not get the read performance benefit."
+  },
+  {
+    "module": 2,
+    "text": "One user is writing data to a Delta table while another user is reading from it concurrently. What ensures the reader does not see partial or uncommitted writes?",
+    "options": [
+      "Partition pruning isolates read and write operations",
+      "Delta Lake's ACID transaction isolation guarantees readers see only committed data",
+      "Schema enforcement prevents partial writes from being visible",
+      "V-Order optimization separates read and write paths"
+    ],
+    "correct": 1,
+    "explanation": "Delta Lake's ACID transaction isolation ensures that concurrent readers never see uncommitted or partial writes. Writes are atomic: either all changes are committed and visible, or none are. This is a core ACID property that distinguishes Delta Lake from raw Parquet file storage."
+  },
+  {
+    "module": 2,
+    "text": "You are designing security for a medallion architecture. What is a recommended best practice for the Gold layer?",
+    "options": [
+      "Grant all users full read-write access for maximum flexibility",
+      "Grant read-only access to downstream consumers such as analysts and reporting tools",
+      "Restrict all access to only the data engineering team",
+      "Store Gold layer data in the Files folder without any access controls"
+    ],
+    "correct": 1,
+    "explanation": "Granting read-only access to the Gold layer is a security best practice. Downstream consumers (analysts, Power BI) need to query the data but should not modify it. Write access should be restricted to the ETL processes that populate the Gold layer."
+  },
+  {
+    "module": 2,
+    "text": "In a medallion architecture with CI/CD integration in Fabric, which layer requires the most rigorous version control and deployment practices?",
+    "options": [
+      "Bronze layer, because raw data changes frequently",
+      "Silver layer, because it contains validated data",
+      "Gold layer, because it directly feeds business reporting",
+      "All layers require identical CI/CD rigor"
+    ],
+    "correct": 2,
+    "explanation": "CI/CD is most critical at the Gold layer because it directly affects business reporting and downstream consumers. Changes to Gold layer schemas, transformations, or aggregations can break reports and dashboards. Bronze and Silver layers also benefit from CI/CD, but the impact is highest at Gold."
+  },
+  {
+    "module": 2,
+    "text": "A compliance auditor requires that raw ingested data remains immutable and can never be modified after ingestion. Which medallion architecture layer serves this purpose?",
+    "options": [
+      "Bronze layer, because it stores unaltered source data as an immutable archive",
+      "Silver layer, because data is cleaned and validated",
+      "Gold layer, because data is aggregated for reporting",
+      "None of the layers guarantee immutability"
+    ],
+    "correct": 0,
+    "explanation": "The Bronze layer stores raw, unaltered data exactly as ingested from source systems, serving as an immutable archive for auditing and compliance. It provides a single source of truth that can always be referenced for reprocessing or regulatory requirements."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following correctly distinguishes a Fabric Warehouse from a SQL analytics endpoint?",
+    "options": [
+      "A Warehouse is read-only; a SQL analytics endpoint supports full read-write operations",
+      "A Warehouse is a standalone resource; a SQL analytics endpoint is automatically provisioned when a Lakehouse is created",
+      "A Warehouse uses Spark for querying; a SQL analytics endpoint uses T-SQL",
+      "A Warehouse supports only Delta format; a SQL analytics endpoint supports all formats"
+    ],
+    "correct": 1,
+    "explanation": "A Fabric Warehouse is a standalone, fully managed T-SQL endpoint with its own independent storage. A SQL analytics endpoint is automatically created alongside each Lakehouse and provides read-only T-SQL access to the Lakehouse's Delta tables. Both use T-SQL, not Spark."
+  },
+  {
+    "module": 2,
+    "text": "Which features are supported by both a Fabric Warehouse and a SQL analytics endpoint?",
+    "options": [
+      "Full DDL and DML operations including INSERT, UPDATE, and DELETE",
+      "Views, stored procedures, and row-level and column-level security",
+      "Data modification through MERGE statements",
+      "Table creation and schema modification"
+    ],
+    "correct": 1,
+    "explanation": "Both a Warehouse and a SQL analytics endpoint support views, stored procedures, and SQL-based security (RLS, CLS). However, only the Warehouse supports write operations (DDL, DML, MERGE); the SQL analytics endpoint is read-only and cannot create or modify tables."
+  },
+  {
+    "module": 2,
+    "text": "A data architect needs to choose between a Fabric Warehouse and a SQL analytics endpoint. The requirement is full read-write T-SQL capabilities with independent storage and transaction support. Which should be chosen?",
+    "options": [
+      "SQL analytics endpoint with Direct Lake mode",
+      "Fabric Warehouse",
+      "A Spark notebook with T-SQL magic",
+      "A Lakehouse with default semantic model"
+    ],
+    "correct": 1,
+    "explanation": "A Fabric Warehouse provides full read-write T-SQL capabilities (DDL, DML, MERGE), ACID transactions, and stores its own data independently. The SQL analytics endpoint is read-only and reads from Lakehouse Delta tables. Spark notebooks use Spark SQL, not T-SQL."
   }
   ];
   
