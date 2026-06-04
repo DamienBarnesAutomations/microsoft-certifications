@@ -372,8 +372,188 @@
     "correct": 3,
     "module": 2,
     "explanation": "Similar to a previous question, using Table.Buffer, List.Buffer, and List.ParallelTransform are all valid optimization techniques for custom functions in Power Query. The exam expects 'All of the above'."
+  },
+  {
+    "module": 2,
+    "text": "An organization uses lakehouses for data engineering, warehouses for BI reporting, and an eventhouse for real-time IoT monitoring. What allows all three stores to access data across each other without duplication?",
+    "options": [
+      "Dataflows Gen2 with scheduled refresh",
+      "OneLake shortcuts and cross-database queries",
+      "COPY INTO commands running on a schedule",
+      "Spark notebooks with JDBC connectors"
+    ],
+    "correct": 1,
+    "explanation": "All three analytical stores (lakehouse, warehouse, eventhouse) store data in OneLake. Shortcuts and cross-database queries let users reference data across stores without copying or moving it. Dataflows, COPY INTO, and JDBC connections involve data movement or duplication."
+  },
+  {
+    "module": 2,
+    "text": "An eventhouse ingests 100,000 IoT sensor readings per second. The operations team needs to correct some readings after ingestion. What is the expected behavior of UPDATE and DELETE operations on an eventhouse?",
+    "options": [
+      "They execute with full ACID support, identical to a warehouse",
+      "They are supported only for the most recent 24 hours of data",
+      "The eventhouse is optimized for append-only workloads and frequent UPDATE/DELETE operations are not recommended",
+      "They trigger automatic rollback because eventhouses only support SELECT queries"
+    ],
+    "correct": 2,
+    "explanation": "Eventhouses are optimized for append-heavy, time-series workloads. While some data management operations are possible, frequent UPDATE and DELETE patterns are not recommended. Use a warehouse or lakehouse for workloads that require transactional updates."
+  },
+  {
+    "module": 2,
+    "text": "A data science team needs to explore structured transaction data and unstructured clickstream logs using Python. The schema is not fully defined and changes frequently. Which Fabric data store should they use?",
+    "options": [
+      "Warehouse, because it enforces schema on write for data quality",
+      "Eventhouse, because it handles JSON natively with automatic indexing",
+      "Lakehouse, because it supports structured, semi-structured, and unstructured data with Spark notebooks",
+      "SQL analytics endpoint, because it provides T-SQL access for analysts"
+    ],
+    "correct": 2,
+    "explanation": "The lakehouse is the most versatile store, handling structured, semi-structured, and unstructured data with Spark notebook support (Python). The warehouse enforces schema on write and is T-SQL-only. The eventhouse is for time-series data. The SQL endpoint is read-only."
+  },
+  {
+    "module": 2,
+    "text": "A data modeler is designing a dimensional model for a Power BI semantic model. The dimension tables are relatively small and denormalized. Which schema type is recommended for most Fabric analytics workloads?",
+    "options": [
+      "Snowflake schema, because normalized dimensions reduce storage",
+      "Star schema, because fewer joins provide faster queries and better Power BI performance",
+      "Third normal form, because it eliminates all data redundancy",
+      "Wide table with all attributes in a single table"
+    ],
+    "correct": 1,
+    "explanation": "Star schema is the recommended approach for most Fabric analytics and Power BI workloads. It uses denormalized dimensions with a central fact table, resulting in fewer joins and faster query performance. Snowflake schemas add join complexity."
+  },
+  {
+    "module": 2,
+    "text": "A retail company needs to capture the state of inventory for every product at the end of each day. Which type of fact table should they use?",
+    "options": [
+      "Transaction fact table",
+      "Periodic snapshot fact table",
+      "Accumulating snapshot fact table",
+      "Factless fact table"
+    ],
+    "correct": 1,
+    "explanation": "A periodic snapshot fact table captures the state of something at regular intervals, such as end-of-day inventory levels. Transaction fact tables record individual events. Accumulating snapshots track process milestones. Factless tables capture occurrences without measures."
+  },
+  {
+    "module": 2,
+    "text": "A sales fact table needs to reference the date dimension three times: for Order Date, Ship Date, and Delivery Date. What is this pattern called?",
+    "options": [
+      "Conformed dimensions",
+      "Junk dimensions",
+      "Role-playing dimensions",
+      "Slowly changing dimensions"
+    ],
+    "correct": 2,
+    "explanation": "Role-playing dimensions occur when a single physical dimension table is referenced multiple times in one fact table, each representing a different context (Order Date, Ship Date, Delivery Date). Conformed dimensions are shared across fact tables. Junk dimensions consolidate small attributes."
+  },
+  {
+    "module": 2,
+    "text": "A Dataflow Gen2 processes a large dataset and the developer wants to use incremental refresh. Which destinations support this update method?",
+    "options": [
+      "Lakehouse, Warehouse, and Azure SQL Database",
+      "Lakehouse, Warehouse, and Eventhouse",
+      "All Fabric destinations support incremental refresh",
+      "Only Lakehouse destinations support incremental refresh"
+    ],
+    "correct": 0,
+    "explanation": "Incremental refresh in Dataflow Gen2 is supported for Fabric Lakehouse, Fabric Warehouse, and Azure SQL Database destinations. It divides data into time-range buckets and refreshes only new or changed data. Other destinations use Replace or Append only."
+  },
+  {
+    "module": 2,
+    "text": "A developer creates a Dataflow Gen2 that transforms data but does not configure an output destination. What happens when the dataflow is published and runs?",
+    "options": [
+      "The dataflow fails validation because a destination is required",
+      "The dataflow runs successfully and can be consumed by pipelines or Power BI as a data source",
+      "The dataflow runs but only the first 1000 rows are processed",
+      "The dataflow automatically creates a default Lakehouse destination"
+    ],
+    "correct": 1,
+    "explanation": "A destination is optional in Dataflow Gen2. The dataflow runs and processes transformations, and its output can be consumed by pipelines or connected to from Power BI Desktop. This is a key distinction from pipelines, where every Copy Data activity requires a destination."
+  },
+  {
+    "module": 2,
+    "text": "A team needs to transform 5 TB of data using complex window functions, custom Python logic, and multi-step joins. The team is proficient in PySpark. Which transformation tool should they use?",
+    "options": [
+      "Dataflows Gen2 with Power Query transformations",
+      "Spark notebooks in Fabric",
+      "T-SQL stored procedures in the warehouse",
+      "Eventstream with KQL transformations"
+    ],
+    "correct": 1,
+    "explanation": "Spark notebooks are the right choice for complex transformations on large datasets when the team has PySpark skills. Dataflows Gen2 are better for simple-to-moderate transformations and low-code preferences. Stored procedures use T-SQL, not Python."
+  },
+  {
+    "module": 2,
+    "text": "A developer pins a lakehouse as the default lakehouse in a Spark notebook. How does this affect how tables are referenced in Spark SQL queries?",
+    "options": [
+      "It replicates all tables to a warehouse for SQL access",
+      "It sets the Hive metastore context so tables can be referenced by name without full paths",
+      "It enables V-Order optimization on all Delta tables in the lakehouse",
+      "It creates SQL analytics endpoint views for all tables in the lakehouse"
+    ],
+    "correct": 1,
+    "explanation": "Pinning a default lakehouse sets the Hive metastore context. Tables in that lakehouse can then be referenced by their simple name (e.g., 'SELECT * FROM sales') instead of requiring a full path. This makes code portable across environments."
+  },
+  {
+    "module": 2,
+    "text": "A PySpark notebook needs to run a Spark SQL query. The notebook language is set to PySpark. Which magic command should be used at the top of a code cell?",
+    "options": [
+      "%python",
+      "%%sql",
+      "%scala",
+      "%%local"
+    ],
+    "correct": 1,
+    "explanation": "The %%sql magic command switches the cell language to Spark SQL within a PySpark notebook. This allows mixing SQL and Python in the same notebook. %python would stay in Python, %scala switches to Scala, and %%local is not a Fabric magic command."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following is true about write-time optimizations in Fabric Spark notebooks?",
+    "options": [
+      "Both Optimize Write and V-Order are enabled by default",
+      "Optimize Write is enabled by default; V-Order is disabled by default",
+      "Optimize Write is disabled by default; V-Order is enabled by default",
+      "Both Optimize Write and V-Order must be explicitly enabled"
+    ],
+    "correct": 1,
+    "explanation": "Optimize Write is enabled by default in Fabric and consolidates small files during writes. V-Order is disabled by default and must be enabled at the session level using SET spark.sql.parquet.vorder.default=TRUE. V-Order optimizes Parquet files for read-heavy workloads."
+  },
+  {
+    "module": 2,
+    "text": "A developer needs to test a transformation on a 500 GB table without duplicating storage. Which Fabric warehouse feature should they use?",
+    "options": [
+      "CREATE TABLE AS SELECT (CTAS)",
+      "COPY INTO with a new table name",
+      "CREATE TABLE ... AS CLONE OF",
+      "INSERT INTO ... SELECT with TOP 0"
+    ],
+    "correct": 2,
+    "explanation": "Table clones (CREATE TABLE ... AS CLONE OF) create a zero-copy reference to a table at a point in time. The clone shares the underlying data files with the source table until modified, so no storage is consumed for unchanged data. CTAS and COPY INTO duplicate data."
+  },
+  {
+    "module": 2,
+    "text": "A transformation query produces a monthly sales summary that must run on a recurring schedule. The logic accepts parameterized year and month values. Which approach should be used?",
+    "options": [
+      "CREATE VIEW with the transformation logic",
+      "CREATE TABLE AS SELECT (CTAS) each time new data arrives",
+      "A stored procedure with parameters using MERGE or DELETE/INSERT patterns",
+      "A Dataflow Gen2 that reads from the warehouse"
+    ],
+    "correct": 2,
+    "explanation": "Stored procedures are the preferred mechanism for recurring, parameterized transformations. They support parameters, multi-step logic, error handling, and can be scheduled via pipelines. CTAS is for one-time materialization. Views are read-only. A Dataflow would add unnecessary overhead for T-SQL logic."
+  },
+  {
+    "module": 2,
+    "text": "A data architect needs to decide between a view and a table for a monthly sales aggregation. Consumers require the most current data, and the aggregation logic changes periodically. Which should they choose?",
+    "options": [
+      "A table, because it provides precomputed results for faster queries",
+      "A view, because it always reflects current source data and the definition can be updated with ALTER VIEW",
+      "A stored procedure that creates a temporary table each time",
+      "An external table linked to a CSV file"
+    ],
+    "correct": 1,
+    "explanation": "Views always reflect the current state of source data because they run the underlying query each time they are accessed. They have no storage cost and can be modified with ALTER VIEW when logic changes. Tables need to be refreshed and recreated when logic changes."
   }
-];
+  ];
   
   if (typeof window.__dp600 === 'undefined') {
     window.__dp600 = { modules: [], questions: [] };
