@@ -82,6 +82,13 @@ label{display:block;margin-bottom:6px;font-size:.85rem;color:#aaa}
 <script src="tests/dp700/dp700_module5.js"></script>
 <script src="tests/dp700/dp700_module6.js"></script>
 <script src="tests/dp700/dp700.js"></script>
+<script src="tests/dp300/dp300_module1.js"></script>
+<script src="tests/dp300/dp300_module2.js"></script>
+<script src="tests/dp300/dp300_module3.js"></script>
+<script src="tests/dp300/dp300_module4.js"></script>
+<script src="tests/dp300/dp300_module5.js"></script>
+<script src="tests/dp300/dp300_module6.js"></script>
+<script src="tests/dp300/dp300.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -89,7 +96,7 @@ label{display:block;margin-bottom:6px;font-size:.85rem;color:#aaa}
   <!-- Setup Screen -->
   <div id="screen-setup">
     <h1>Fabric Certification Practice Test</h1>
-    <p class="subtitle">DP-600 &amp; DP-700 Exam Questions</p>
+    <p class="subtitle">DP-600, DP-700 &amp; DP-300 Exam Questions</p>
 
     <div class="tabs">
       <button class="tab active" onclick="switchTab('test')">Take Test</button>
@@ -102,9 +109,10 @@ label{display:block;margin-bottom:6px;font-size:.85rem;color:#aaa}
         <div class="row" style="margin-bottom:16px">
           <div>
             <label>Certification</label>
-            <select id="cert-select" onchange="updateModules()">
+              <select id="cert-select" onchange="updateModules()">
               <option value="dp600">DP-600</option>
               <option value="dp700">DP-700</option>
+              <option value="dp300">DP-300</option>
               <option value="both">Both</option>
             </select>
           </div>
@@ -190,7 +198,7 @@ function updateModules(){
   const cert=document.getElementById('cert-select').value;
   const sel=document.getElementById('module-select');
   sel.innerHTML='<option value="all">All Modules</option>';
-  const mods=cert==='dp600'?DP600_MODULES:cert==='dp700'?DP700_MODULES:[...DP600_MODULES,...DP700_MODULES];
+  const mods=cert==='dp600'?DP600_MODULES:cert==='dp700'?DP700_MODULES:cert==='dp300'?DP300_MODULES:[...DP600_MODULES,...DP700_MODULES];
   mods.forEach((m,i)=>{
     const v=cert==='both'?(i<5?'dp600_'+(i+1):'dp700_'+(i-4)):cert+'_'+(i+1);
     sel.innerHTML+='<option value="'+v+'">'+m+'</option>';
@@ -211,6 +219,7 @@ function updateModuleCount(){
 function getPool(cert) {
   if (cert === 'dp600') return DP600_QUESTIONS.map(q => ({...q, cert: 'DP600'}));
   if (cert === 'dp700') return DP700_QUESTIONS.map(q => ({...q, cert: 'DP700'}));
+  if (cert === 'dp300') return DP300_QUESTIONS.map(q => ({...q, cert: 'DP300'}));
   return [...DP600_QUESTIONS.map(q => ({...q, cert: 'DP600'})), ...DP700_QUESTIONS.map(q => ({...q, cert: 'DP700'}))];
 }
 ;
@@ -289,7 +298,7 @@ function updateTimer() {
 function showQuestion() {
   const q = state.questions[state.current];
   document.getElementById('q-counter').textContent = `Question ${state.current + 1} / ${state.questions.length}`;
-  const modLabel = q.cert === 'DP600' ? DP600_MODULES[q.module-1] : DP700_MODULES[q.module-1];
+  const modLabel = q.cert === 'DP600' ? DP600_MODULES[q.module-1] : q.cert === 'DP700' ? DP700_MODULES[q.module-1] : DP300_MODULES[q.module-1];
   document.getElementById('q-cert').textContent = q.cert ? `${q.cert.toUpperCase()} — ${modLabel}` : '';
   document.getElementById('q-text').textContent = q.text;
 

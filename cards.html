@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DP-600 & DP-700 Study Cards</title>
+<title>DP-600, DP-700 & DP-300 Study Cards</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.6;min-height:100vh}
@@ -57,8 +57,9 @@ var DATA = {};
 </script>
 <script src="cards_dp600.js"></script>
 <script src="cards_dp700.js"></script>
+<script src="cards_dp300.js"></script>
 <script>
-DATA['DP-600']=DP600_DATA;DATA['DP-700']=DP700_DATA;
+DATA['DP-600']=DP600_DATA;DATA['DP-700']=DP700_DATA;DATA['DP-300']=DP300_DATA;
 var currentView='home',currentCert=null,currentModule=null,expandedTopics={};
 
 function render(){
@@ -67,7 +68,7 @@ if(currentView==='home'){
 title.textContent='Microsoft Fabric Certification Study Cards';
 search.classList.add('hidden');
 bc.innerHTML='<span class="current">Home</span>';
-app.innerHTML='<div class="cert-grid"><div class="card cert-card" onclick="selectCert(\'DP-600\')"><h2>DP-600</h2><p>Designing and Implementing Analytics Solutions Using Microsoft Fabric</p></div><div class="card cert-card" onclick="selectCert(\'DP-700\')"><h2>DP-700</h2><p>Fabric Data Engineer</p></div></div>';
+app.innerHTML='<div class="cert-grid"><div class="card cert-card" onclick="selectCert(\'DP-600\')"><h2>DP-600</h2><p>Designing and Implementing Analytics Solutions Using Microsoft Fabric</p></div><div class="card cert-card" onclick="selectCert(\'DP-700\')"><h2>DP-700</h2><p>Fabric Data Engineer</p></div><div class="card cert-card" onclick="selectCert(\'DP-300\')"><h2>DP-300</h2><p>Designing and Implementing Azure Database Solutions</p></div></div>';
 return;}
 if(currentView==='modules'){
 var cert=DATA[currentCert];
