@@ -23,7 +23,7 @@
     ],
     "correct": 1,
     "module": 2,
-    "explanation": "The SQL analytics endpoint provides a read-only Tâ€‘SQL interface to Delta tables in a lakehouse and supports Tâ€‘SQL security features such as rowâ€‘level security. The lakehouse explorer does not support Tâ€‘SQL. Notebooks use Spark SQL, not Tâ€‘SQL. Direct Lake mode is for Power BI reporting, not adâ€‘hoc Tâ€‘SQL queries with RLS."
+    "explanation": "The SQL analytics endpoint provides a read-only T‑SQL interface to Delta tables in a lakehouse and supports T‑SQL security features such as row‑level security. The lakehouse explorer does not support T‑SQL. Notebooks use Spark SQL, not T‑SQL. Direct Lake mode is for Power BI reporting, not ad‑hoc T‑SQL queries with RLS."
   },
   {
     "text": "You are implementing a medallion architecture. The bronze layer contains raw JSON files. You need to clean and validate the data before moving it to the silver layer. Which tool is most appropriate?",
@@ -35,7 +35,7 @@
     ],
     "correct": 0,
     "module": 2,
-    "explanation": "Bronze to silver transformations typically involve complex data cleansing, schema enforcement, and validation, for which Spark notebooks are ideal. Realâ€‘Time Dashboards are for visualization. Direct Lake semantic models are for reporting. KQL Querysets query KQL databases, not batch transform JSON files."
+    "explanation": "Bronze to silver transformations typically involve complex data cleansing, schema enforcement, and validation, for which Spark notebooks are ideal. Real‑Time Dashboards are for visualization. Direct Lake semantic models are for reporting. KQL Querysets query KQL databases, not batch transform JSON files."
   },
   {
     "text": "You need to optimize a Delta table that has many small Parquet files. Which command should you run?",
@@ -71,7 +71,7 @@
     ],
     "correct": 0,
     "module": 2,
-    "explanation": "Within the same workspace, Fabric supports crossâ€‘database queries using threeâ€‘part naming: database.schema.table. This allows a warehouse to directly reference a lakehouse table. OPENROWSET is for external files. Linked servers are not used in Fabric. COPY INTO is for loading from files, not from a lakehouse table directly."
+    "explanation": "Within the same workspace, Fabric supports cross‑database queries using three‑part naming: database.schema.table. This allows a warehouse to directly reference a lakehouse table. OPENROWSET is for external files. Linked servers are not used in Fabric. COPY INTO is for loading from files, not from a lakehouse table directly."
   },
   {
     "text": "You need to ensure that a Delta table in a lakehouse can be queried by Power BI using Direct Lake mode. Which of the following is required?",
@@ -119,19 +119,19 @@
     ],
     "correct": 0,
     "module": 2,
-    "explanation": "Bronze layer is the raw, unaltered data as ingested. Silver is cleaned/validated. Gold is businessâ€‘ready. Bronze can be stored in various formats, not only KQL."
+    "explanation": "Bronze layer is the raw, unaltered data as ingested. Silver is cleaned/validated. Gold is business‑ready. Bronze can be stored in various formats, not only KQL."
   },
   {
     "text": "You have a Delta table in a lakehouse. You want to update specific rows. Which Delta API method should you use?",
     "options": [
-      "update()",
-      "delete()",
-      "merge()",
-      "All of the above"
+      "update() only",
+      "merge() only",
+      "upsert()",
+      "Both update() and merge()"
     ],
     "correct": 3,
     "module": 2,
-    "explanation": "All three methods can be used to update specific rows: update() changes rows matching a condition, delete() removes rows, and merge() upserts. Depending on the requirement, any may be appropriate. The question asks 'which method should you use' â€“ all are valid for updating specific rows (merge is common for upserts)."
+    "explanation": "Both update() and merge() can modify specific rows. update() changes rows matching a condition, merge() performs upserts (insert+update). delete() removes rows entirely, which is not an update operation. merge() is the most common approach for incremental updates."
   },
   {
     "text": "You need to create a shortcut in a lakehouse to reference data stored in an external ADLS Gen2 storage account. What does a shortcut do?",
@@ -179,7 +179,7 @@
     ],
     "correct": 1,
     "module": 2,
-    "explanation": "Partitioning improves performance for large tables when filtering on the partition column, but it can degrade performance for small tables or highâ€‘cardinality columns (too many small files). Partitioning is supported for Delta tables and does not require premium capacity."
+    "explanation": "Partitioning improves performance for large tables when filtering on the partition column, but it can degrade performance for small tables or high‑cardinality columns (too many small files). Partitioning is supported for Delta tables and does not require premium capacity."
   },
   {
     "text": "Which of the following describes V-Order for Delta tables?",
@@ -191,7 +191,7 @@
     ],
     "correct": 1,
     "module": 2,
-    "explanation": "Vâ€‘Order is a writeâ€‘time optimization that reorders data to accelerate read performance (Vertiâ€‘Scan) with about 15% overhead on writes. It is not encryption, compression, or version control."
+    "explanation": "V‑Order is a write‑time optimization that reorders data to accelerate read performance (Verti‑Scan) with about 15% overhead on writes. It is not encryption, compression, or version control."
   },
   {
     "text": "Which of the following is true about the Medallion architecture in Fabric?",
@@ -219,19 +219,19 @@
   },
   {
     "module": 2,
-    "text": "A bronze Delta table has millions of small files. Which command will improve read performance the most?",
+    "text": "You want to optimize query performance for range filters on two columns in a large Delta table. Which OPTIMIZE option should you use?",
     "options": [
-      "VACUUM",
-      "OPTIMIZE",
-      "REPAIR",
-      "DESCRIBE HISTORY"
+      "OPTIMIZE with VACUUM",
+      "OPTIMIZE with ZORDER BY (col1, col2)",
+      "OPTIMIZE with REPAIR",
+      "OPTIMIZE alone (default compaction)"
     ],
     "correct": 1,
-    "explanation": "OPTIMIZE compacts small files into larger ones, reducing file count and improving read performance. VACUUM removes old files, REPAIR is not a Delta command, DESCRIBE HISTORY shows log."
+    "explanation": "OPTIMIZE with ZORDER BY col1, col2 co-locates related data from both columns within files, improving data skipping for multi-column range filters. OPTIMIZE alone only compacts files. VACUUM and REPAIR are unrelated."
   },
   {
     "module": 2,
-    "text": "You must ensure a Delta table can be timeâ€‘travelled to a point 12 days ago. Which setting must you adjust?",
+    "text": "You must ensure a Delta table can be time‑travelled to a point 12 days ago. Which setting must you adjust?",
     "options": [
       "VACUUM retention period",
       "Delta lake versioning to 30 days",
@@ -246,9 +246,9 @@
     "text": "When partitioning a Delta table by a date column, which practice yields the best query performance for range queries on recent data?",
     "options": [
       "Partition by year only",
-      "Partition by yearâ€‘monthâ€‘day",
+      "Partition by year‑month‑day",
       "No partitioning; rely on file size",
-      "Partition by a highâ€‘cardinality string"
+      "Partition by a high‑cardinality string"
     ],
     "correct": 1,
     "explanation": "Partitioning by year-month-day (e.g., 2025-01-15) allows efficient pruning for queries filtering on specific dates or date ranges. Year only is too coarse. No partitioning may scan more data. High cardinality string creates too many small files."
@@ -269,37 +269,37 @@
     "module": 2,
     "text": "Which of the following is NOT a valid reason to use the gold layer in a Medallion architecture?",
     "options": [
-      "To store curated, businessâ€‘ready data",
+      "To store curated, business‑ready data",
       "To hold raw, unvalidated data",
       "To provide fast query performance for reporting",
       "To enforce schema and data quality"
     ],
     "correct": 1,
-    "explanation": "The gold layer contains businessâ€‘ready, aggregated, curated data. Raw, unvalidated data belongs in the bronze layer, not gold."
+    "explanation": "The gold layer contains business‑ready, aggregated, curated data. Raw, unvalidated data belongs in the bronze layer, not gold."
   },
   {
     "module": 2,
     "text": "You have a Delta table with a large number of columns but only a few are used in most queries. Which optimization can reduce I/O?",
     "options": [
       "Create a columnstore index",
-      "Enable Vâ€‘Order on frequently accessed columns",
+      "Enable V-Order write-time optimization",
       "Set file format to CSV",
       "Disable transaction log"
     ],
     "correct": 1,
-    "explanation": "Vâ€‘Order organizes data to improve column pruning and read performance, reducing I/O by skipping irrelevant columns. Columnstore index is not a Delta feature. CSV is not columnar. Disabling transaction log is not recommended."
+    "explanation": "V-Order is a write-time optimization that reorders Parquet data so that the VertiScan engine can skip irrelevant columns more efficiently, reducing I/O. Columnstore index is not a Delta feature. CSV is not columnar. Disabling transaction log is not recommended."
   },
   {
     "module": 2,
-    "text": "A lakehouse contains both managed and external Delta tables. Which statement best describes the difference?",
+    "text": "What happens to the underlying data when you DROP a managed table vs an external table in a Fabric lakehouse?",
     "options": [
-      "Managed tables store data in OneLake; external tables reference data outside OneLake.",
-      "Managed tables support ACID; external tables do not.",
-      "Managed tables can only be created via notebooks; external tables via pipelines.",
-      "There is no functional difference."
+      "Both drop the data because all tables own their data",
+      "Managed table data stays in OneLake; external table data is deleted",
+      "Managed table data is deleted from OneLake; external table data remains in the external location",
+      "Neither drops any data; only metadata is removed"
     ],
-    "correct": 0,
-    "explanation": "Managed tables store data in the lakehouse's Tables folder (OneLake). External tables reference data elsewhere (e.g., Files folder or external storage). Both support ACID if Delta. Creation methods are not exclusive."
+    "correct": 2,
+    "explanation": "Dropping a managed table deletes both the metadata and the underlying data files from OneLake. Dropping an external table removes only the metadata reference; the data files remain in the external location."
   },
   {
     "module": 2,
@@ -311,7 +311,7 @@
       "Activator"
     ],
     "correct": 0,
-    "explanation": "Dataflow Gen2 provides a visual interface with schema mapping and data type enforcement, making it straightforward for bronze to silver transformations with schema enforcement. Spark notebooks are more codeâ€‘intensive. Copy Data has limited schema enforcement. Activator is for realâ€‘time rules."
+    "explanation": "Dataflow Gen2 provides a visual interface with schema mapping and data type enforcement, making it straightforward for bronze to silver transformations with schema enforcement. Spark notebooks are more code‑intensive. Copy Data has limited schema enforcement. Activator is for real‑time rules."
   },
   {
     "module": 2,
@@ -455,19 +455,19 @@
       "A temporary link that expires after 30 days"
     ],
     "correct": 1,
-    "explanation": "A shortcut is a zeroâ€‘copy metadata reference to data stored externally (e.g., ADLS Gen2, AWS S3) or in another lakehouse. It appears as local data but no data movement occurs until read."
+    "explanation": "A shortcut is a zero‑copy metadata reference to data stored externally (e.g., ADLS Gen2, AWS S3) or in another lakehouse. It appears as local data but no data movement occurs until read."
   },
   {
     "module": 2,
-    "text": "Which of the following describes Vâ€‘Order optimization for Delta tables?",
+    "text": "What does ZORDER BY do when used with OPTIMIZE on a Delta table?",
     "options": [
-      "A writeâ€‘time optimization that reorders Parquet data to accelerate read performance with about 15% write overhead",
-      "A compression algorithm that reduces storage by 50%",
-      "An indexing feature for highâ€‘cardinality columns",
-      "A method to encrypt data at rest"
+      "It sorts the entire table by the specified columns",
+      "It co-locates related data from the specified columns within files to improve data skipping",
+      "It compresses the specified columns to reduce storage",
+      "It creates an index on the specified columns"
     ],
-    "correct": 0,
-    "explanation": "Vâ€‘Order reorganizes data within Parquet files at write time to enable faster scanning (Vertiâ€‘Scan) by Fabric engines. It adds approximately 15% overhead to writes but significantly improves read performance."
+    "correct": 1,
+    "explanation": "ZORDER BY co-locates related column values within Parquet files, so queries with filters on those columns can skip more files. It does not sort the entire table, compress columns, or create a traditional index."
   },
   {
     "module": 2,
@@ -487,13 +487,72 @@
     "options": [
       "Raw, unaltered data as ingested",
       "Validated, cleansed, and standardized data serving as the central repository",
-      "Aggregated, businessâ€‘ready data for reporting",
-      "Data stored only in KQL databases for realâ€‘time queries"
+      "Aggregated, business‑ready data for reporting",
+      "Data stored only in KQL databases for real‑time queries"
     ],
     "correct": 1,
-    "explanation": "The Silver layer contains data that has been validated, deduplicated, typeâ€‘cast, and enriched with basic business logic. It is the authoritative source for cleaned data before aggregation into Gold."
+    "explanation": "The Silver layer contains data that has been validated, deduplicated, type‑cast, and enriched with basic business logic. It is the authoritative source for cleaned data before aggregation into Gold."
+  },
+  {
+    "module": 2,
+    "text": "A lakehouse stores data in two main folders. Which of the following describes the Tables folder?",
+    "options": [
+      "Stores raw files in any format for staging before transformation",
+      "Stores Delta Lake tables that support SQL queries, ACID transactions, and schema enforcement",
+      "Stores only CSV and JSON files for ad-hoc analysis",
+      "Stores compressed Parquet files with no schema enforcement"
+    ],
+    "correct": 1,
+    "explanation": "The Tables folder contains Delta Lake tables that provide structured, queryable data with ACID transactions, schema enforcement, and SQL access through the SQL analytics endpoint. The Files folder stores raw or semi-structured data in native formats without schema enforcement."
+  },
+  {
+    "module": 2,
+    "text": "Which of the following is true about OptimizeWrite in Microsoft Fabric?",
+    "options": [
+      "It is disabled by default and must be enabled per table",
+      "It reduces the number of small files by writing fewer, larger files at write time",
+      "It removes old Parquet files no longer referenced by the transaction log",
+      "It reorganizes data within Parquet files to accelerate read performance"
+    ],
+    "correct": 1,
+    "explanation": "OptimizeWrite reduces the number of small files by consolidating data into fewer, larger Parquet files as they are written. It is enabled by default in Fabric. VACUUM removes old files. V-Order reorganizes data within files for faster reads."
+  },
+  {
+    "module": 2,
+    "text": "You need to query a Delta table in a lakehouse from a different workspace. Which syntax allows this?",
+    "options": [
+      "Two-part naming: lakehouse.table",
+      "Three-part naming: lakehouse.schema.table",
+      "Four-part naming: workspace.lakehouse.schema.table",
+      "Use COPY INTO with the target workspace path"
+    ],
+    "correct": 2,
+    "explanation": "Cross-workspace queries use four-part naming: workspace.lakehouse.schema.table. Three-part naming works within the same workspace only. COPY INTO loads files, it does not query tables. Schema-enabled lakehouses support this pattern."
+  },
+  {
+    "module": 2,
+    "text": "You are designing a medallion architecture and need to choose between Dataflows Gen2 and a Spark notebook for moving data from silver to gold. Which statement correctly distinguishes them?",
+    "options": [
+      "Dataflows Gen2 are for orchestration; notebooks are for transformation",
+      "Dataflows Gen2 are best for complex transformations on large datasets; notebooks are for simple semantic models",
+      "Dataflows Gen2 are suited for simpler transformations with Power Query; notebooks are better for complex transformations on large datasets",
+      "There is no difference; both are interchangeable"
+    ],
+    "correct": 2,
+    "explanation": "Dataflows Gen2 use the Power Query interface and are well-suited for simpler transformations and smaller datasets. Spark notebooks provide programmatic control (PySpark/SQL) and are better for complex transformations on large datasets. Pipelines handle orchestration, not Dataflows alone."
+  },
+  {
+    "module": 2,
+    "text": "Which Spark optimization in Microsoft Fabric uses a vectorized processing engine to run operations directly on lakehouse infrastructure?",
+    "options": [
+      "V-Order",
+      "OptimizeWrite",
+      "The native execution engine",
+      "High concurrency mode"
+    ],
+    "correct": 2,
+    "explanation": "The native execution engine is a vectorized processing engine that runs Spark operations directly on lakehouse infrastructure, significantly improving query performance on large Parquet or Delta datasets. V-Order and OptimizeWrite are write-time optimizations. High concurrency mode shares Spark sessions across users."
   }
-
   ];
   
   if (typeof window.__dp700 === 'undefined') {
