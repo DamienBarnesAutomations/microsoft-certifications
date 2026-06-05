@@ -315,18 +315,6 @@
   },
   {
     "module": 2,
-    "text": "Which command can be used to retrieve a specific version of a Delta table as of 3 hours ago?",
-    "options": [
-      "SELECT * FROM table VERSION AS OF 3",
-      "SELECT * FROM table TIMESTAMP AS OF ...",
-      "SELECT * FROM table AS OF TIME 3h",
-      "SELECT * FROM table AT VERSION 3"
-    ],
-    "correct": 1,
-    "explanation": "The standard Delta time travel syntax is `SELECT * FROM table TIMESTAMP AS OF '...'`. VERSION AS OF uses version number. The other options are invalid."
-  },
-  {
-    "module": 2,
     "text": "A Delta table has 50 GB of data and you run OPTIMIZE. What is the primary benefit?",
     "options": [
       "Reduced storage cost due to compression",
@@ -423,18 +411,6 @@
   },
   {
     "module": 2,
-    "text": "Which Fabric feature allows you to query Delta tables from a warehouse without copying data?",
-    "options": [
-      "Shortcuts",
-      "Cross-database queries (three-part naming)",
-      "Dataflows Gen2",
-      "COPY INTO"
-    ],
-    "correct": 1,
-    "explanation": "Three-part naming (database.schema.table) allows cross-database queries within the same workspace, so a warehouse can directly query a lakehouse Delta table without copying data."
-  },
-  {
-    "module": 2,
     "text": "You have a Delta table partitioned by `event_date`. A query filters on `event_date = '2025-01-01' AND product_id = 123`. How does partition pruning help?",
     "options": [
       "It scans only the partition for 2025-01-01, then filters by product_id",
@@ -444,18 +420,6 @@
     ],
     "correct": 0,
     "explanation": "Partition pruning eliminates all partitions except the one matching '2025-01-01', then the product_id filter is applied to the remaining data. This dramatically reduces I/O."
-  },
-  {
-    "module": 2,
-    "text": "Which of the following describes a shortcut in a Fabric lakehouse?",
-    "options": [
-      "A physical copy of external data stored in OneLake",
-      "A metadata reference to data in another location without copying",
-      "A compressed version of Delta table files",
-      "A temporary link that expires after 30 days"
-    ],
-    "correct": 1,
-    "explanation": "A shortcut is a zero‑copy metadata reference to data stored externally (e.g., ADLS Gen2, AWS S3) or in another lakehouse. It appears as local data but no data movement occurs until read."
   },
   {
     "module": 2,
