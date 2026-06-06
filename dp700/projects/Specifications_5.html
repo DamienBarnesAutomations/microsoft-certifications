@@ -40,7 +40,7 @@ img{max-width:100%;border-radius:8px;margin:10px 0}
 <a href="../../projects.html" class="back">← Back to Projects</a>
 <h1>Specifications_5.md</h1>
 <h1>RetailIQ — Project 5: Monitor the Platform</h1>
-<p><strong>Domain:</strong> Monitor &amp; Optimize an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Alert rules, monitoring notebook (completed), Data Activator, diagnostic queries</p>
+<p><strong>Domain:</strong> Monitor &amp; Optimize an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Alert rules, monitoring notebook (completed), Data Activator, diagnostic queries, Database Project</p>
 <hr>
 <h2>1. Overview</h2>
 <p>Things go wrong in production. This project simulates a series of realistic failure scenarios across the RetailIQ platform — pipeline failures, dataflow hangs, notebook Spark errors, eventhouse ingestion drops, and shortcut misconfiguration — and walks through how to diagnose and resolve each one. You will also build a proactive monitoring notebook and configure alerting.</p>
@@ -159,6 +159,56 @@ sensor_raw
           alert_message = strcat(&quot;CRITICAL: Queue at &quot;, store_id,
                                  &quot; has exceeded 15 for 5+ consecutive readings&quot;)
 </code></pre>
+<hr>
+<h3>4.5 Implement Database Projects</h3>
+<p><strong>Action:</strong> Create a Fabric Database Project to manage the warehouse schema as code.</p>
+<p>Fabric Database Projects let you version-control your warehouse schema (tables, views, stored procedures) and deploy it via CI/CD — similar to SQL Server Database Projects.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In <code>retailiq-dev</code>, go to the workspace and click <strong>New → Database Project</strong></li>
+<li>Name: <code>retailiq_wh_project</code></li>
+<li>Select <strong>Start with empty project</strong></li>
+<li>In the project explorer, right-click <strong>Tables → New table</strong></li>
+<li>Create a table definition for <code>dim_customer</code>:</li>
+</ol>
+<pre><code class="language-sql">CREATE TABLE [dbo].[dim_customer] (
+    customer_id     INT NOT NULL,
+    customer_name   VARCHAR(100),
+    customer_email  VARCHAR(100),
+    customer_phone  VARCHAR(20),
+    region          VARCHAR(20),
+    CONSTRAINT PK_dim_customer PRIMARY KEY (customer_id)
+);
+</code></pre>
+<ol start="6">
+<li>Right-click <strong>Stored Procedures → New stored procedure</strong></li>
+<li>Create a procedure for loading customer data:</li>
+</ol>
+<pre><code class="language-sql">CREATE PROCEDURE [dbo].[usp_LoadDimCustomer]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    MERGE INTO dbo.dim_customer AS target
+    USING staging.customer_raw AS source
+    ON target.customer_id = source.customer_id
+    WHEN MATCHED THEN UPDATE SET
+        customer_name  = source.customer_name,
+        customer_email = source.customer_email,
+        customer_phone = source.customer_phone,
+        region         = source.region
+    WHEN NOT MATCHED THEN INSERT
+        (customer_id, customer_name, customer_email, customer_phone, region)
+    VALUES
+        (source.customer_id, source.customer_name, source.customer_email,
+         source.customer_phone, source.region);
+END;
+</code></pre>
+<ol start="8">
+<li>Save the project — this creates files that can be committed to Git</li>
+<li>Connect the project to the same Git repo as the workspace for version control</li>
+</ol>
+<p><strong>Deployment:</strong> Database Projects can be deployed directly from the Fabric portal or integrated into deployment pipelines. This allows schema changes to be reviewed, tested, and promoted alongside other Fabric items.</p>
+<p><strong>Exam note:</strong> Database Projects are the Fabric equivalent of SQL Server Data Tools (SSDT) database projects. They are stored as <code>.sql</code> files in the repo and can be included in deployment pipelines alongside notebooks, pipelines, and other items.</p>
 <hr>
 <h2>5. Identify and Resolve Errors — Break/Fix Scenarios</h2>
 <h3>5.1 Pipeline Error: Silent Copy Activity Failure</h3>
@@ -420,6 +470,8 @@ mssparkutils.notebook.exit(json.dumps({&quot;overall_status&quot;: overall, &quo
 <li><input disabled="" type="checkbox"> Alert <code>master_pipeline_failure</code> configured and tested (manually cancel a run to trigger it)</li>
 <li><input disabled="" type="checkbox"> Data Activator reflex <code>reflex_ingestion_freshness</code> configured</li>
 <li><input disabled="" type="checkbox"> KQL queue alert query runs successfully in <code>qs_sensor_analysis</code></li>
+<li><input disabled="" type="checkbox"> Database Project <code>retailiq_wh_project</code> created with table and stored procedure definitions</li>
+<li><input disabled="" type="checkbox"> Database Project is connected to Git for version control</li>
 <li><input disabled="" type="checkbox"> All 7 break/fix scenarios have been worked through and documented</li>
 <li><input disabled="" type="checkbox"> <code>.show ingestion failures</code> query has been run and results interpreted</li>
 <li><input disabled="" type="checkbox"> <code>nb_monitoring_check</code> runs end-to-end and outputs a valid health report JSON</li>
@@ -478,6 +530,10 @@ mssparkutils.notebook.exit(json.dumps({&quot;overall_status&quot;: overall, &quo
 <tr>
 <td>Identify and resolve shortcut errors</td>
 <td>Section 5.7</td>
+</tr>
+<tr>
+<td>Implement database projects</td>
+<td>Section 4.5</td>
 </tr>
 </tbody></table>
 <hr>

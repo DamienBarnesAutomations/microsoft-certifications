@@ -809,9 +809,222 @@ in
 <li><strong>Shortcuts</strong> = virtual pointers, data stays in source, read-only</li>
 <li><strong>Mirroring</strong> = replicates data into OneLake, data is materialised and writable</li>
 </ul>
-<p>Document this distinction in <code>docs/architecture.md</code>.</p>
+<h3>8.1 Enable Query Acceleration (Optional)</h3>
+<p><strong>Action:</strong> If your shortcut points to an ADLS Gen2 location with frequently queried files, enable Query acceleration.</p>
+<ol>
+<li>In the lakehouse, right-click the <code>external_sales_archive</code> shortcut → <strong>Properties</strong></li>
+<li>Toggle <strong>Query acceleration</strong> → <strong>On</strong></li>
+<li>Select the columns most frequently used in filters (e.g. <code>region</code>, <code>transaction_date</code>)</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<p><strong>Exam note:</strong> Query acceleration indexes the shortcut&#39;s data in the Eventhouse for faster queries, at the cost of additional storage. Use it when shortcuts are queried frequently. For occasional ad-hoc queries, leave it off.</p>
+<h3>8.2 Implement Mirroring (Conceptual)</h3>
+<p><strong>Action:</strong> Set up a mirrored database from Azure SQL Database (or document the configuration if you don&#39;t have an Azure SQL instance).</p>
+<p><strong>Steps (if Azure SQL is available):</strong></p>
+<ol>
+<li>In the Fabric portal, go to <strong>New → Mirroring → Azure SQL Database</strong></li>
+<li>Name: <code>retailiq_mirror_salesdb</code></li>
+<li>Connection string: your Azure SQL Database connection</li>
+<li>Select tables to mirror: Choose a few tables (e.g. <code>SalesOrderHeader</code>, <code>SalesOrderDetail</code>)</li>
+<li>Click <strong>Create</strong></li>
+</ol>
+<p><strong>What happens:</strong> Fabric replicates the selected tables into OneLake in Delta format. The mirrored data is queryable via the SQL analytics endpoint, Spark, and KQL.</p>
+<p><strong>Steps (if Azure SQL is unavailable):</strong></p>
+<ul>
+<li>Document in <code>docs/architecture.md</code> that mirroring would be configured here for the source system&#39;s operational database</li>
+<li>Understanding the difference: Mirroring creates a writable Delta copy in OneLake that stays in sync with the source; shortcuts only provide read access to data where it lives</li>
+</ul>
 <hr>
-<h2>9. Validation Checklist</h2>
+<h2>9. Apply Security and Governance</h2>
+<p>Now that all gold tables exist, apply the security policies planned in Project 1.</p>
+<h3>9.1 Create OneLake Security Role for Row-Level Security</h3>
+<p><strong>Action:</strong> Create a OneLake Security Role that restricts <code>fact_sales</code> data by region.</p>
+<p><strong>Business rule:</strong> Regional managers should only see sales data for their own region.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In <code>retailiq_lakehouse</code>, go to the ribbon → <strong>Security</strong> → <strong>OneLake Security</strong></li>
+<li>Click <strong>New security role</strong></li>
+<li>Name: <code>RegionManager_Role</code></li>
+<li><strong>Data</strong> tab: Select <code>gold_fact_sales</code> table</li>
+<li><strong>Constraints</strong> tab: Add a row-level filter:<ul>
+<li>Column: <code>region</code></li>
+<li>Operator: <code>=</code></li>
+<li>Value: Use a placeholder like <code>North</code> (in production this would be dynamically tied to the user&#39;s profile)</li>
+</ul>
+</li>
+<li><strong>Members</strong> tab: Add <code>grp-regional-managers</code> (if real groups exist) or leave empty and document</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<p><strong>Note:</strong> The DefaultReader role gives all users access to all tables by default. To enforce the constraint, remove users from DefaultReader and assign them to custom roles instead.</p>
+<h3>9.2 Create OneLake Security Role for Column-Level Security</h3>
+<p><strong>Action:</strong> Restrict access to cost and margin columns for analysts.</p>
+<ol>
+<li>In <strong>OneLake Security</strong>, click <strong>New security role</strong></li>
+<li>Name: <code>Analyst_Restricted_Role</code></li>
+<li><strong>Data</strong> tab: Select <code>gold_fact_sales</code></li>
+<li><strong>Constraints</strong> tab → <strong>Column level</strong>: Check <strong>Exclude columns</strong> and select:<ul>
+<li><code>unit_cost</code></li>
+<li><code>gross_margin_pct</code></li>
+<li><code>supplier_price</code></li>
+</ul>
+</li>
+<li><strong>Members</strong> tab: Add <code>grp-data-analysts</code></li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<h3>9.3 Create dim_customer Table for DDM</h3>
+<p><strong>Action:</strong> Create a customer dimension table with PII that can be masked.</p>
+<p>In the Fabric portal, run a new notebook with:</p>
+<pre><code class="language-python">from pyspark.sql import SparkSession, functions as F
+spark = SparkSession.builder.getOrCreate()
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+data = [
+    (&quot;CUST_00001&quot;, &quot;Alice Johnson&quot;, &quot;alice@email.com&quot;, &quot;0411-111-111&quot;, &quot;123 Main St&quot;),
+    (&quot;CUST_00002&quot;, &quot;Bob Smith&quot;, &quot;bob@email.com&quot;, &quot;0422-222-222&quot;, &quot;456 Oak Ave&quot;),
+    (&quot;CUST_00003&quot;, &quot;Carol Lee&quot;, &quot;carol@email.com&quot;, &quot;0433-333-333&quot;, &quot;789 Pine Rd&quot;),
+]
+columns = [&quot;customer_id&quot;, &quot;customer_name&quot;, &quot;customer_email&quot;, &quot;customer_phone&quot;, &quot;customer_address&quot;]
+df = spark.createDataFrame(data, columns)
+df.write.format(&quot;delta&quot;).mode(&quot;overwrite&quot;).save(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_customer&quot;)
+</code></pre>
+<h3>9.4 Apply Dynamic Data Masking (via Warehouse)</h3>
+<p><strong>Action:</strong> Create a Fabric Warehouse, load dim_customer, and apply DDM.</p>
+<ol>
+<li>In <code>retailiq-dev</code>, click <strong>New → Warehouse</strong></li>
+<li>Name: <code>retailiq_wh</code></li>
+<li>In the warehouse query editor, run:</li>
+</ol>
+<pre><code class="language-sql">-- Create the customer table with masking
+CREATE TABLE dbo.dim_customer (
+    customer_id      STRING,
+    customer_name    STRING MASKED WITH (FUNCTION = &#39;partial(1,&quot;...&quot;,1)&#39;),
+    customer_email   STRING MASKED WITH (FUNCTION = &#39;email()&#39;),
+    customer_phone   STRING MASKED WITH (FUNCTION = &#39;partial(0,&quot;XXX-XXX-&quot;,4)&#39;),
+    customer_address STRING MASKED WITH (FUNCTION = &#39;default()&#39;)
+);
+
+-- Insert sample data
+INSERT INTO dbo.dim_customer VALUES
+(&#39;CUST_00001&#39;, &#39;Alice Johnson&#39;, &#39;alice@email.com&#39;, &#39;0411-111-111&#39;, &#39;123 Main St&#39;),
+(&#39;CUST_00002&#39;, &#39;Bob Smith&#39;, &#39;bob@email.com&#39;, &#39;0422-222-222&#39;, &#39;456 Oak Ave&#39;),
+(&#39;CUST_00003&#39;, &#39;Carol Lee&#39;, &#39;carol@email.com&#39;, &#39;0433-333-333&#39;, &#39;789 Pine Rd&#39;);
+
+-- Grant unmask to admins
+GRANT UNMASK ON dbo.dim_customer TO [grp-fabric-admins];
+
+-- Verify masking works (run as a non-admin user)
+SELECT * FROM dbo.dim_customer;
+-- customer_name should show: A...n
+-- customer_email should show: a***@email.com
+-- customer_phone should show: XXX-XXX-1111
+</code></pre>
+<h3>9.5 Apply Sensitivity Labels</h3>
+<p><strong>Action:</strong> Label items by sensitivity in the Fabric portal.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Label</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>retailiq_lakehouse</code></td>
+<td>Confidential</td>
+</tr>
+<tr>
+<td><code>gold_fact_sales</code> table</td>
+<td>Highly Confidential</td>
+</tr>
+<tr>
+<td><code>dim_customer</code> table</td>
+<td>Highly Confidential</td>
+</tr>
+<tr>
+<td>All bronze/silver tables</td>
+<td>General</td>
+</tr>
+</tbody></table>
+<p><strong>Steps for each item:</strong></p>
+<ol>
+<li>Click the item&#39;s <strong>&quot;...&quot; → Settings → Sensitivity label</strong></li>
+<li>Select the appropriate label</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<h3>9.6 Endorse the Lakehouse</h3>
+<p><strong>Action:</strong> Mark the lakehouse as a trusted data source.</p>
+<ol>
+<li>Open <code>retailiq_lakehouse</code></li>
+<li>Click <strong>&quot;...&quot; → Endorsement</strong></li>
+<li>Set to <strong>Promoted</strong> (or <strong>Certified</strong> if you have admin rights)</li>
+<li>Description: <code>&quot;RetailIQ production lakehouse — certified by data engineering team&quot;</code></li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<h3>9.7 Review Audit Logs</h3>
+<p><strong>Action:</strong> View the audit trail of actions performed across the workspace.</p>
+<ol>
+<li>Go to the Fabric <strong>Admin portal → Audit logs</strong></li>
+<li>Search for actions in the last hour:<ul>
+<li><code>CreateLakehouse</code> — should show the lakehouse creation</li>
+<li><code>CreateNotebook</code> — should show notebook creation events</li>
+<li><code>OneLakeSecurityRoleCreated</code> — should show the role you configured in 9.1</li>
+</ul>
+</li>
+<li>Filter by user, workspace, or activity type to practice navigating audit data</li>
+</ol>
+<p><strong>Exam note:</strong> Audit logs capture user actions across the tenant and are retained per your Microsoft 365 compliance config. They are distinct from the Monitor hub (which tracks operational runs) and workspace logging (which tracks item-level access).</p>
+<hr>
+<h3>9.8 Implement Item-Level Access Controls</h3>
+<p><strong>Action:</strong> Configure granular permissions on specific Fabric items — beyond workspace-level roles.</p>
+<p>Workspace roles (Admin/Member/Contributor/Viewer) grant broad access. Item-level permissions let you share specific items with users who should not have full workspace access.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In <code>retailiq-dev</code>, find the <strong>gold_fact_sales</strong> Delta table in the lakehouse</li>
+<li>Click the <strong>...</strong> (More options) menu → <strong>Manage permissions</strong></li>
+<li>Click <strong>Add user</strong> (or <strong>Grant access</strong>)</li>
+<li>Add a test user (or a colleague&#39;s account) with <strong>Read</strong> permission only</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Permission Level</th>
+<th>What It Allows</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read</td>
+<td>View data in the item</td>
+</tr>
+<tr>
+<td>ReadData</td>
+<td>Query the contents of tables</td>
+</tr>
+<tr>
+<td>ReadAll</td>
+<td>View metadata and data</td>
+</tr>
+<tr>
+<td>Write</td>
+<td>Modify the item</td>
+</tr>
+<tr>
+<td>Reshare</td>
+<td>Grant permissions to others</td>
+</tr>
+</tbody></table>
+<ol start="5">
+<li>Repeat for the notebook <code>nb_generate_synthetic_data</code> — share it with <strong>Read</strong> access to an analyst user</li>
+<li>Review the <strong>Shared with me</strong> section in the Fabric portal (left nav) to see items others have shared with you</li>
+</ol>
+<p><strong>Commit</strong> a permissions document to <code>security/item-permissions.md</code>:</p>
+<pre><code class="language-markdown"># RetailIQ Item-Level Permissions
+
+| Item | Shared With | Permission | Reason |
+|---|---|---|---|
+| gold_fact_sales (Lakehouse table) | analyst@company.com | Read | View sales data without edit access |
+| nb_generate_synthetic_data | analyst@company.com | Read | Review data generation logic |
+</code></pre>
+<p><strong>Exam note:</strong> Item-level permissions override workspace roles for specific items. A user with Contributor workspace role can still be restricted on a specific item via item-level Manage permissions. Know the difference between Share (gives access) and Manage permissions (grants the ability to control others&#39; access).</p>
+<hr>
+<h2>10. Validation Checklist</h2>
 <ul>
 <li><input disabled="" type="checkbox"> <code>nb_generate_synthetic_data</code> ran successfully and files exist in <code>Files/bronze/sales/</code>, <code>Files/bronze/products/</code>, <code>Files/bronze/stores/</code></li>
 <li><input disabled="" type="checkbox"> At least 1 day of CSV data is visible in the bronze sales folder</li>
@@ -822,10 +1035,20 @@ in
 <li><input disabled="" type="checkbox"> <code>gold_dim_date</code>, <code>gold_dim_store</code>, <code>gold_dim_product</code>, <code>gold_fact_sales</code> all exist as Delta tables</li>
 <li><input disabled="" type="checkbox"> <code>df_dim_product</code> Dataflow Gen2 has been updated with the full M query and runs successfully</li>
 <li><input disabled="" type="checkbox"> At least one shortcut exists in the lakehouse</li>
+<li><input disabled="" type="checkbox"> Query acceleration is enabled on the shortcut (or documented if skipped)</li>
+<li><input disabled="" type="checkbox"> Mirroring is configured (or documented if Azure SQL unavailable)</li>
+<li><input disabled="" type="checkbox"> OneLake Security Role <code>RegionManager_Role</code> exists with row-level filter on <code>region</code></li>
+<li><input disabled="" type="checkbox"> OneLake Security Role <code>Analyst_Restricted_Role</code> exists with column exclusions</li>
+<li><input disabled="" type="checkbox"> <code>dim_customer</code> exists in the gold layer with PII columns</li>
+<li><input disabled="" type="checkbox"> Warehouse <code>retailiq_wh</code> exists with DDM applied to <code>dim_customer</code></li>
+<li><input disabled="" type="checkbox"> Sensitivity labels are applied to lakehouse and gold tables</li>
+<li><input disabled="" type="checkbox"> Lakehouse is endorsed (Promoted or Certified)</li>
+<li><input disabled="" type="checkbox"> Audit logs reviewed — understand how to navigate them</li>
+<li><input disabled="" type="checkbox"> Item-level permissions configured — gold_fact_sales and notebook shared with Read access</li>
 <li><input disabled="" type="checkbox"> All notebooks committed to <code>ingestion/batch/notebooks/</code> in the repo</li>
 </ul>
 <hr>
-<h2>10. Exam Topics Covered</h2>
+<h2>11. Exam Topics Covered</h2>
 <table>
 <thead>
 <tr>
@@ -854,6 +1077,14 @@ in
 <td>Section 8</td>
 </tr>
 <tr>
+<td>Implement mirroring</td>
+<td>Section 8.2</td>
+</tr>
+<tr>
+<td>Choose between Query acceleration for shortcuts and standard shortcuts</td>
+<td>Section 8.1</td>
+</tr>
+<tr>
 <td>Ingest data by using pipelines</td>
 <td>Via Project 2 pipelines calling these notebooks</td>
 </tr>
@@ -877,9 +1108,37 @@ in
 <td>Group and aggregate data</td>
 <td>Cells 5, 10 of transform notebook</td>
 </tr>
+<tr>
+<td>Implement row-level, column-level, and folder/file-level access controls</td>
+<td>Sections 9.1, 9.2</td>
+</tr>
+<tr>
+<td>Implement dynamic data masking</td>
+<td>Section 9.4</td>
+</tr>
+<tr>
+<td>Apply sensitivity labels to items</td>
+<td>Section 9.5</td>
+</tr>
+<tr>
+<td>Endorse items</td>
+<td>Section 9.6</td>
+</tr>
+<tr>
+<td>Implement and use Fabric audit logs</td>
+<td>Section 9.7</td>
+</tr>
+<tr>
+<td>Configure and implement OneLake security</td>
+<td>Sections 9.1, 9.2</td>
+</tr>
+<tr>
+<td>Implement item-level access controls</td>
+<td>Section 9.8</td>
+</tr>
 </tbody></table>
 <hr>
-<h2>11. Further Reading</h2>
+<h2>12. Further Reading</h2>
 <ul>
 <li><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-and-delta-tables">Delta Lake in Microsoft Fabric</a></li>
 <li><a href="https://learn.microsoft.com/en-us/fabric/onelake/onelake-shortcuts">OneLake shortcuts</a></li>

@@ -190,7 +190,19 @@ in
 
 5. Set the **data destination** to: `retailiq_lakehouse` → `Tables` → `gold.dim_product`
 6. Set the update method to **Replace** (for now; will change to Append in Project 3)
-7. Save and close without publishing (publish will occur when real logic is added in Project 3)
+
+**Configure Dataflows Gen2 workspace settings:**
+7. Go to **Workspace settings → Data Factory → Dataflow settings**
+8. Review the following settings (change if needed for your environment):
+
+| Setting | Value | Purpose |
+|---|---|---|
+| Default staging location | `retailiq_lakehouse` | Where intermediate data is stored during dataflow execution |
+| Staging file format | Parquet | More efficient than CSV for large transformations |
+| Compute engine | Enabled | Allows query folding and push-down to the source when possible |
+| Max execution time | 480 minutes | Prevents runaway dataflows |
+
+9. Save and close without publishing (publish will occur when real logic is added in Project 3)
 
 ---
 
@@ -462,6 +474,7 @@ Document the following dynamic expression patterns in `docs/architecture.md` for
 
 - [ ] Notebooks `nb_transform_bronze_to_silver_sales`, `nb_validate_streaming_config`, and `nb_monitoring_check` exist as stubs in `retailiq-dev`
 - [ ] `df_dim_product` Dataflow Gen2 exists with the stub M query and destination set to `gold.dim_product`
+- [ ] Dataflows Gen2 workspace settings configured (staging location, compute engine enabled)
 - [ ] All four child pipelines exist: `pl_load_bronze_sales`, `pl_load_silver_sales`, `pl_load_dimensions`, `pl_load_streaming_config`
 - [ ] Each child pipeline has the correct parameters defined
 - [ ] `master_pipeline` exists with all 7 activities wired in the correct dependency order
@@ -480,6 +493,7 @@ Document the following dynamic expression patterns in `docs/architecture.md` for
 | Exam Objective | Covered In |
 |---|---|
 | Choose between Dataflow Gen2, a pipeline, and a notebook | Steps 4.1, 4.3, 4.4 |
+| Configure Dataflows Gen2 workspace settings | Step 4.3 |
 | Design and implement schedules and event-based triggers | Steps 4.6, 4.7 |
 | Implement orchestration patterns with notebooks and pipelines | Steps 4.4, 4.5 |
 | Implement parameters and dynamic expressions | Steps 4.4, 4.5, 4.8, 4.9 |

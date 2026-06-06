@@ -2,7 +2,7 @@
 # RetailIQ — Project 5: Monitor the Platform
 **Domain:** Monitor & Optimize an Analytics Solution  
 **Estimated Effort:** 4–6 hours  
-**Fabric Items Created:** Alert rules, monitoring notebook (completed), Data Activator, diagnostic queries
+**Fabric Items Created:** Alert rules, monitoring notebook (completed), Data Activator, diagnostic queries, Database Project
 
 ---
 
@@ -146,6 +146,63 @@ sensor_raw
           alert_message = strcat("CRITICAL: Queue at ", store_id,
                                  " has exceeded 15 for 5+ consecutive readings")
 ```
+
+---
+
+### 4.5 Implement Database Projects
+
+**Action:** Create a Fabric Database Project to manage the warehouse schema as code.
+
+Fabric Database Projects let you version-control your warehouse schema (tables, views, stored procedures) and deploy it via CI/CD — similar to SQL Server Database Projects.
+
+**Steps:**
+1. In `retailiq-dev`, go to the workspace and click **New → Database Project**
+2. Name: `retailiq_wh_project`
+3. Select **Start with empty project**
+4. In the project explorer, right-click **Tables → New table**
+5. Create a table definition for `dim_customer`:
+
+```sql
+CREATE TABLE [dbo].[dim_customer] (
+    customer_id     INT NOT NULL,
+    customer_name   VARCHAR(100),
+    customer_email  VARCHAR(100),
+    customer_phone  VARCHAR(20),
+    region          VARCHAR(20),
+    CONSTRAINT PK_dim_customer PRIMARY KEY (customer_id)
+);
+```
+
+6. Right-click **Stored Procedures → New stored procedure**
+7. Create a procedure for loading customer data:
+
+```sql
+CREATE PROCEDURE [dbo].[usp_LoadDimCustomer]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    MERGE INTO dbo.dim_customer AS target
+    USING staging.customer_raw AS source
+    ON target.customer_id = source.customer_id
+    WHEN MATCHED THEN UPDATE SET
+        customer_name  = source.customer_name,
+        customer_email = source.customer_email,
+        customer_phone = source.customer_phone,
+        region         = source.region
+    WHEN NOT MATCHED THEN INSERT
+        (customer_id, customer_name, customer_email, customer_phone, region)
+    VALUES
+        (source.customer_id, source.customer_name, source.customer_email,
+         source.customer_phone, source.region);
+END;
+```
+
+8. Save the project — this creates files that can be committed to Git
+9. Connect the project to the same Git repo as the workspace for version control
+
+**Deployment:** Database Projects can be deployed directly from the Fabric portal or integrated into deployment pipelines. This allows schema changes to be reviewed, tested, and promoted alongside other Fabric items.
+
+**Exam note:** Database Projects are the Fabric equivalent of SQL Server Data Tools (SSDT) database projects. They are stored as `.sql` files in the repo and can be included in deployment pipelines alongside notebooks, pipelines, and other items.
 
 ---
 
@@ -430,6 +487,8 @@ mssparkutils.notebook.exit(json.dumps({"overall_status": overall, "report": repo
 - [ ] Alert `master_pipeline_failure` configured and tested (manually cancel a run to trigger it)
 - [ ] Data Activator reflex `reflex_ingestion_freshness` configured
 - [ ] KQL queue alert query runs successfully in `qs_sensor_analysis`
+- [ ] Database Project `retailiq_wh_project` created with table and stored procedure definitions
+- [ ] Database Project is connected to Git for version control
 - [ ] All 7 break/fix scenarios have been worked through and documented
 - [ ] `.show ingestion failures` query has been run and results interpreted
 - [ ] `nb_monitoring_check` runs end-to-end and outputs a valid health report JSON
@@ -453,6 +512,7 @@ mssparkutils.notebook.exit(json.dumps({"overall_status": overall, "report": repo
 | Identify and resolve eventstream errors | Section 5.5 |
 | Identify and resolve T-SQL errors | Section 5.6 |
 | Identify and resolve shortcut errors | Section 5.7 |
+| Implement database projects | Section 4.5 |
 
 ---
 

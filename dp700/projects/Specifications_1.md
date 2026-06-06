@@ -164,217 +164,26 @@ Apply the following configuration:
 
 ---
 
-### 4.5 Configure Domain Workspace Settings
+### 4.5 Plan Security and Governance (Executed in P3)
 
-**Action:** If your Fabric tenant has domain management enabled, assign the `retailiq-dev` workspace to a domain named `Retail Analytics`. If domains are not available on your tenant, document this as a known limitation in `docs/architecture.md`.
+**Action:** Review the security requirements below. Implementation happens in Project 3 after the gold layer tables exist.
 
-**Steps (if domains are available):**
-1. Go to the Fabric **Admin portal → Domains**
-2. Create a domain named `Retail Analytics` if it does not exist
-3. Assign all three workspaces (`retailiq-dev`, `retailiq-test`, `retailiq-prod`) to this domain
+**Security requirements for RetailIQ:**
 
----
-
-### 4.6 Implement Workspace-Level Access Controls
-
-**Action:** Assign roles to simulated team members across all three workspaces.
-
-For the purposes of this project, create the following **fictitious user groups** (or use real Entra ID groups if available in your tenant). Document the intended assignments in `security/workspace-roles.json` even if you cannot create real groups.
-
-**Role assignments:**
-
-| Group / User | Workspace | Role |
+| Requirement | Mechanism | When Applied |
 |---|---|---|
-| `grp-fabric-admins` | retailiq-dev, test, prod | Admin |
-| `grp-data-engineers` | retailiq-dev | Member |
-| `grp-data-engineers` | retailiq-test | Contributor |
-| `grp-data-engineers` | retailiq-prod | Viewer |
-| `grp-data-analysts` | retailiq-prod | Viewer |
-| `grp-regional-managers` | retailiq-prod | Viewer |
+| Regional managers see only their region | OneLake Security Role (row-level filter on `fact_sales`) | P3, after gold tables exist |
+| Analysts cannot see cost/margin columns | OneLake Security Role (column-level restriction) | P3, after gold tables exist |
+| Customer PII masked for non-admins | Dynamic Data Masking in Warehouse | P3, after creating warehouse & dim_customer |
+| Items labelled by sensitivity | Portal: "..." → Sensitivity label | P3, after items exist |
+| Lakehouse endorsed as certified | Portal: "..." → Endorsement | P3, after data is confirmed working |
+| All activity captured for audit | Workspace logging to Eventhouse | Applied now (P1, next step) |
 
-**Rationale to document:** Engineers have full edit rights in dev but are restricted in prod. Analysts and managers are read-only in prod only.
-
-`security/workspace-roles.json`:
-```json
-{
-  "roleAssignments": [
-    { "group": "grp-fabric-admins", "workspace": "retailiq-dev", "role": "Admin" },
-    { "group": "grp-fabric-admins", "workspace": "retailiq-test", "role": "Admin" },
-    { "group": "grp-fabric-admins", "workspace": "retailiq-prod", "role": "Admin" },
-    { "group": "grp-data-engineers", "workspace": "retailiq-dev", "role": "Member" },
-    { "group": "grp-data-engineers", "workspace": "retailiq-test", "role": "Contributor" },
-    { "group": "grp-data-engineers", "workspace": "retailiq-prod", "role": "Viewer" },
-    { "group": "grp-data-analysts", "workspace": "retailiq-prod", "role": "Viewer" },
-    { "group": "grp-regional-managers", "workspace": "retailiq-prod", "role": "Viewer" }
-  ]
-}
-```
+**No files to commit for security in this project** — you will configure all of the above in Project 3 after the data is loaded.
 
 ---
 
-### 4.7 Implement Row-Level Security (RLS)
-
-**Action:** Define RLS rules that will be applied to the `fact_sales` table once it is created in Project 3. Write the SQL now and store it so it is ready to apply.
-
-The business rule is: **Regional managers should only see sales data for their own region.**
-
-`security/row-level-security.sql`:
-```sql
--- ============================================================
--- RetailIQ Row-Level Security Policy
--- Applied to: retailiq_lakehouse.gold.fact_sales
--- ============================================================
-
--- Step 1: Create a mapping table (to be created in Project 3)
--- This table maps user principal names to their allowed regions
-CREATE TABLE IF NOT EXISTS retailiq_lakehouse.gold.dim_user_region_access (
-    user_principal_name STRING NOT NULL,
-    allowed_region      STRING NOT NULL
-);
-
--- Seed data (representative — expand as needed)
-INSERT INTO retailiq_lakehouse.gold.dim_user_region_access VALUES
-('manager.north@retailiq.com',   'North'),
-('manager.south@retailiq.com',   'South'),
-('manager.east@retailiq.com',    'East'),
-('manager.west@retailiq.com',    'West'),
-('analyst@retailiq.com',         NULL),   -- NULL means access to all regions
-('dataengineer@retailiq.com',    NULL);
-
--- Step 2: RLS Filter Definition
--- In Fabric Warehouse or Power BI semantic model, apply this logic:
--- A user can see a row in fact_sales IF:
---   a) Their UPN maps to NULL (all-access), OR
---   b) Their UPN maps to the store_region of the row
-
--- Pseudocode for semantic model RLS filter on fact_sales:
--- [store_region] = LOOKUPVALUE(
---     dim_user_region_access[allowed_region],
---     dim_user_region_access[user_principal_name], USERPRINCIPALNAME()
--- ) || ISBLANK(
---     LOOKUPVALUE(
---         dim_user_region_access[allowed_region],
---         dim_user_region_access[user_principal_name], USERPRINCIPALNAME()
---     )
--- )
-
--- Note: In Fabric Data Warehouse, RLS is implemented via security policies:
--- CREATE SECURITY POLICY SalesRegionFilter
--- ADD FILTER PREDICATE dbo.fn_region_access_predicate(store_region)
--- ON dbo.fact_sales
--- WITH (STATE = ON);
-```
-
----
-
-### 4.8 Implement Column-Level Security
-
-**Action:** Define which columns in `fact_sales` should be restricted from `grp-data-analysts`. Analysts should not see raw cost price or margin data.
-
-Add the following section to `security/row-level-security.sql`:
-
-```sql
--- ============================================================
--- Column-Level Security
--- Restrict cost/margin columns from analysts
--- ============================================================
-
--- In Fabric Data Warehouse, use DENY on specific columns:
--- DENY SELECT ON dbo.fact_sales (unit_cost, gross_margin_pct)
--- TO [grp-data-analysts];
-
--- Columns restricted from grp-data-analysts:
---   - unit_cost
---   - gross_margin_pct
---   - supplier_price
-
--- Columns accessible to all roles:
---   - sale_id, sale_date, store_id, product_id,
---     quantity_sold, unit_price, total_revenue, region
-```
-
----
-
-### 4.9 Implement Dynamic Data Masking
-
-**Action:** Define a masking policy so that customer-identifiable fields in any future customer table are masked for non-admin users.
-
-Add to `security/row-level-security.sql`:
-
-```sql
--- ============================================================
--- Dynamic Data Masking
--- Applied to: any table containing customer PII
--- ============================================================
-
--- Example: if a dim_customer table is added in future
--- ALTER TABLE dbo.dim_customer
--- ALTER COLUMN customer_email ADD MASKED WITH (FUNCTION = 'email()');
-
--- ALTER TABLE dbo.dim_customer
--- ALTER COLUMN customer_phone ADD MASKED WITH (FUNCTION = 'partial(0,"XXX-XXX-",4)');
-
--- ALTER TABLE dbo.dim_customer
--- ALTER COLUMN customer_name ADD MASKED WITH (FUNCTION = 'partial(1,"...",1)');
-
--- Grant unmask to admins and engineers only:
--- GRANT UNMASK ON dbo.dim_customer TO [grp-fabric-admins];
--- GRANT UNMASK ON dbo.dim_customer TO [grp-data-engineers];
-```
-
----
-
-### 4.10 Apply Sensitivity Labels
-
-**Action:** Document the sensitivity label strategy for RetailIQ's Fabric items. Apply labels in the portal where possible.
-
-`security/sensitivity-labels.md`:
-
-```markdown
-# RetailIQ Sensitivity Label Strategy
-
-## Label Definitions (from Microsoft Purview)
-
-| Label | Description | Applied To |
-|---|---|---|
-| Public | No restrictions | docs/, architecture diagrams |
-| General | Internal use only | Bronze layer tables, raw files |
-| Confidential | Business sensitive | Silver layer tables, gold dim tables |
-| Highly Confidential | Restricted access | fact_sales, cost/margin columns, any PII |
-
-## Application Rules
-
-- All **Gold layer** Lakehouse tables → `Confidential`
-- `fact_sales` → `Highly Confidential`
-- Any column containing cost, margin, or supplier data → `Highly Confidential`
-- Notebooks and pipelines → `General`
-- Deployment pipeline configuration → `Confidential`
-
-## How to Apply in Fabric Portal
-1. Open the item (e.g. the Lakehouse)
-2. Click the item's "..." menu → Sensitivity label
-3. Select the appropriate label
-4. Click Save
-
-Note: Sensitivity labels require Microsoft Purview to be configured
-at the tenant level. If unavailable, document intended labels only.
-```
-
----
-
-### 4.11 Endorse Items
-
-**Action:** Once the lakehouse is confirmed working, endorse it in the Fabric portal.
-
-**Steps:**
-1. Open `retailiq_lakehouse` in `retailiq-prod` (after deployment)
-2. Click **"..." → Endorsement**
-3. Set to **Certified** (requires admin rights) or **Promoted** if certification is unavailable
-4. Add the description: `"Certified RetailIQ production lakehouse. Managed by the data engineering team."`
-
----
-
-### 4.12 Configure Workspace Logging
+### 4.6 Configure Workspace Logging
 
 **Action:** Enable logging so that all workspace activity is captured.
 
@@ -390,7 +199,7 @@ Set log destination to a new Eventhouse item named `retailiq_logs` (create this 
 
 ---
 
-### 4.13 Create and Configure the Deployment Pipeline
+### 4.7 Create and Configure the Deployment Pipeline
 
 **Action:** Create a Fabric deployment pipeline that promotes content from Dev → Test → Prod.
 
@@ -414,6 +223,65 @@ Set log destination to a new Eventhouse item named `retailiq_logs` (create this 
 
 ---
 
+### 4.8 Configure Domain Workspace Settings
+
+**Action:** Assign the workspace to a Fabric domain to organize and govern workspaces by business area.
+
+**Note:** Domain management is a tenant-level admin function. If you have Fabric admin rights, follow the steps below. If you do not, read through them to understand the concept — the exam expects you to know how domains work.
+
+**Steps (admin only):**
+1. Go to the **Fabric Admin portal** (gear icon → Admin portal)
+2. Select **Domains** from the left navigation
+3. Click **New domain**
+4. Name: `Data Engineering`
+5. Description: `"Workspaces for data ingestion, transformation, and orchestration"`
+6. (Optional) Set a domain icon and color for visual identification
+7. Click **Create**
+8. In the domain detail page, click **Assign workspaces**
+9. Search for and select: `retailiq-dev`, `retailiq-test`, `retailiq-prod`
+10. Click **Assign**
+
+**Non-admin alternative:** Review the Domains page in the Admin portal to see which domains exist and which workspaces they contain. Document the desired assignment in `docs/architecture.md`.
+
+**Exam note:** Domains let you organize workspaces by business area (e.g., Sales, Finance, Data Engineering) and apply consistent governance policies. You should know how to create domains and assign workspaces in the Admin portal.
+
+---
+
+### 4.9 Implement Workspace-Level Access Controls
+
+**Action:** Set up workspace roles to control who can do what in `retailiq-dev`.
+
+**Steps:**
+1. In `retailiq-dev`, click the **Manage Access** button (top-right area)
+2. Click **Add people** (or **Add members**)
+3. Add a test user (or another account you control) with appropriate roles:
+
+| Role | Recommended Assignment | Permissions |
+|---|---|---|
+| Admin | Your primary account | Full control — manage roles, settings, items |
+| Member | Data engineering team | Create/edit items, run pipelines, not manage access |
+| Contributor | Analytics team | View and interact with items, not create new ones |
+| Viewer | Stakeholders | Read-only access to items and data |
+
+4. If you only have one account, assign a colleague's account as **Member** for demonstration
+
+**Commit** the role assignments to `security/workspace-roles.json`:
+```json
+{
+  "workspace": "retailiq-dev",
+  "roles": [
+    { "role": "Admin", "members": ["your.name@company.com"] },
+    { "role": "Member", "members": ["engineer@company.com"] },
+    { "role": "Contributor", "members": ["analyst@company.com"] },
+    { "role": "Viewer", "members": ["stakeholder@company.com"] }
+  ]
+}
+```
+
+**Exam note:** Workspace roles (Admin/Member/Contributor/Viewer) control what users can do at the workspace level. Item-level permissions (Share/Manage permissions) provide finer-grained control — those are configured in Project 3 after items exist.
+
+---
+
 ## 5. Validation Checklist
 
 Before marking this project complete, verify every item below:
@@ -423,30 +291,29 @@ Before marking this project complete, verify every item below:
 - [ ] `retailiq_lakehouse` exists in `retailiq-dev` with the full bronze/silver/gold folder structure
 - [ ] Spark settings are configured with high concurrency, autotune, and native execution engine enabled
 - [ ] `workspace/spark-settings.json` and `workspace/onelake-settings.json` are committed to the repo
-- [ ] `security/workspace-roles.json` documents all role assignments
-- [ ] `security/row-level-security.sql` contains RLS, CLS, and DDM definitions
-- [ ] `security/sensitivity-labels.md` documents the label strategy
-- [ ] Workspace logging is enabled and pointing to `retailiq_logs` eventhouse
+- [ ] Workspace logging is enabled and pointing to `retailiq_logs` eventhouse (used in P5)
 - [ ] Deployment pipeline `retailiq-deploy` exists with all three stages assigned
-- [ ] Lakehouse is endorsed (Promoted or Certified) in prod
+- [ ] Domains reviewed — workspaces assigned to `Data Engineering` domain (or documented)
+- [ ] Workspace-level access controls configured — roles documented in `security/workspace-roles.json`
+- [ ] Security requirements reviewed — execution deferred to P3
 
 ---
 
 ## 6. Exam Topics Covered
 
 | Exam Objective | Covered In |
-|---|---|
+|---|---|---|
+| Configure Fabric workspace settings | Step 4.1 |
+| Configure domain workspace settings | Step 4.8 |
 | Configure Spark workspace settings | Step 4.4 |
-| Configure domain workspace settings | Step 4.5 |
 | Configure OneLake workspace settings | Step 4.2 |
-| Implement workspace-level access controls | Step 4.6 |
-| Implement row-level, column-level, and object-level access controls | Steps 4.7, 4.8 |
-| Implement dynamic data masking | Step 4.9 |
-| Apply sensitivity labels to items | Step 4.10 |
-| Endorse items | Step 4.11 |
-| Implement and use workspace logging | Step 4.12 |
-| Create and configure deployment pipelines | Step 4.13 |
+| Implement workspace-level access controls | Step 4.9 |
+| Apply sensitivity labels to items | Deferred to P3 |
+| Endorse items | Deferred to P3 |
+| Implement and use workspace logging | Step 4.6 |
+| Create and configure deployment pipelines | Step 4.7 |
 | Configure version control | Step 4.2 |
+| Review security & governance requirements | Step 4.5 |
 
 ---
 

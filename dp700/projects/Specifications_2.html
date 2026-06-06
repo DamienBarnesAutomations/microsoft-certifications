@@ -196,6 +196,40 @@ in
 <ol start="5">
 <li>Set the <strong>data destination</strong> to: <code>retailiq_lakehouse</code> → <code>Tables</code> → <code>gold.dim_product</code></li>
 <li>Set the update method to <strong>Replace</strong> (for now; will change to Append in Project 3)</li>
+</ol>
+<p><strong>Configure Dataflows Gen2 workspace settings:</strong>
+7. Go to <strong>Workspace settings → Data Factory → Dataflow settings</strong>
+8. Review the following settings (change if needed for your environment):</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Default staging location</td>
+<td><code>retailiq_lakehouse</code></td>
+<td>Where intermediate data is stored during dataflow execution</td>
+</tr>
+<tr>
+<td>Staging file format</td>
+<td>Parquet</td>
+<td>More efficient than CSV for large transformations</td>
+</tr>
+<tr>
+<td>Compute engine</td>
+<td>Enabled</td>
+<td>Allows query folding and push-down to the source when possible</td>
+</tr>
+<tr>
+<td>Max execution time</td>
+<td>480 minutes</td>
+<td>Prevents runaway dataflows</td>
+</tr>
+</tbody></table>
+<ol start="9">
 <li>Save and close without publishing (publish will occur when real logic is added in Project 3)</li>
 </ol>
 <hr>
@@ -544,6 +578,7 @@ in
 <ul>
 <li><input disabled="" type="checkbox"> Notebooks <code>nb_transform_bronze_to_silver_sales</code>, <code>nb_validate_streaming_config</code>, and <code>nb_monitoring_check</code> exist as stubs in <code>retailiq-dev</code></li>
 <li><input disabled="" type="checkbox"> <code>df_dim_product</code> Dataflow Gen2 exists with the stub M query and destination set to <code>gold.dim_product</code></li>
+<li><input disabled="" type="checkbox"> Dataflows Gen2 workspace settings configured (staging location, compute engine enabled)</li>
 <li><input disabled="" type="checkbox"> All four child pipelines exist: <code>pl_load_bronze_sales</code>, <code>pl_load_silver_sales</code>, <code>pl_load_dimensions</code>, <code>pl_load_streaming_config</code></li>
 <li><input disabled="" type="checkbox"> Each child pipeline has the correct parameters defined</li>
 <li><input disabled="" type="checkbox"> <code>master_pipeline</code> exists with all 7 activities wired in the correct dependency order</li>
@@ -567,6 +602,10 @@ in
 <tbody><tr>
 <td>Choose between Dataflow Gen2, a pipeline, and a notebook</td>
 <td>Steps 4.1, 4.3, 4.4</td>
+</tr>
+<tr>
+<td>Configure Dataflows Gen2 workspace settings</td>
+<td>Step 4.3</td>
 </tr>
 <tr>
 <td>Design and implement schedules and event-based triggers</td>
