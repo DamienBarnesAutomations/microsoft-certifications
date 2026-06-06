@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Specifications_3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.7;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+h1{font-size:24px;margin:28px 0 12px 0;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px;color:#00cec9;margin:24px 0 10px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
+h3{font-size:16px;color:#e4e6eb;margin:18px 0 8px 0}
+h4{font-size:14px;color:#8b8fa3;margin:12px 0 6px 0}
+p{margin:8px 0}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin-bottom:4px}
+code{background:#0a0c12;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
+pre{background:#0a0c12;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:10px 0;border:1px solid #2a2e3a}
+pre code{background:none;padding:0;border-radius:0;color:#e4e6eb;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
+th{background:#1a1d27;font-weight:600;color:#00cec9}
+td{background:#0f1117}
+blockquote{border-left:3px solid #6c5ce7;padding:8px 14px;margin:10px 0;background:#1a1d27;border-radius:0 8px 8px 0;color:#b0b4c0}
+blockquote p{margin:2px 0}
+hr{border:none;border-top:1px solid #2a2e3a;margin:20px 0}
+a{color:#6c5ce7;text-decoration:none}
+a:hover{text-decoration:underline}
+input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+strong{color:#e4e6eb}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+@media(max-width:640px){.container{padding:12px}h1{font-size:20px}h2{font-size:17px}.container{font-size:14px}table{font-size:12px}th,td{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="../../projects.html" class="back">← Back to Projects</a>
+<h1>Specifications_3.md</h1>
+<h1>RetailIQ — Project 3: Load Historical Sales Data</h1>
+<p><strong>Domain:</strong> Ingest &amp; Transform Data<br><strong>Estimated Effort:</strong> 5–8 hours<br><strong>Fabric Items Created:</strong> Bronze Delta tables, Silver Delta tables, Gold dimensional model, Shortcuts, Dataflow Gen2 (completed), PySpark notebooks (completed)</p>
+<hr>
+<h2>1. Overview</h2>
+<p>This project implements the full batch ingestion and transformation pipeline for RetailIQ&#39;s three years of historical sales data. You will generate synthetic source data, land it in the bronze layer, transform it through silver using PySpark, load the dimensional model into gold using both PySpark and SQL, and configure an incremental load pattern so that only new records are processed on subsequent runs.</p>
+<p>This project completes the notebook and dataflow stubs created in Project 2.</p>
+<hr>
+<h2>2. Prerequisites</h2>
+<ul>
+<li>Projects 1 and 2 completed</li>
+<li><code>retailiq_lakehouse</code> exists with the bronze/silver/gold folder structure</li>
+<li>Stub notebooks and pipelines from Project 2 are in place</li>
+<li>Git integration active on <code>dev</code> branch</li>
+</ul>
+<hr>
+<h2>3. Repository Structure for This Project</h2>
+<pre><code>retailiq-fabric/
+└── ingestion/
+    └── batch/
+        ├── notebooks/
+        │   ├── nb_generate_synthetic_data.py
+        │   ├── nb_transform_bronze_to_silver_sales.py
+        │   ├── nb_load_gold_dimensions.py
+        │   └── nb_load_gold_fact_sales.py
+        └── dataflows/
+            └── df_dim_product.json   (updated from Project 2 stub)
+</code></pre>
+<hr>
+<h2>4. Source Data Specification</h2>
+<h3>4.1 Synthetic Data Schema</h3>
+<p>Since RetailIQ is a fictitious company, you will generate synthetic data. The following schema must be used exactly — all downstream transforms and the dimensional model depend on it.</p>
+<h4>Raw Sales File Schema (<code>bronze/sales/</code>)</h4>
+<p>File format: <strong>CSV with header</strong>, one file per day, named <code>sales_YYYY-MM-DD.csv</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>transaction_id</code></td>
+<td>string</td>
+<td>UUID</td>
+<td><code>a1b2c3d4-...</code></td>
+</tr>
+<tr>
+<td><code>transaction_date</code></td>
+<td>string</td>
+<td><code>YYYY-MM-DD</code></td>
+<td><code>2022-01-15</code></td>
+</tr>
+<tr>
+<td><code>store_id</code></td>
+<td>string</td>
+<td><code>STR_001</code> to <code>STR_020</code></td>
+<td><code>STR_007</code></td>
+</tr>
+<tr>
+<td><code>product_id</code></td>
+<td>string</td>
+<td><code>PRD_001</code> to <code>PRD_200</code></td>
+<td><code>PRD_042</code></td>
+</tr>
+<tr>
+<td><code>quantity_sold</code></td>
+<td>integer</td>
+<td>1–50</td>
+<td><code>3</code></td>
+</tr>
+<tr>
+<td><code>unit_price</code></td>
+<td>float</td>
+<td>1.00–500.00</td>
+<td><code>29.99</code></td>
+</tr>
+<tr>
+<td><code>unit_cost</code></td>
+<td>float</td>
+<td>unit_price * 0.4–0.7</td>
+<td><code>14.50</code></td>
+</tr>
+<tr>
+<td><code>discount_pct</code></td>
+<td>float</td>
+<td>0.0–0.3</td>
+<td><code>0.10</code></td>
+</tr>
+<tr>
+<td><code>customer_id</code></td>
+<td>string</td>
+<td>nullable, <code>CUST_00001</code>+</td>
+<td><code>CUST_00234</code></td>
+</tr>
+<tr>
+<td><code>payment_method</code></td>
+<td>string</td>
+<td><code>CASH</code>, <code>CARD</code>, <code>ONLINE</code></td>
+<td><code>CARD</code></td>
+</tr>
+<tr>
+<td><code>region</code></td>
+<td>string</td>
+<td><code>North</code>,<code>South</code>,<code>East</code>,<code>West</code></td>
+<td><code>North</code></td>
+</tr>
+</tbody></table>
+<p><strong>Intentional data quality issues to inject</strong> (for Project 3 cleaning):</p>
+<ul>
+<li>2% of rows: duplicate <code>transaction_id</code> (exact duplicates)</li>
+<li>1% of rows: <code>quantity_sold</code> = NULL</li>
+<li>0.5% of rows: <code>unit_price</code> = 0 or negative</li>
+<li>3% of rows: <code>transaction_date</code> = a future date (late-arriving simulation — use dates 1–5 days ahead of the file date)</li>
+<li>1% of rows: <code>store_id</code> not in the valid store list (orphan records)</li>
+</ul>
+<h4>Raw Products File Schema (<code>bronze/products/</code>)</h4>
+<p>File format: <strong>CSV with header</strong>, one file named <code>products.csv</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>product_id</code></td>
+<td>string</td>
+<td><code>PRD_001</code> to <code>PRD_200</code></td>
+</tr>
+<tr>
+<td><code>product_name</code></td>
+<td>string</td>
+<td>Descriptive name</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>string</td>
+<td><code>Electronics</code>, <code>Clothing</code>, <code>Food</code>, <code>Home</code>, <code>Sports</code></td>
+</tr>
+<tr>
+<td><code>subcategory</code></td>
+<td>string</td>
+<td>Category-specific</td>
+</tr>
+<tr>
+<td><code>unit_price</code></td>
+<td>float</td>
+<td>Retail price</td>
+</tr>
+<tr>
+<td><code>unit_cost</code></td>
+<td>float</td>
+<td>Cost price</td>
+</tr>
+<tr>
+<td><code>supplier_id</code></td>
+<td>string</td>
+<td><code>SUP_01</code> to <code>SUP_20</code></td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>true/false</td>
+</tr>
+<tr>
+<td><code>created_date</code></td>
+<td>string</td>
+<td><code>YYYY-MM-DD</code></td>
+</tr>
+</tbody></table>
+<h4>Raw Stores File Schema (<code>bronze/stores/</code>)</h4>
+<p>File format: <strong>CSV with header</strong>, one file named <code>stores.csv</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>store_id</code></td>
+<td>string</td>
+<td><code>STR_001</code> to <code>STR_020</code></td>
+</tr>
+<tr>
+<td><code>store_name</code></td>
+<td>string</td>
+<td>e.g. <code>RetailIQ North Sydney</code></td>
+</tr>
+<tr>
+<td><code>region</code></td>
+<td>string</td>
+<td><code>North</code>, <code>South</code>, <code>East</code>, <code>West</code></td>
+</tr>
+<tr>
+<td><code>city</code></td>
+<td>string</td>
+<td>City name</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td>string</td>
+<td>State abbreviation</td>
+</tr>
+<tr>
+<td><code>open_date</code></td>
+<td>string</td>
+<td><code>YYYY-MM-DD</code></td>
+</tr>
+<tr>
+<td><code>store_size_sqft</code></td>
+<td>integer</td>
+<td>5000–50000</td>
+</tr>
+<tr>
+<td><code>manager_email</code></td>
+<td>string</td>
+<td><code>manager.region@retailiq.com</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h3>4.2 Synthetic Data Generation Notebook</h3>
+<p>Create a notebook named <code>nb_generate_synthetic_data</code> in <code>retailiq-dev</code>. This only needs to be run once to populate the bronze layer.</p>
+<p><code>ingestion/batch/notebooks/nb_generate_synthetic_data.py</code>:</p>
+<pre><code class="language-python"># ============================================================
+# RetailIQ — Synthetic Data Generator
+# Run once to populate bronze layer with 3 years of sales data
+# ============================================================
+
+# Cell 1 — Imports
+import random
+import uuid
+from datetime import date, timedelta
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+import pyspark.sql.functions as F
+
+spark = SparkSession.builder.getOrCreate()
+
+# Cell 2 — Configuration
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+BRONZE_PATH = f&quot;{LAKEHOUSE_PATH}/Files/bronze&quot;
+START_DATE = date(2022, 1, 1)
+END_DATE = date(2024, 12, 31)
+NUM_PRODUCTS = 200
+NUM_STORES = 20
+ROWS_PER_DAY = 500   # Approx rows per day — adjust down for faster generation
+
+REGIONS = [&quot;North&quot;, &quot;South&quot;, &quot;East&quot;, &quot;West&quot;]
+CATEGORIES = {
+    &quot;Electronics&quot;: [&quot;Phones&quot;, &quot;Laptops&quot;, &quot;Tablets&quot;, &quot;Accessories&quot;],
+    &quot;Clothing&quot;: [&quot;Mens&quot;, &quot;Womens&quot;, &quot;Kids&quot;, &quot;Footwear&quot;],
+    &quot;Food&quot;: [&quot;Snacks&quot;, &quot;Beverages&quot;, &quot;Produce&quot;, &quot;Dairy&quot;],
+    &quot;Home&quot;: [&quot;Furniture&quot;, &quot;Decor&quot;, &quot;Kitchen&quot;, &quot;Bedding&quot;],
+    &quot;Sports&quot;: [&quot;Outdoor&quot;, &quot;Gym&quot;, &quot;Team Sports&quot;, &quot;Cycling&quot;]
+}
+PAYMENT_METHODS = [&quot;CASH&quot;, &quot;CARD&quot;, &quot;ONLINE&quot;]
+
+# Cell 3 — Generate stores
+stores = []
+region_assignment = {i: REGIONS[(i-1) % 4] for i in range(1, NUM_STORES + 1)}
+cities = {
+    &quot;North&quot;: [&quot;Manchester&quot;, &quot;Leeds&quot;, &quot;Newcastle&quot;, &quot;Sheffield&quot;],
+    &quot;South&quot;: [&quot;London&quot;, &quot;Brighton&quot;, &quot;Southampton&quot;, &quot;Oxford&quot;],
+    &quot;East&quot;: [&quot;Norwich&quot;, &quot;Cambridge&quot;, &quot;Ipswich&quot;, &quot;Peterborough&quot;],
+    &quot;West&quot;: [&quot;Bristol&quot;, &quot;Cardiff&quot;, &quot;Exeter&quot;, &quot;Plymouth&quot;]
+}
+for i in range(1, NUM_STORES + 1):
+    region = region_assignment[i]
+    city = random.choice(cities[region])
+    stores.append({
+        &quot;store_id&quot;: f&quot;STR_{i:03d}&quot;,
+        &quot;store_name&quot;: f&quot;RetailIQ {city} {i}&quot;,
+        &quot;region&quot;: region,
+        &quot;city&quot;: city,
+        &quot;state&quot;: region[:2].upper(),
+        &quot;open_date&quot;: str(START_DATE - timedelta(days=random.randint(100, 1000))),
+        &quot;store_size_sqft&quot;: random.randint(5000, 50000),
+        &quot;manager_email&quot;: f&quot;manager.{region.lower()}@retailiq.com&quot;
+    })
+
+stores_schema = StructType([
+    StructField(&quot;store_id&quot;, StringType()),
+    StructField(&quot;store_name&quot;, StringType()),
+    StructField(&quot;region&quot;, StringType()),
+    StructField(&quot;city&quot;, StringType()),
+    StructField(&quot;state&quot;, StringType()),
+    StructField(&quot;open_date&quot;, StringType()),
+    StructField(&quot;store_size_sqft&quot;, IntegerType()),
+    StructField(&quot;manager_email&quot;, StringType())
+])
+
+df_stores = spark.createDataFrame(stores, schema=stores_schema)
+df_stores.coalesce(1).write.mode(&quot;overwrite&quot;).option(&quot;header&quot;, True).csv(f&quot;{BRONZE_PATH}/stores/&quot;)
+print(f&quot;Written {df_stores.count()} stores&quot;)
+
+# Cell 4 — Generate products
+products = []
+category_list = list(CATEGORIES.keys())
+for i in range(1, NUM_PRODUCTS + 1):
+    category = random.choice(category_list)
+    subcategory = random.choice(CATEGORIES[category])
+    unit_price = round(random.uniform(1.0, 500.0), 2)
+    unit_cost = round(unit_price * random.uniform(0.4, 0.7), 2)
+    products.append({
+        &quot;product_id&quot;: f&quot;PRD_{i:03d}&quot;,
+        &quot;product_name&quot;: f&quot;{subcategory} Product {i}&quot;,
+        &quot;category&quot;: category,
+        &quot;subcategory&quot;: subcategory,
+        &quot;unit_price&quot;: unit_price,
+        &quot;unit_cost&quot;: unit_cost,
+        &quot;supplier_id&quot;: f&quot;SUP_{random.randint(1,20):02d}&quot;,
+        &quot;is_active&quot;: random.random() &gt; 0.05,
+        &quot;created_date&quot;: str(START_DATE - timedelta(days=random.randint(0, 500)))
+    })
+
+products_schema = StructType([
+    StructField(&quot;product_id&quot;, StringType()),
+    StructField(&quot;product_name&quot;, StringType()),
+    StructField(&quot;category&quot;, StringType()),
+    StructField(&quot;subcategory&quot;, StringType()),
+    StructField(&quot;unit_price&quot;, FloatType()),
+    StructField(&quot;unit_cost&quot;, FloatType()),
+    StructField(&quot;supplier_id&quot;, StringType()),
+    StructField(&quot;is_active&quot;, BooleanType()),
+    StructField(&quot;created_date&quot;, StringType())
+])
+
+df_products = spark.createDataFrame(products, schema=products_schema)
+df_products.coalesce(1).write.mode(&quot;overwrite&quot;).option(&quot;header&quot;, True).csv(f&quot;{BRONZE_PATH}/products/&quot;)
+print(f&quot;Written {df_products.count()} products&quot;)
+
+# Cell 5 — Generate sales (one file per day)
+valid_store_ids = [f&quot;STR_{i:03d}&quot; for i in range(1, NUM_STORES + 1)]
+valid_product_ids = [f&quot;PRD_{i:03d}&quot; for i in range(1, NUM_PRODUCTS + 1)]
+
+current_date = START_DATE
+total_rows = 0
+
+while current_date &lt;= END_DATE:
+    rows = []
+    num_rows = int(random.gauss(ROWS_PER_DAY, ROWS_PER_DAY * 0.1))
+
+    for _ in range(num_rows):
+        transaction_id = str(uuid.uuid4())
+        transaction_date = str(current_date)
+        store_id = random.choice(valid_store_ids)
+        product_id = random.choice(valid_product_ids)
+        quantity_sold = random.randint(1, 50)
+        unit_price = round(random.uniform(1.0, 500.0), 2)
+        unit_cost = round(unit_price * random.uniform(0.4, 0.7), 2)
+        discount_pct = round(random.choice([0.0, 0.0, 0.0, 0.05, 0.10, 0.15, 0.20, 0.30]), 2)
+        customer_id = f&quot;CUST_{random.randint(1,10000):05d}&quot; if random.random() &gt; 0.2 else None
+        payment_method = random.choice(PAYMENT_METHODS)
+        region = store_id_to_region = stores[int(store_id.split(&quot;_&quot;)[1]) - 1][&quot;region&quot;]
+
+        rows.append((transaction_id, transaction_date, store_id, product_id,
+                     quantity_sold, unit_price, unit_cost, discount_pct,
+                     customer_id, payment_method, region))
+
+    # Inject data quality issues
+    # 2% duplicates
+    num_dupes = max(1, int(len(rows) * 0.02))
+    for row in random.sample(rows, num_dupes):
+        rows.append(row)
+
+    # 1% null quantity
+    for i in random.sample(range(len(rows)), max(1, int(len(rows) * 0.01))):
+        row = list(rows[i])
+        row[4] = None
+        rows[i] = tuple(row)
+
+    # 0.5% zero/negative price
+    for i in random.sample(range(len(rows)), max(1, int(len(rows) * 0.005))):
+        row = list(rows[i])
+        row[5] = random.choice([0.0, -1.0])
+        rows[i] = tuple(row)
+
+    # 3% late-arriving (future date)
+    for i in random.sample(range(len(rows)), max(1, int(len(rows) * 0.03))):
+        row = list(rows[i])
+        future_offset = random.randint(1, 5)
+        row[1] = str(current_date + timedelta(days=future_offset))
+        rows[i] = tuple(row)
+
+    # 1% orphan store IDs
+    for i in random.sample(range(len(rows)), max(1, int(len(rows) * 0.01))):
+        row = list(rows[i])
+        row[2] = &quot;STR_999&quot;
+        rows[i] = tuple(row)
+
+    sales_schema = StructType([
+        StructField(&quot;transaction_id&quot;, StringType()),
+        StructField(&quot;transaction_date&quot;, StringType()),
+        StructField(&quot;store_id&quot;, StringType()),
+        StructField(&quot;product_id&quot;, StringType()),
+        StructField(&quot;quantity_sold&quot;, IntegerType()),
+        StructField(&quot;unit_price&quot;, FloatType()),
+        StructField(&quot;unit_cost&quot;, FloatType()),
+        StructField(&quot;discount_pct&quot;, FloatType()),
+        StructField(&quot;customer_id&quot;, StringType()),
+        StructField(&quot;payment_method&quot;, StringType()),
+        StructField(&quot;region&quot;, StringType())
+    ])
+
+    df_day = spark.createDataFrame(rows, schema=sales_schema)
+    output_path = f&quot;{BRONZE_PATH}/sales/sales_{current_date}.csv&quot;
+    df_day.coalesce(1).write.mode(&quot;overwrite&quot;).option(&quot;header&quot;, True).csv(output_path)
+
+    total_rows += len(rows)
+    current_date += timedelta(days=1)
+
+print(f&quot;Total rows generated across all days: {total_rows:,}&quot;)
+print(f&quot;Date range: {START_DATE} to {END_DATE}&quot;)
+print(&quot;Bronze layer populated.&quot;)
+</code></pre>
+<hr>
+<h2>5. Bronze to Silver Transformation Notebook</h2>
+<p>This completes the stub created in Project 2.</p>
+<p><code>ingestion/batch/notebooks/nb_transform_bronze_to_silver_sales.py</code>:</p>
+<pre><code class="language-python"># ============================================================
+# RetailIQ — Bronze to Silver Sales Transform
+# Handles: dedup, null imputation, late-arrival, orphan removal
+# ============================================================
+
+# Cell 1 — Parameters (tag as parameters cell)
+region = &quot;ALL&quot;
+execution_date = &quot;&quot;
+incremental = True
+
+# Cell 2 — Imports
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+from datetime import datetime, date, timedelta
+
+spark = SparkSession.builder.getOrCreate()
+
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+BRONZE_PATH = f&quot;{LAKEHOUSE_PATH}/Files/bronze/sales&quot;
+SILVER_PATH = f&quot;{LAKEHOUSE_PATH}/Files/silver/sales&quot;
+MAX_FUTURE_DAYS = 3  # Late-arriving records beyond 3 days are excluded
+
+exec_date = execution_date if execution_date else str(date.today())
+print(f&quot;Execution date: {exec_date} | Region: {region} | Incremental: {incremental}&quot;)
+
+# Cell 3 — Read bronze data
+if incremental:
+    # Read only today&#39;s file in incremental mode
+    read_path = f&quot;{BRONZE_PATH}/sales_{exec_date}.csv&quot;
+    print(f&quot;Incremental read from: {read_path}&quot;)
+else:
+    # Full load reads all files
+    read_path = BRONZE_PATH
+    print(f&quot;Full load read from: {read_path}&quot;)
+
+df_bronze = spark.read \
+    .option(&quot;header&quot;, True) \
+    .option(&quot;inferSchema&quot;, True) \
+    .csv(read_path)
+
+print(f&quot;Bronze records read: {df_bronze.count():,}&quot;)
+
+# Cell 4 — Cast types explicitly (do not rely on inferSchema for production)
+df_typed = df_bronze.select(
+    F.col(&quot;transaction_id&quot;).cast(&quot;string&quot;),
+    F.to_date(F.col(&quot;transaction_date&quot;), &quot;yyyy-MM-dd&quot;).alias(&quot;transaction_date&quot;),
+    F.col(&quot;store_id&quot;).cast(&quot;string&quot;),
+    F.col(&quot;product_id&quot;).cast(&quot;string&quot;),
+    F.col(&quot;quantity_sold&quot;).cast(&quot;integer&quot;),
+    F.col(&quot;unit_price&quot;).cast(&quot;double&quot;),
+    F.col(&quot;unit_cost&quot;).cast(&quot;double&quot;),
+    F.col(&quot;discount_pct&quot;).cast(&quot;double&quot;),
+    F.col(&quot;customer_id&quot;).cast(&quot;string&quot;),
+    F.col(&quot;payment_method&quot;).cast(&quot;string&quot;),
+    F.col(&quot;region&quot;).cast(&quot;string&quot;)
+)
+
+# Cell 5 — Remove exact duplicates
+df_deduped = df_typed.dropDuplicates([&quot;transaction_id&quot;])
+dupes_removed = df_typed.count() - df_deduped.count()
+print(f&quot;Duplicates removed: {dupes_removed:,}&quot;)
+
+# Cell 6 — Handle null quantity_sold (impute with median per product)
+median_qty = df_deduped.filter(F.col(&quot;quantity_sold&quot;).isNotNull()) \
+    .groupBy(&quot;product_id&quot;) \
+    .agg(F.expr(&quot;percentile_approx(quantity_sold, 0.5)&quot;).alias(&quot;median_qty&quot;))
+
+df_qty_fixed = df_deduped.join(median_qty, on=&quot;product_id&quot;, how=&quot;left&quot;) \
+    .withColumn(
+        &quot;quantity_sold&quot;,
+        F.when(F.col(&quot;quantity_sold&quot;).isNull(), F.col(&quot;median_qty&quot;))
+         .otherwise(F.col(&quot;quantity_sold&quot;))
+    ) \
+    .drop(&quot;median_qty&quot;)
+
+nulls_imputed = df_deduped.filter(F.col(&quot;quantity_sold&quot;).isNull()).count()
+print(f&quot;Null quantity_sold imputed: {nulls_imputed:,}&quot;)
+
+# Cell 7 — Remove invalid prices (zero or negative)
+df_valid_price = df_qty_fixed.filter(F.col(&quot;unit_price&quot;) &gt; 0)
+invalid_prices = df_qty_fixed.count() - df_valid_price.count()
+print(f&quot;Invalid price records removed: {invalid_prices:,}&quot;)
+
+# Cell 8 — Handle late-arriving records
+# Records with transaction_date more than MAX_FUTURE_DAYS in the future
+# relative to execution date are quarantined
+exec_date_lit = F.lit(exec_date).cast(&quot;date&quot;)
+max_allowed_date = F.date_add(exec_date_lit, MAX_FUTURE_DAYS)
+
+df_on_time = df_valid_price.filter(F.col(&quot;transaction_date&quot;) &lt;= max_allowed_date)
+df_late = df_valid_price.filter(F.col(&quot;transaction_date&quot;) &gt; max_allowed_date)
+
+late_count = df_late.count()
+print(f&quot;Late-arriving records quarantined: {late_count:,}&quot;)
+
+# Write late-arriving records to a quarantine folder for reprocessing
+if late_count &gt; 0:
+    quarantine_path = f&quot;{LAKEHOUSE_PATH}/Files/bronze/sales_quarantine/late_{exec_date}&quot;
+    df_late.write.mode(&quot;overwrite&quot;).parquet(quarantine_path)
+    print(f&quot;Late records written to quarantine: {quarantine_path}&quot;)
+
+# Cell 9 — Remove orphan store IDs
+# Load valid store IDs from the stores reference file
+df_stores_ref = spark.read \
+    .option(&quot;header&quot;, True) \
+    .csv(f&quot;{LAKEHOUSE_PATH}/Files/bronze/stores/&quot;)
+
+valid_store_ids = [row[&quot;store_id&quot;] for row in df_stores_ref.select(&quot;store_id&quot;).collect()]
+df_no_orphans = df_on_time.filter(F.col(&quot;store_id&quot;).isin(valid_store_ids))
+orphans_removed = df_on_time.count() - df_no_orphans.count()
+print(f&quot;Orphan store records removed: {orphans_removed:,}&quot;)
+
+# Cell 10 — Add derived columns
+df_enriched = df_no_orphans \
+    .withColumn(&quot;total_revenue&quot;,
+        F.round(F.col(&quot;quantity_sold&quot;) * F.col(&quot;unit_price&quot;) * (1 - F.col(&quot;discount_pct&quot;)), 2)) \
+    .withColumn(&quot;gross_margin&quot;,
+        F.round((F.col(&quot;unit_price&quot;) - F.col(&quot;unit_cost&quot;)) * F.col(&quot;quantity_sold&quot;), 2)) \
+    .withColumn(&quot;gross_margin_pct&quot;,
+        F.round((F.col(&quot;unit_price&quot;) - F.col(&quot;unit_cost&quot;)) / F.col(&quot;unit_price&quot;), 4)) \
+    .withColumn(&quot;_ingestion_timestamp&quot;, F.current_timestamp()) \
+    .withColumn(&quot;_source_file_date&quot;, F.lit(exec_date).cast(&quot;date&quot;))
+
+# Cell 11 — Filter by region if specified
+if region != &quot;ALL&quot;:
+    df_final = df_enriched.filter(F.col(&quot;region&quot;) == region)
+    print(f&quot;Filtered to region: {region} ({df_final.count():,} records)&quot;)
+else:
+    df_final = df_enriched
+
+# Cell 12 — Write to silver as Delta table (partitioned by region and date)
+silver_table_path = f&quot;{SILVER_PATH}&quot;
+
+if incremental:
+    # Merge/upsert logic for incremental — use Delta MERGE
+    df_final.createOrReplaceTempView(&quot;silver_updates&quot;)
+    spark.sql(f&quot;&quot;&quot;
+        CREATE TABLE IF NOT EXISTS retailiq_lakehouse.silver_sales
+        USING DELTA
+        PARTITIONED BY (region, transaction_date)
+        LOCATION &#39;{silver_table_path}&#39;
+        AS SELECT * FROM silver_updates WHERE 1=0
+    &quot;&quot;&quot;)
+    spark.sql(&quot;&quot;&quot;
+        MERGE INTO retailiq_lakehouse.silver_sales AS target
+        USING silver_updates AS source
+        ON target.transaction_id = source.transaction_id
+        WHEN MATCHED THEN UPDATE SET *
+        WHEN NOT MATCHED THEN INSERT *
+    &quot;&quot;&quot;)
+else:
+    # Full overwrite for full load
+    df_final.write \
+        .format(&quot;delta&quot;) \
+        .mode(&quot;overwrite&quot;) \
+        .partitionBy(&quot;region&quot;, &quot;transaction_date&quot;) \
+        .save(silver_table_path)
+
+print(f&quot;Silver write complete. Records written: {df_final.count():,}&quot;)
+
+# Cell 13 — Quality summary log
+print(&quot;\n===== Data Quality Summary =====&quot;)
+print(f&quot;Input records (bronze):     {df_typed.count():,}&quot;)
+print(f&quot;Duplicates removed:         {dupes_removed:,}&quot;)
+print(f&quot;Nulls imputed:              {nulls_imputed:,}&quot;)
+print(f&quot;Invalid prices removed:     {invalid_prices:,}&quot;)
+print(f&quot;Late records quarantined:   {late_count:,}&quot;)
+print(f&quot;Orphan records removed:     {orphans_removed:,}&quot;)
+print(f&quot;Output records (silver):    {df_final.count():,}&quot;)
+print(&quot;================================&quot;)
+
+mssparkutils.notebook.exit(&quot;success&quot;)
+</code></pre>
+<hr>
+<h2>6. Gold Layer — Dimension Loading</h2>
+<h3>6.1 dim_date (Generate in PySpark)</h3>
+<pre><code class="language-python"># nb_load_gold_dimensions.py — Cell 1: dim_date
+
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import *
+import pandas as pd
+from datetime import date
+
+spark = SparkSession.builder.getOrCreate()
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+
+# Generate date spine from 2022-01-01 to 2025-12-31
+date_range = pd.date_range(&quot;2022-01-01&quot;, &quot;2025-12-31&quot;, freq=&quot;D&quot;)
+dates = [{
+    &quot;date_key&quot;: int(d.strftime(&quot;%Y%m%d&quot;)),
+    &quot;full_date&quot;: d.date(),
+    &quot;day_of_week&quot;: d.dayofweek,
+    &quot;day_name&quot;: d.day_name(),
+    &quot;day_of_month&quot;: d.day,
+    &quot;day_of_year&quot;: d.dayofyear,
+    &quot;week_of_year&quot;: d.isocalendar()[1],
+    &quot;month_number&quot;: d.month,
+    &quot;month_name&quot;: d.month_name(),
+    &quot;quarter&quot;: (d.month - 1) // 3 + 1,
+    &quot;year&quot;: d.year,
+    &quot;is_weekend&quot;: d.dayofweek &gt;= 5,
+    &quot;is_holiday&quot;: False  # Extend with real holiday logic as needed
+} for d in date_range]
+
+df_date = spark.createDataFrame(pd.DataFrame(dates))
+df_date.write.format(&quot;delta&quot;).mode(&quot;overwrite&quot;) \
+    .save(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_date&quot;)
+spark.sql(f&quot;&quot;&quot;
+    CREATE TABLE IF NOT EXISTS retailiq_lakehouse.gold_dim_date
+    USING DELTA LOCATION &#39;{LAKEHOUSE_PATH}/Files/gold/dim_date&#39;
+&quot;&quot;&quot;)
+print(f&quot;dim_date loaded: {df_date.count():,} rows&quot;)
+</code></pre>
+<h3>6.2 dim_store</h3>
+<pre><code class="language-python"># nb_load_gold_dimensions.py — Cell 2: dim_store
+
+df_silver_stores = spark.read.option(&quot;header&quot;, True) \
+    .csv(f&quot;{LAKEHOUSE_PATH}/Files/bronze/stores/&quot;)
+
+df_dim_store = df_silver_stores \
+    .withColumn(&quot;store_key&quot;, F.monotonically_increasing_id()) \
+    .withColumn(&quot;open_date&quot;, F.to_date(&quot;open_date&quot;, &quot;yyyy-MM-dd&quot;)) \
+    .withColumn(&quot;_loaded_at&quot;, F.current_timestamp()) \
+    .select(&quot;store_key&quot;, &quot;store_id&quot;, &quot;store_name&quot;, &quot;region&quot;,
+            &quot;city&quot;, &quot;state&quot;, &quot;open_date&quot;, &quot;store_size_sqft&quot;)
+
+df_dim_store.write.format(&quot;delta&quot;).mode(&quot;overwrite&quot;) \
+    .save(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_store&quot;)
+print(f&quot;dim_store loaded: {df_dim_store.count():,} rows&quot;)
+</code></pre>
+<h3>6.3 fact_sales</h3>
+<pre><code class="language-python"># nb_load_gold_fact_sales.py
+
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
+spark = SparkSession.builder.getOrCreate()
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+
+df_silver = spark.read.format(&quot;delta&quot;) \
+    .load(f&quot;{LAKEHOUSE_PATH}/Files/silver/sales&quot;)
+
+df_dim_store = spark.read.format(&quot;delta&quot;) \
+    .load(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_store&quot;)
+
+df_dim_product = spark.read.format(&quot;delta&quot;) \
+    .load(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_product&quot;)
+
+df_dim_date = spark.read.format(&quot;delta&quot;) \
+    .load(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_date&quot;)
+
+# Join to get surrogate keys
+df_fact = df_silver \
+    .join(df_dim_store.select(&quot;store_key&quot;, &quot;store_id&quot;),
+          on=&quot;store_id&quot;, how=&quot;left&quot;) \
+    .join(df_dim_product.select(&quot;product_key&quot;, &quot;product_id&quot;),
+          on=&quot;product_id&quot;, how=&quot;left&quot;) \
+    .join(df_dim_date.select(&quot;date_key&quot;, &quot;full_date&quot;),
+          df_silver.transaction_date == df_dim_date.full_date,
+          how=&quot;left&quot;) \
+    .select(
+        F.col(&quot;transaction_id&quot;).alias(&quot;sale_id&quot;),
+        F.col(&quot;date_key&quot;),
+        F.col(&quot;store_key&quot;),
+        F.col(&quot;product_key&quot;),
+        F.col(&quot;quantity_sold&quot;),
+        F.col(&quot;unit_price&quot;),
+        F.col(&quot;unit_cost&quot;),
+        F.col(&quot;discount_pct&quot;),
+        F.col(&quot;total_revenue&quot;),
+        F.col(&quot;gross_margin&quot;),
+        F.col(&quot;gross_margin_pct&quot;),
+        F.col(&quot;customer_id&quot;),
+        F.col(&quot;payment_method&quot;),
+        F.col(&quot;region&quot;),
+        F.col(&quot;_ingestion_timestamp&quot;)
+    )
+
+df_fact.write.format(&quot;delta&quot;) \
+    .mode(&quot;overwrite&quot;) \
+    .partitionBy(&quot;region&quot;) \
+    .save(f&quot;{LAKEHOUSE_PATH}/Files/gold/fact_sales&quot;)
+
+print(f&quot;fact_sales loaded: {df_fact.count():,} rows&quot;)
+</code></pre>
+<hr>
+<h2>7. Complete the Dataflow Gen2 (df_dim_product)</h2>
+<p>Update the stub <code>df_dim_product</code> from Project 2 with the following completed M query:</p>
+<pre><code class="language-powerquery">let
+    Source = Csv.Document(
+        AzureStorage.BlobContents(
+            &quot;https://onelake.dfs.fabric.microsoft.com/retailiq_lakehouse/Files/bronze/products/&quot;
+        ),
+        [Delimiter=&quot;,&quot;, Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None]
+    ),
+    PromoteHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    TypedTable = Table.TransformColumnTypes(PromoteHeaders, {
+        {&quot;product_id&quot;, type text},
+        {&quot;product_name&quot;, type text},
+        {&quot;category&quot;, type text},
+        {&quot;subcategory&quot;, type text},
+        {&quot;unit_price&quot;, type number},
+        {&quot;unit_cost&quot;, type number},
+        {&quot;supplier_id&quot;, type text},
+        {&quot;is_active&quot;, type logical},
+        {&quot;created_date&quot;, type date}
+    }),
+    RemovedDuplicates = Table.Distinct(TypedTable, {&quot;product_id&quot;}),
+    AddedSurrogateKey = Table.AddColumn(
+        RemovedDuplicates,
+        &quot;product_key&quot;,
+        each Number.From(Text.AfterDelimiter([product_id], &quot;_&quot;)),
+        Int64.Type
+    ),
+    AddedLoadTimestamp = Table.AddColumn(
+        AddedSurrogateKey,
+        &quot;_loaded_at&quot;,
+        each DateTime.LocalNow(),
+        type datetime
+    ),
+    ReorderedColumns = Table.ReorderColumns(AddedLoadTimestamp,
+        {&quot;product_key&quot;, &quot;product_id&quot;, &quot;product_name&quot;, &quot;category&quot;,
+         &quot;subcategory&quot;, &quot;unit_price&quot;, &quot;unit_cost&quot;, &quot;supplier_id&quot;,
+         &quot;is_active&quot;, &quot;created_date&quot;, &quot;_loaded_at&quot;})
+in
+    ReorderedColumns
+</code></pre>
+<p>Set destination to <code>retailiq_lakehouse</code> → <code>Tables</code> → <code>gold_dim_product</code>, update method: <strong>Replace</strong>.</p>
+<hr>
+<h2>8. Implement Shortcuts</h2>
+<p><strong>Action:</strong> Create a shortcut in the lakehouse that points to an external ADLS Gen2 location (simulating the source system&#39;s storage).</p>
+<p>In the Fabric portal, inside <code>retailiq_lakehouse</code>:</p>
+<ol>
+<li>Go to <strong>Files → bronze → New shortcut</strong></li>
+<li>Choose <strong>Azure Data Lake Storage Gen2</strong> as source</li>
+<li>URL: Use your own ADLS account, or document this step as requiring an external ADLS account</li>
+<li>Name the shortcut: <code>external_sales_archive</code></li>
+<li>Point it to a container/folder path of your choice</li>
+</ol>
+<p><strong>Exam note:</strong> Understand the difference between shortcuts and mirroring:</p>
+<ul>
+<li><strong>Shortcuts</strong> = virtual pointers, data stays in source, read-only</li>
+<li><strong>Mirroring</strong> = replicates data into OneLake, data is materialised and writable</li>
+</ul>
+<p>Document this distinction in <code>docs/architecture.md</code>.</p>
+<hr>
+<h2>9. Validation Checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> <code>nb_generate_synthetic_data</code> ran successfully and files exist in <code>Files/bronze/sales/</code>, <code>Files/bronze/products/</code>, <code>Files/bronze/stores/</code></li>
+<li><input disabled="" type="checkbox"> At least 1 day of CSV data is visible in the bronze sales folder</li>
+<li><input disabled="" type="checkbox"> <code>nb_transform_bronze_to_silver_sales</code> runs without error for at least one execution date</li>
+<li><input disabled="" type="checkbox"> Silver Delta table <code>silver_sales</code> exists and is partitioned by <code>region</code> and <code>transaction_date</code></li>
+<li><input disabled="" type="checkbox"> Data quality summary log shows correct counts for dupes, nulls, invalid prices, late records, orphans</li>
+<li><input disabled="" type="checkbox"> Late-arriving records are written to the quarantine folder</li>
+<li><input disabled="" type="checkbox"> <code>gold_dim_date</code>, <code>gold_dim_store</code>, <code>gold_dim_product</code>, <code>gold_fact_sales</code> all exist as Delta tables</li>
+<li><input disabled="" type="checkbox"> <code>df_dim_product</code> Dataflow Gen2 has been updated with the full M query and runs successfully</li>
+<li><input disabled="" type="checkbox"> At least one shortcut exists in the lakehouse</li>
+<li><input disabled="" type="checkbox"> All notebooks committed to <code>ingestion/batch/notebooks/</code> in the repo</li>
+</ul>
+<hr>
+<h2>10. Exam Topics Covered</h2>
+<table>
+<thead>
+<tr>
+<th>Exam Objective</th>
+<th>Covered In</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Design and implement full and incremental data loads</td>
+<td>Sections 5, 6.3</td>
+</tr>
+<tr>
+<td>Prepare data for loading into a dimensional model</td>
+<td>Section 6</td>
+</tr>
+<tr>
+<td>Choose an appropriate data store</td>
+<td>Section 8</td>
+</tr>
+<tr>
+<td>Choose between dataflows, notebooks, KQL, T-SQL</td>
+<td>Sections 5, 7</td>
+</tr>
+<tr>
+<td>Create and manage shortcuts</td>
+<td>Section 8</td>
+</tr>
+<tr>
+<td>Ingest data by using pipelines</td>
+<td>Via Project 2 pipelines calling these notebooks</td>
+</tr>
+<tr>
+<td>Transform data using PySpark</td>
+<td>Section 5</td>
+</tr>
+<tr>
+<td>Transform data using Power Query (M)</td>
+<td>Section 7</td>
+</tr>
+<tr>
+<td>Handle duplicate, missing, and late-arriving data</td>
+<td>Cells 5–8 of transform notebook</td>
+</tr>
+<tr>
+<td>Denormalize data</td>
+<td>Section 6.3 (fact_sales join)</td>
+</tr>
+<tr>
+<td>Group and aggregate data</td>
+<td>Cells 5, 10 of transform notebook</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>11. Further Reading</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-and-delta-tables">Delta Lake in Microsoft Fabric</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/onelake/onelake-shortcuts">OneLake shortcuts</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview">Dataflow Gen2 transformations</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook">PySpark in Fabric notebooks</a></li>
+</ul>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Specifications_2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.7;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+h1{font-size:24px;margin:28px 0 12px 0;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px;color:#00cec9;margin:24px 0 10px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
+h3{font-size:16px;color:#e4e6eb;margin:18px 0 8px 0}
+h4{font-size:14px;color:#8b8fa3;margin:12px 0 6px 0}
+p{margin:8px 0}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin-bottom:4px}
+code{background:#0a0c12;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
+pre{background:#0a0c12;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:10px 0;border:1px solid #2a2e3a}
+pre code{background:none;padding:0;border-radius:0;color:#e4e6eb;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
+th{background:#1a1d27;font-weight:600;color:#00cec9}
+td{background:#0f1117}
+blockquote{border-left:3px solid #6c5ce7;padding:8px 14px;margin:10px 0;background:#1a1d27;border-radius:0 8px 8px 0;color:#b0b4c0}
+blockquote p{margin:2px 0}
+hr{border:none;border-top:1px solid #2a2e3a;margin:20px 0}
+a{color:#6c5ce7;text-decoration:none}
+a:hover{text-decoration:underline}
+input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+strong{color:#e4e6eb}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+@media(max-width:640px){.container{padding:12px}h1{font-size:20px}h2{font-size:17px}.container{font-size:14px}table{font-size:12px}th,td{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="../../projects.html" class="back">← Back to Projects</a>
+<h1>Specifications_2.md</h1>
+<h1>RetailIQ — Project 2: Orchestrate the Data Platform</h1>
+<p><strong>Domain:</strong> Implement &amp; Manage an Analytics Solution<br><strong>Estimated Effort:</strong> 3–5 hours<br><strong>Fabric Items Created:</strong> Master Pipeline, Dataflow Gen2, Notebooks (stubs), Event-Based Triggers, Parameterised Sub-Pipelines</p>
+<hr>
+<h2>1. Overview</h2>
+<p>With the workspace and lakehouse in place from Project 1, this project builds the orchestration layer that will power all of RetailIQ&#39;s nightly and event-driven data workflows. You will design and implement a master pipeline that coordinates multiple child pipelines, a Dataflow Gen2 for dimension loading, parameterised notebooks for regional processing, and both schedule-based and event-based triggers.</p>
+<p>This project intentionally creates pipeline and notebook stubs that will be filled with real logic in Projects 3 and 4. The focus here is on the orchestration architecture and wiring — not the transformation code itself.</p>
+<hr>
+<h2>2. Prerequisites</h2>
+<ul>
+<li>Project 1 completed: <code>retailiq-dev</code> workspace exists, <code>retailiq_lakehouse</code> exists</li>
+<li>Git integration is active on the <code>dev</code> branch</li>
+<li>No data is required yet — all pipelines will be built with stub activities</li>
+</ul>
+<hr>
+<h2>3. Repository Structure for This Project</h2>
+<pre><code>retailiq-fabric/
+└── orchestration/
+    ├── pipelines/
+    │   ├── master_pipeline.json
+    │   ├── pl_load_bronze_sales.json
+    │   ├── pl_load_silver_sales.json
+    │   ├── pl_load_dimensions.json
+    │   └── pl_load_streaming_config.json
+    ├── dataflows/
+    │   └── df_dim_product.json
+    ├── triggers/
+    │   ├── schedule_nightly.json
+    │   └── trigger_new_file_event.json
+    └── parameters/
+        └── region_parameters.json
+</code></pre>
+<hr>
+<h2>4. Step-by-Step Implementation</h2>
+<h3>4.1 Understand the Orchestration Architecture</h3>
+<p>Before building anything, document the intended orchestration flow in a comment block at the top of <code>master_pipeline.json</code>. The architecture is:</p>
+<pre><code>[Nightly Schedule Trigger @ 02:00 UTC]
+        |
+        v
+[master_pipeline]
+        |
+        |---&gt; [pl_load_bronze_sales]          (Copy Activity: raw CSVs → bronze)
+        |           |
+        |           v
+        |     [pl_load_silver_sales]           (Notebook Activity: PySpark transforms)
+        |           |
+        |           v
+        |     [pl_load_dimensions]             (Dataflow Gen2: dimension tables)
+        |
+        |---&gt; [pl_load_streaming_config]       (Eventstream validation - parallel)
+        |
+        v
+[Success/Failure Notification Activity]
+
+[Event Trigger: New file in OneLake bronze/sales/]
+        |
+        v
+[pl_load_bronze_sales] (triggered independently on file arrival)
+</code></pre>
+<p>Key design decisions to document:</p>
+<ul>
+<li>Bronze loading runs first (dependency: silver needs bronze to exist)</li>
+<li>Dimension loading runs after silver (dependency: dimensions reference silver product data)</li>
+<li>Streaming config validation runs in parallel (no dependency on batch path)</li>
+<li>The event trigger allows real-time file processing independent of the nightly schedule</li>
+</ul>
+<hr>
+<h3>4.2 Create Stub Notebooks</h3>
+<p><strong>Action:</strong> Create the following notebooks in <code>retailiq-dev</code>. These are stubs — they contain the correct structure and print statements but no real transformation logic yet (that comes in Project 3).</p>
+<p><strong>Notebook 1:</strong> <code>nb_transform_bronze_to_silver_sales</code></p>
+<p>Create this notebook in the Fabric portal with the following cells:</p>
+<pre><code class="language-python"># Cell 1 — Parameters (Fabric notebook parameters cell)
+# Tag this cell as &quot;parameters&quot; in the cell toolbar
+region = &quot;ALL&quot;
+execution_date = &quot;&quot;
+incremental = True
+
+# Cell 2 — Imports and setup
+from pyspark.sql import SparkSession
+from datetime import datetime, date
+
+spark = SparkSession.builder.getOrCreate()
+
+print(f&quot;Starting bronze → silver transform&quot;)
+print(f&quot;Region: {region}&quot;)
+print(f&quot;Execution date: {execution_date if execution_date else &#39;today&#39;}&quot;)
+print(f&quot;Incremental mode: {incremental}&quot;)
+
+# Cell 3 — Stub: Bronze read (to be implemented in Project 3)
+print(&quot;TODO: Read from bronze/sales/&quot;)
+# df_bronze = spark.read.parquet(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/bronze/sales/&quot;)
+
+# Cell 4 — Stub: Transform (to be implemented in Project 3)
+print(&quot;TODO: Apply cleaning, dedup, and late-arrival handling&quot;)
+
+# Cell 5 — Stub: Silver write (to be implemented in Project 3)
+print(&quot;TODO: Write to silver/sales/ as Delta&quot;)
+
+# Cell 6 — Exit status
+print(&quot;Stub execution complete. No data was processed.&quot;)
+mssparkutils.notebook.exit(&quot;stub_success&quot;)
+</code></pre>
+<p><strong>Notebook 2:</strong> <code>nb_validate_streaming_config</code></p>
+<pre><code class="language-python"># Cell 1 — Imports
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+
+# Cell 2 — Stub: Validate eventstream is reachable
+print(&quot;TODO: Validate eventstream connection to IoT hub&quot;)
+print(&quot;TODO: Check eventhouse is receiving data&quot;)
+
+# Cell 3 — Exit
+mssparkutils.notebook.exit(&quot;stub_success&quot;)
+</code></pre>
+<p><strong>Notebook 3:</strong> <code>nb_monitoring_check</code> (will be used in Project 5)</p>
+<pre><code class="language-python"># Cell 1 — Monitoring stub
+print(&quot;TODO: Check pipeline run history&quot;)
+print(&quot;TODO: Flag stale tables&quot;)
+print(&quot;TODO: Send alert if ingestion freshness &gt; 24 hours&quot;)
+mssparkutils.notebook.exit(&quot;stub_success&quot;)
+</code></pre>
+<hr>
+<h3>4.3 Create the Dataflow Gen2 for Dimension Loading</h3>
+<p><strong>Action:</strong> Create a Dataflow Gen2 named <code>df_dim_product</code> in <code>retailiq-dev</code>.</p>
+<p><strong>Purpose:</strong> This dataflow will eventually load product dimension data from a source CSV into the gold lakehouse layer. For now, configure its structure with a placeholder source.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In <code>retailiq-dev</code>, click <strong>New → Dataflow Gen2</strong></li>
+<li>Name it <code>df_dim_product</code></li>
+<li>In the Power Query editor, add a new blank query named <code>ProductSource</code></li>
+<li>Enter the following M code as a stub:</li>
+</ol>
+<pre><code class="language-powerquery">let
+    // TODO in Project 3: Replace with actual source connection
+    // This stub creates an empty table with the correct schema
+    Source = #table(
+        type table [
+            product_id = text,
+            product_name = text,
+            category = text,
+            subcategory = text,
+            unit_price = number,
+            unit_cost = number,
+            supplier_id = text,
+            is_active = logical
+        ],
+        {}
+    ),
+    // TODO: Add cleaning steps here
+    // TODO: Add deduplication
+    // TODO: Add surrogate key generation
+    Output = Source
+in
+    Output
+</code></pre>
+<ol start="5">
+<li>Set the <strong>data destination</strong> to: <code>retailiq_lakehouse</code> → <code>Tables</code> → <code>gold.dim_product</code></li>
+<li>Set the update method to <strong>Replace</strong> (for now; will change to Append in Project 3)</li>
+<li>Save and close without publishing (publish will occur when real logic is added in Project 3)</li>
+</ol>
+<hr>
+<h3>4.4 Create Child Pipelines</h3>
+<p>Create each of the following pipelines in <code>retailiq-dev</code>. Each should contain a single <strong>Notebook activity</strong> pointing to the relevant stub notebook, plus a <strong>Set variable</strong> activity for logging.</p>
+<hr>
+<h4>Pipeline: <code>pl_load_bronze_sales</code></h4>
+<p><strong>Activities:</strong></p>
+<ol>
+<li><p><strong>Set Variable</strong> activity named <code>SetExecutionDate</code></p>
+<ul>
+<li>Variable name: <code>executionDate</code></li>
+<li>Variable type: String</li>
+<li>Value: <code>@formatDateTime(utcnow(), &#39;yyyy-MM-dd&#39;)</code></li>
+</ul>
+</li>
+<li><p><strong>Copy Data</strong> activity named <code>CopyRawSalesToBronze</code> (stub — no real source yet)</p>
+<ul>
+<li>Source: HTTP (placeholder URL: <code>https://placeholder.retailiq.com/sales.csv</code>)</li>
+<li>Sink: Lakehouse <code>retailiq_lakehouse</code> → Files → <code>bronze/sales/</code></li>
+<li>Sink file format: Parquet</li>
+<li><strong>Mark this activity as:</strong> <code>Continue on error = true</code> (so the pipeline doesn&#39;t fail on stub)</li>
+</ul>
+</li>
+<li><p><strong>Notebook</strong> activity named <code>LogBronzeLoad</code></p>
+<ul>
+<li>Notebook: <code>nb_transform_bronze_to_silver_sales</code></li>
+<li>Base parameters:<ul>
+<li><code>region</code>: <code>@pipeline().parameters.region</code></li>
+<li><code>execution_date</code>: <code>@variables(&#39;executionDate&#39;)</code></li>
+<li><code>incremental</code>: <code>@pipeline().parameters.incremental</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p><strong>Pipeline parameters to define:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Type</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>region</code></td>
+<td>String</td>
+<td><code>ALL</code></td>
+</tr>
+<tr>
+<td><code>incremental</code></td>
+<td>Bool</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>executionDate</code></td>
+<td>String</td>
+<td>`` (empty — set by activity)</td>
+</tr>
+</tbody></table>
+<hr>
+<h4>Pipeline: <code>pl_load_silver_sales</code></h4>
+<p><strong>Activities:</strong></p>
+<ol>
+<li><p><strong>Notebook</strong> activity named <code>TransformBronzeToSilver</code></p>
+<ul>
+<li>Notebook: <code>nb_transform_bronze_to_silver_sales</code></li>
+<li>Base parameters:<ul>
+<li><code>region</code>: <code>@pipeline().parameters.region</code></li>
+<li><code>execution_date</code>: <code>@pipeline().parameters.executionDate</code></li>
+<li><code>incremental</code>: <code>true</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Set Variable</strong> named <code>SetSilverLoadStatus</code></p>
+<ul>
+<li>Variable: <code>silverLoadStatus</code></li>
+<li>Value: <code>@activity(&#39;TransformBronzeToSilver&#39;).output.runStatus</code></li>
+</ul>
+</li>
+</ol>
+<p><strong>Pipeline parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Type</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>region</code></td>
+<td>String</td>
+<td><code>ALL</code></td>
+</tr>
+<tr>
+<td><code>executionDate</code></td>
+<td>String</td>
+<td>``</td>
+</tr>
+</tbody></table>
+<hr>
+<h4>Pipeline: <code>pl_load_dimensions</code></h4>
+<p><strong>Activities:</strong></p>
+<ol>
+<li><p><strong>Dataflow</strong> activity named <code>LoadProductDimension</code></p>
+<ul>
+<li>Dataflow: <code>df_dim_product</code></li>
+</ul>
+</li>
+<li><p><strong>Notebook</strong> activity named <code>ValidateDimensionLoad</code> (stub)</p>
+<ul>
+<li>Notebook: <code>nb_monitoring_check</code></li>
+</ul>
+</li>
+</ol>
+<p><strong>No parameters required for now.</strong></p>
+<hr>
+<h4>Pipeline: <code>pl_load_streaming_config</code></h4>
+<p><strong>Activities:</strong></p>
+<ol>
+<li><p><strong>Notebook</strong> activity named <code>ValidateStreamingConfig</code></p>
+<ul>
+<li>Notebook: <code>nb_validate_streaming_config</code></li>
+</ul>
+</li>
+<li><p><strong>Wait</strong> activity named <code>WaitForStreamingStabilisation</code></p>
+<ul>
+<li>Wait time in seconds: <code>10</code></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>4.5 Create the Master Pipeline</h3>
+<p><strong>Action:</strong> Create the main orchestration pipeline named <code>master_pipeline</code> in <code>retailiq-dev</code>.</p>
+<p><strong>Pipeline variables to define:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Variable Name</th>
+<th>Type</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>executionDate</code></td>
+<td>String</td>
+<td>``</td>
+</tr>
+<tr>
+<td><code>overallStatus</code></td>
+<td>String</td>
+<td><code>running</code></td>
+</tr>
+<tr>
+<td><code>failedActivities</code></td>
+<td>Array</td>
+<td><code>[]</code></td>
+</tr>
+</tbody></table>
+<p><strong>Activities and their dependencies:</strong></p>
+<ol>
+<li><p><strong>Set Variable</strong> named <code>SetExecutionDate</code></p>
+<ul>
+<li>Variable: <code>executionDate</code></li>
+<li>Value: <code>@formatDateTime(utcnow(), &#39;yyyy-MM-dd&#39;)</code></li>
+<li>Depends on: nothing (runs first)</li>
+</ul>
+</li>
+<li><p><strong>Execute Pipeline</strong> named <code>RunBronzeLoad</code></p>
+<ul>
+<li>Pipeline: <code>pl_load_bronze_sales</code></li>
+<li>Parameters:<ul>
+<li><code>region</code>: <code>ALL</code></li>
+<li><code>incremental</code>: <code>true</code></li>
+</ul>
+</li>
+<li>Wait on completion: <code>true</code></li>
+<li>Depends on: <code>SetExecutionDate</code> (success)</li>
+</ul>
+</li>
+<li><p><strong>Execute Pipeline</strong> named <code>RunSilverLoad</code></p>
+<ul>
+<li>Pipeline: <code>pl_load_silver_sales</code></li>
+<li>Parameters:<ul>
+<li><code>region</code>: <code>ALL</code></li>
+<li><code>executionDate</code>: <code>@variables(&#39;executionDate&#39;)</code></li>
+</ul>
+</li>
+<li>Wait on completion: <code>true</code></li>
+<li>Depends on: <code>RunBronzeLoad</code> (success)</li>
+</ul>
+</li>
+<li><p><strong>Execute Pipeline</strong> named <code>RunDimensionLoad</code></p>
+<ul>
+<li>Pipeline: <code>pl_load_dimensions</code></li>
+<li>Wait on completion: <code>true</code></li>
+<li>Depends on: <code>RunSilverLoad</code> (success)</li>
+</ul>
+</li>
+<li><p><strong>Execute Pipeline</strong> named <code>RunStreamingValidation</code></p>
+<ul>
+<li>Pipeline: <code>pl_load_streaming_config</code></li>
+<li>Wait on completion: <code>false</code> (run in parallel)</li>
+<li>Depends on: <code>SetExecutionDate</code> (success)</li>
+</ul>
+</li>
+<li><p><strong>If Condition</strong> named <code>CheckOverallSuccess</code></p>
+<ul>
+<li>Expression: <code>@and(equals(activity(&#39;RunBronzeLoad&#39;).Status, &#39;Succeeded&#39;), equals(activity(&#39;RunSilverLoad&#39;).Status, &#39;Succeeded&#39;), equals(activity(&#39;RunDimensionLoad&#39;).Status, &#39;Succeeded&#39;))</code></li>
+<li>Depends on: <code>RunDimensionLoad</code> (success or failure), <code>RunStreamingValidation</code> (success or failure)</li>
+<li>If True: <strong>Set Variable</strong> <code>overallStatus</code> = <code>&quot;succeeded&quot;</code></li>
+<li>If False: <strong>Set Variable</strong> <code>overallStatus</code> = <code>&quot;failed&quot;</code></li>
+</ul>
+</li>
+<li><p><strong>Notebook</strong> activity named <code>RunMonitoringCheck</code></p>
+<ul>
+<li>Notebook: <code>nb_monitoring_check</code></li>
+<li>Depends on: <code>CheckOverallSuccess</code> (success)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>4.6 Configure the Nightly Schedule Trigger</h3>
+<p><strong>Action:</strong> Create a scheduled trigger for the master pipeline.</p>
+<p>In the master pipeline, click <strong>Add trigger → New/Edit</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Name</td>
+<td><code>trigger_nightly_02utc</code></td>
+</tr>
+<tr>
+<td>Type</td>
+<td>Scheduled</td>
+</tr>
+<tr>
+<td>Start date</td>
+<td>Tomorrow&#39;s date @ 02:00:00 UTC</td>
+</tr>
+<tr>
+<td>Time zone</td>
+<td>UTC</td>
+</tr>
+<tr>
+<td>Recurrence</td>
+<td>Every 1 day</td>
+</tr>
+<tr>
+<td>End</td>
+<td>No end</td>
+</tr>
+</tbody></table>
+<p><strong>Do not activate this trigger yet</strong> — leave it in draft/stopped state until Project 3 data is in place.</p>
+<p>Commit the trigger definition to <code>orchestration/triggers/schedule_nightly.json</code>.</p>
+<hr>
+<h3>4.7 Configure the Event-Based Trigger</h3>
+<p><strong>Action:</strong> Create a storage event trigger that fires <code>pl_load_bronze_sales</code> whenever a new file arrives in the bronze sales folder.</p>
+<p><strong>Note:</strong> Storage event triggers in Fabric require the OneLake path to be registered. If this feature is not available in your tenant version, document the intended configuration below.</p>
+<p>In the Fabric portal, create a <strong>Data workflow</strong> (or pipeline trigger) with the following configuration:</p>
+<p><code>orchestration/triggers/trigger_new_file_event.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;trigger_onelake_new_sales_file&quot;,
+  &quot;type&quot;: &quot;StorageEventTrigger&quot;,
+  &quot;description&quot;: &quot;Fires pl_load_bronze_sales when a new file lands in OneLake bronze/sales/&quot;,
+  &quot;properties&quot;: {
+    &quot;storageAccountName&quot;: &quot;onelake&quot;,
+    &quot;containerName&quot;: &quot;retailiq_lakehouse&quot;,
+    &quot;folderPath&quot;: &quot;Files/bronze/sales/&quot;,
+    &quot;events&quot;: [&quot;Microsoft.Storage.BlobCreated&quot;],
+    &quot;ignoreEmptyBlobs&quot;: true
+  },
+  &quot;pipeline&quot;: {
+    &quot;pipelineReference&quot;: &quot;pl_load_bronze_sales&quot;,
+    &quot;parameters&quot;: {
+      &quot;region&quot;: &quot;ALL&quot;,
+      &quot;incremental&quot;: true
+    }
+  },
+  &quot;state&quot;: &quot;Stopped&quot;
+}
+</code></pre>
+<hr>
+<h3>4.8 Define and Externalise Region Parameters</h3>
+<p><strong>Action:</strong> Create a parameter file that allows the orchestration layer to be driven by configuration rather than hardcoded values. This will allow the same pipelines to process each region independently if needed.</p>
+<p><code>orchestration/parameters/region_parameters.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;regions&quot;: [&quot;North&quot;, &quot;South&quot;, &quot;East&quot;, &quot;West&quot;],
+  &quot;defaultRegion&quot;: &quot;ALL&quot;,
+  &quot;processingSchedule&quot;: {
+    &quot;North&quot;: &quot;02:00 UTC&quot;,
+    &quot;South&quot;: &quot;02:15 UTC&quot;,
+    &quot;East&quot;: &quot;02:30 UTC&quot;,
+    &quot;West&quot;: &quot;02:45 UTC&quot;
+  },
+  &quot;incrementalLoadEnabled&quot;: true,
+  &quot;fullLoadDayOfWeek&quot;: &quot;Sunday&quot;
+}
+</code></pre>
+<p><strong>Implementation note:</strong> In the master pipeline, you could use a <strong>ForEach</strong> activity iterating over this regions array to run <code>pl_load_bronze_sales</code> once per region in parallel. This is an optional enhancement — implement it if time allows, but document the intent in <code>docs/architecture.md</code> regardless.</p>
+<p><strong>ForEach enhancement (optional):</strong></p>
+<ul>
+<li>Add a <strong>ForEach</strong> activity named <code>ProcessAllRegions</code></li>
+<li>Items: <code>@json(pipeline().parameters.regionsConfig).regions</code></li>
+<li>Inside ForEach → Execute Pipeline: <code>pl_load_bronze_sales</code> with <code>region = @item()</code></li>
+<li>Batch count: <code>4</code> (run all 4 regions in parallel)</li>
+</ul>
+<hr>
+<h3>4.9 Implement Orchestration Patterns — Dynamic Expressions Reference</h3>
+<p>Document the following dynamic expression patterns in <code>docs/architecture.md</code> for exam reference:</p>
+<pre><code># Common Dynamic Expressions Used in RetailIQ Pipelines
+
+## Current date as string
+@formatDateTime(utcnow(), &#39;yyyy-MM-dd&#39;)
+
+## Yesterday&#39;s date (for incremental loads)
+@formatDateTime(addDays(utcnow(), -1), &#39;yyyy-MM-dd&#39;)
+
+## Reference a pipeline parameter
+@pipeline().parameters.region
+
+## Reference a variable
+@variables(&#39;executionDate&#39;)
+
+## Reference an activity output
+@activity(&#39;RunBronzeLoad&#39;).output.rowsCopied
+
+## Conditional expression
+@if(equals(pipeline().parameters.incremental, true), &#39;incremental&#39;, &#39;full&#39;)
+
+## Construct a file path dynamically
+@concat(&#39;Files/bronze/sales/&#39;, formatDateTime(utcnow(), &#39;yyyy/MM/dd&#39;), &#39;/&#39;)
+
+## Check activity status
+@equals(activity(&#39;RunBronzeLoad&#39;).Status, &#39;Succeeded&#39;)
+</code></pre>
+<hr>
+<h2>5. Validation Checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Notebooks <code>nb_transform_bronze_to_silver_sales</code>, <code>nb_validate_streaming_config</code>, and <code>nb_monitoring_check</code> exist as stubs in <code>retailiq-dev</code></li>
+<li><input disabled="" type="checkbox"> <code>df_dim_product</code> Dataflow Gen2 exists with the stub M query and destination set to <code>gold.dim_product</code></li>
+<li><input disabled="" type="checkbox"> All four child pipelines exist: <code>pl_load_bronze_sales</code>, <code>pl_load_silver_sales</code>, <code>pl_load_dimensions</code>, <code>pl_load_streaming_config</code></li>
+<li><input disabled="" type="checkbox"> Each child pipeline has the correct parameters defined</li>
+<li><input disabled="" type="checkbox"> <code>master_pipeline</code> exists with all 7 activities wired in the correct dependency order</li>
+<li><input disabled="" type="checkbox"> The parallel branch (streaming validation) runs independently of the batch branch</li>
+<li><input disabled="" type="checkbox"> The If Condition activity correctly evaluates all three batch pipeline statuses</li>
+<li><input disabled="" type="checkbox"> Nightly schedule trigger exists in Stopped state</li>
+<li><input disabled="" type="checkbox"> Event-based trigger is defined (in portal or as JSON in repo) in Stopped state</li>
+<li><input disabled="" type="checkbox"> <code>orchestration/parameters/region_parameters.json</code> is committed to the repo</li>
+<li><input disabled="" type="checkbox"> Dynamic expression reference is added to <code>docs/architecture.md</code></li>
+<li><input disabled="" type="checkbox"> All pipeline changes are synced to the Git <code>dev</code> branch</li>
+</ul>
+<hr>
+<h2>6. Exam Topics Covered</h2>
+<table>
+<thead>
+<tr>
+<th>Exam Objective</th>
+<th>Covered In</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Choose between Dataflow Gen2, a pipeline, and a notebook</td>
+<td>Steps 4.1, 4.3, 4.4</td>
+</tr>
+<tr>
+<td>Design and implement schedules and event-based triggers</td>
+<td>Steps 4.6, 4.7</td>
+</tr>
+<tr>
+<td>Implement orchestration patterns with notebooks and pipelines</td>
+<td>Steps 4.4, 4.5</td>
+</tr>
+<tr>
+<td>Implement parameters and dynamic expressions</td>
+<td>Steps 4.4, 4.5, 4.8, 4.9</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Further Reading</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-factory/data-factory-overview">Fabric Data pipelines</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview">Dataflow Gen2 overview</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/data-factory/control-flow-expression-language-functions">Pipeline expressions and functions</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-runs">Schedule and event triggers</a></li>
+</ul>
+
+</div>
+</body>
+</html>

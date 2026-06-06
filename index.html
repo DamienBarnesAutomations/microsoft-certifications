@@ -7,16 +7,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.container{text-align:center;padding:40px 20px;width:100%;max-width:600px}
-h1{font-size:2rem;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-.subtitle{color:#8b8fa3;font-size:.95rem;margin-bottom:48px}
-.options{display:flex;gap:20px;justify-content:center}
-.option{background:#1a1d27;border:1px solid #2a2e3a;border-radius:16px;padding:40px 32px;cursor:pointer;transition:all .2s;flex:1;max-width:260px;text-decoration:none;color:inherit}
-.option:hover{background:#232733;border-color:#6c5ce7;transform:translateY(-3px);box-shadow:0 8px 24px rgba(108,92,231,.2)}
-.option h2{font-size:1.5rem;margin-bottom:8px;font-weight:700}
-.option p{color:#8b8fa3;font-size:.9rem;line-height:1.5}
-.icon{font-size:2.5rem;margin-bottom:16px}
-@media(max-width:500px){.options{flex-direction:column;align-items:center}.option{max-width:100%;width:100%}.option:first-child{margin-bottom:12px}}
+.container{text-align:center;padding:60px 40px;width:100%;max-width:700px}
+h1{font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.subtitle{color:#8b8fa3;font-size:1rem;margin-bottom:48px}
+.options{display:flex;flex-direction:column;gap:16px;align-items:center}
+.option{background:#1a1d27;border:1px solid #2a2e3a;border-radius:16px;padding:32px 28px;cursor:pointer;transition:all .2s;width:100%;max-width:520px;text-decoration:none;color:inherit;display:flex;align-items:center;gap:24px;text-align:left}
+.option:hover{background:#232733;border-color:#6c5ce7;transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.2)}
+.option h2{font-size:1.2rem;font-weight:700;margin-bottom:2px}
+.option p{color:#8b8fa3;font-size:.85rem;line-height:1.4}
+.icon{font-size:2rem;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -33,6 +32,11 @@ h1{font-size:2rem;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00c
 <div class="icon">&#9998;</div>
 <h2>Test</h2>
 <p>Practice exam questions with instant feedback</p>
+</a>
+<a href="projects.html" class="option">
+<div class="icon">&#128187;</div>
+<h2>Projects</h2>
+<p>Hands-on DP-700 implementation labs</p>
 </a>
 </div>
 </div>

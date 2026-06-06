@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Projects</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.6;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+h1{font-size:28px;margin-bottom:4px;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{color:#8b8fa3;font-size:14px;margin-bottom:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+.project-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:32px}
+.project-card{background:#1a1d27;border:1px solid #2a2e3a;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s}
+.project-card:hover{border-color:#6c5ce7;background:#232733}
+.project-header{padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
+.project-header h2{font-size:16px;font-weight:600}
+.project-header .num{color:#6c5ce7;font-weight:700;font-size:14px;margin-right:8px}
+.project-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.project-meta span{font-size:12px;color:#8b8fa3;background:#141620;padding:3px 10px;border-radius:20px;border:1px solid #2a2e3a}
+@media(max-width:640px){.container{padding:12px}.project-header{padding:14px 16px}.project-header h2{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" class="back">← Back to Menu</a>
+<h1>DP-700 Projects</h1>
+<p class="subtitle">RetailIQ — Build a complete Fabric analytics platform end-to-end</p>
+<div class="project-grid" id="projectGrid"></div>
+</div>
+<script>
+var projects = [
+  {
+    num: "1",
+    title: "Build the Foundation",
+    domain: "Implement & Manage an Analytics Solution",
+    effort: "4–6 hours",
+    items: "Workspace, Lakehouse, Deployment Pipeline, Security Rules, Sensitivity Labels",
+    description: "Creates workspace, lakehouse with medallion folders, Spark/OneLake settings, RLS/CLS/DDM, Git integration, deployment pipeline, sensitivity labels, endorsements. This is the bedrock everything else builds on.",
+    examTopics: "Spark settings, domain config, workspace roles, RLS/CLS/DDM, sensitivity labels, endorsements, deployment pipelines, Git, OneLake security"
+  },
+  {
+    num: "2",
+    title: "Orchestrate the Data Platform",
+    domain: "Implement & Manage an Analytics Solution",
+    effort: "3–5 hours",
+    items: "Master Pipeline, Dataflow Gen2, Notebooks (stubs), Event-Based Triggers, Parameterised Sub-Pipelines",
+    description: "Builds the orchestration layer — master pipeline coordinating child pipelines, Dataflow Gen2 for dimension loading, parameterised notebooks, schedule and event-based triggers. Focus on wiring and architecture.",
+    examTopics: "Choose between Dataflow Gen2/pipeline/notebook, schedule & event triggers, orchestration patterns, parameters & dynamic expressions"
+  },
+  {
+    num: "3",
+    title: "Load Historical Sales Data",
+    domain: "Ingest & Transform Data",
+    effort: "5–8 hours",
+    items: "Bronze/Silver/Gold Delta tables, Shortcuts, Dataflow Gen2 (completed), PySpark notebooks (completed)",
+    description: "Generates 3 years of synthetic sales data with intentional quality issues. Implements bronze→silver→gold pipeline: dedup, null imputation, late-arrival handling, orphan removal, Delta MERGE for incremental loads, dimensional model loading.",
+    examTopics: "Full & incremental loads, dimensional model prep, shortcuts, PySpark/M transforms, dedup/null/late-arrival handling, denormalization, aggregation"
+  },
+  {
+    num: "4",
+    title: "Stream Live Sensor Data",
+    domain: "Ingest & Transform Data",
+    effort: "4–6 hours",
+    items: "Eventhouse, KQL Database, Eventstream, KQL Querysets, Real-Time Dashboard (optional)",
+    description: "Builds the real-time pipeline — Eventhouse/KQL DB, Eventstream from IoT sensors, KQL anomaly detection queries, tumbling/sliding/session windowing aggregations, materialized views, and Spark Structured Streaming comparison.",
+    examTopics: "Streaming engine choice, native vs mirrored vs shortcuts, Eventstream processing, Spark SS, KQL processing, windowing functions, streaming load patterns"
+  },
+  {
+    num: "5",
+    title: "Monitor the Platform",
+    domain: "Monitor & Optimize an Analytics Solution",
+    effort: "4–6 hours",
+    items: "Alert rules, monitoring notebook (completed), Data Activator, diagnostic queries",
+    description: "Break/fix lab simulating 7 real failure scenarios (pipeline silent failure, dataflow timeout, Spark AnalysisException, Eventhouse ingestion drop, Eventstream disconnect, T-SQL GROUP BY error, shortcut access denied). Plus Monitor hub exploration, alert configuration, and a completed monitoring notebook.",
+    examTopics: "Monitor ingestion/transformation/refresh, configure alerts, identify & resolve pipeline/dataflow/notebook/eventhouse/eventstream/T-SQL/shortcut errors"
+  },
+  {
+    num: "6",
+    title: "Optimize for Scale",
+    domain: "Monitor & Optimize an Analytics Solution",
+    effort: "4–6 hours",
+    items: "Lakehouse, pipelines, warehouse, eventstreams, Spark config, KQL queries (all modified)",
+    description: "Systematic performance optimization with before/after benchmarking. Covers OPTIMIZE/ZORDER/VACUUM, partition strategy redesign, pipeline parallelism, warehouse stats/CTAS, Eventhouse caching/materialized views/eventstream transforms, Spark AQE/broadcast/shuffle tuning, KQL time-filter optimization.",
+    examTopics: "Optimize lakehouse/pipeline/warehouse/eventstreams/eventhouses/Spark/query performance"
+  }
+];
+
+var grid = document.getElementById('projectGrid');
+
+projects.forEach(function(p) {
+  var card = document.createElement('a');
+  card.href = 'dp700/projects/Specifications_' + p.num + '.html';
+  card.className = 'project-card';
+  card.style.textDecoration = 'none';
+  card.style.color = 'inherit';
+  card.style.display = 'block';
+
+  card.innerHTML =
+    '<div class="project-header" style="cursor:pointer">' +
+      '<div>' +
+        '<h2><span class="num">' + p.num + '.</span> ' + p.title + '</h2>' +
+        '<div class="project-meta">' +
+          '<span>' + p.domain + '</span>' +
+          '<span>' + p.effort + '</span>' +
+          '<span>' + p.items + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<span style="color:#6c5ce7;font-size:13px;font-weight:600;flex-shrink:0">Open →</span>' +
+    '</div>' +
+    '<div style="padding:0 20px 18px 20px;font-size:14px;color:#8b8fa3;line-height:1.5">' +
+      p.description +
+    '</div>';
+
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>

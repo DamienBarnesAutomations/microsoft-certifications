@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Specifications_1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.7;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+h1{font-size:24px;margin:28px 0 12px 0;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px;color:#00cec9;margin:24px 0 10px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
+h3{font-size:16px;color:#e4e6eb;margin:18px 0 8px 0}
+h4{font-size:14px;color:#8b8fa3;margin:12px 0 6px 0}
+p{margin:8px 0}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin-bottom:4px}
+code{background:#0a0c12;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
+pre{background:#0a0c12;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:10px 0;border:1px solid #2a2e3a}
+pre code{background:none;padding:0;border-radius:0;color:#e4e6eb;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
+th{background:#1a1d27;font-weight:600;color:#00cec9}
+td{background:#0f1117}
+blockquote{border-left:3px solid #6c5ce7;padding:8px 14px;margin:10px 0;background:#1a1d27;border-radius:0 8px 8px 0;color:#b0b4c0}
+blockquote p{margin:2px 0}
+hr{border:none;border-top:1px solid #2a2e3a;margin:20px 0}
+a{color:#6c5ce7;text-decoration:none}
+a:hover{text-decoration:underline}
+input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+strong{color:#e4e6eb}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+@media(max-width:640px){.container{padding:12px}h1{font-size:20px}h2{font-size:17px}.container{font-size:14px}table{font-size:12px}th,td{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="../../projects.html" class="back">← Back to Projects</a>
+<h1>Specifications_1.md</h1>
+<h1>RetailIQ — Project 1: Build the Foundation</h1>
+<p><strong>Domain:</strong> Implement &amp; Manage an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Workspace, Lakehouse, Deployment Pipeline, Security Rules, Sensitivity Labels</p>
+<hr>
+<h2>1. Overview</h2>
+<p>This project establishes the entire foundational infrastructure for RetailIQ&#39;s Microsoft Fabric analytics platform. You will create and configure a Fabric workspace, set up a lakehouse with a medallion architecture folder structure, configure Spark and OneLake settings, implement a full security and governance model, and create a three-stage deployment pipeline (Dev → Test → Prod).</p>
+<p>By the end of this project the workspace should be fully configured, secured, and ready to receive data in subsequent projects.</p>
+<hr>
+<h2>2. Prerequisites</h2>
+<ul>
+<li>A Microsoft Fabric capacity (F2 or higher, or a Fabric Trial)</li>
+<li>Admin access to the Fabric tenant</li>
+<li>A GitHub or Azure DevOps account for Git integration</li>
+<li>The <code>retailiq-fabric</code> repository initialised with the folder structure defined in the repo specification</li>
+<li>Familiarity with the Fabric portal UI (no prior build experience required)</li>
+</ul>
+<hr>
+<h2>3. Repository Structure for This Project</h2>
+<p>All artefacts produced in this project should be committed to the following paths in <code>retailiq-fabric/</code>:</p>
+<pre><code>retailiq-fabric/
+├── workspace/
+│   ├── spark-settings.json
+│   ├── onelake-settings.json
+│   └── deployment-pipelines/
+│       └── retailiq-pipeline.json
+├── security/
+│   ├── row-level-security.sql
+│   ├── workspace-roles.json
+│   └── sensitivity-labels.md
+└── docs/
+    └── architecture.md
+</code></pre>
+<hr>
+<h2>4. Step-by-Step Implementation</h2>
+<h3>4.1 Create the Fabric Workspace</h3>
+<p><strong>Action:</strong> In the Fabric portal, create a new workspace named <code>retailiq-dev</code>.</p>
+<p><strong>Configuration requirements:</strong></p>
+<ul>
+<li>License mode: <code>Fabric capacity</code> (attach to your available capacity)</li>
+<li>Description: <code>&quot;RetailIQ development workspace — data engineering platform&quot;</code></li>
+<li>Workspace image: optional, can be skipped</li>
+</ul>
+<p><strong>Repeat</strong> this process to create two additional workspaces:</p>
+<ul>
+<li><code>retailiq-test</code></li>
+<li><code>retailiq-prod</code></li>
+</ul>
+<p>All three workspaces must be attached to the same Fabric capacity.</p>
+<p><strong>Output:</strong> Three workspaces exist in the Fabric portal.</p>
+<hr>
+<h3>4.2 Configure Git Integration</h3>
+<p><strong>Action:</strong> Connect the <code>retailiq-dev</code> workspace to the <code>retailiq-fabric</code> GitHub/Azure DevOps repository.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In <code>retailiq-dev</code>, go to <strong>Workspace settings → Git integration</strong></li>
+<li>Connect to your Git provider</li>
+<li>Set the repository to <code>retailiq-fabric</code></li>
+<li>Set the branch to <code>dev</code></li>
+<li>Set the sync folder to <code>/</code> (root)</li>
+<li>Click <strong>Connect and sync</strong></li>
+</ol>
+<p><strong>Note:</strong> <code>retailiq-test</code> should be connected to branch <code>test</code>, and <code>retailiq-prod</code> to branch <code>main</code>. Do not configure these yet — they will be set up via the deployment pipeline in step 4.7.</p>
+<p><strong>Commit the following file</strong> to the <code>dev</code> branch immediately after connecting:</p>
+<p><code>workspace/onelake-settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;workspaceName&quot;: &quot;retailiq-dev&quot;,
+  &quot;onelakeSettings&quot;: {
+    &quot;storageRegion&quot;: &quot;East US&quot;,
+    &quot;softDeleteEnabled&quot;: true,
+    &quot;softDeleteRetentionDays&quot;: 7
+  }
+}
+</code></pre>
+<hr>
+<h3>4.3 Create the Lakehouse</h3>
+<p><strong>Action:</strong> Inside <code>retailiq-dev</code>, create a new Lakehouse item named <code>retailiq_lakehouse</code>.</p>
+<p><strong>After creation</strong>, manually create the following folder structure inside the <strong>Files</strong> section of the lakehouse (these are raw file folders, not Delta tables):</p>
+<pre><code>Files/
+├── bronze/
+│   ├── sales/
+│   ├── products/
+│   ├── stores/
+│   └── sensors/
+├── silver/
+│   ├── sales/
+│   ├── products/
+│   ├── stores/
+│   └── sensors/
+└── gold/
+    ├── fact_sales/
+    ├── dim_product/
+    ├── dim_store/
+    └── dim_date/
+</code></pre>
+<p><strong>Important naming conventions:</strong></p>
+<ul>
+<li>All folder names must be lowercase with underscores</li>
+<li>No spaces anywhere in paths</li>
+<li>Bronze = raw, unmodified source data</li>
+<li>Silver = cleaned, conformed, deduplicated</li>
+<li>Gold = dimensional model ready for consumption</li>
+</ul>
+<p><strong>Output:</strong> Lakehouse <code>retailiq_lakehouse</code> exists with the full medallion folder structure.</p>
+<hr>
+<h3>4.4 Configure Spark Workspace Settings</h3>
+<p><strong>Action:</strong> Configure the Spark environment for the workspace.</p>
+<p>In <code>retailiq-dev</code>, go to <strong>Workspace settings → Data Engineering/Science → Spark settings</strong>.</p>
+<p>Apply the following configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Runtime version</td>
+<td><code>1.3 (Spark 3.5)</code></td>
+<td>Latest stable runtime</td>
+</tr>
+<tr>
+<td>High concurrency mode</td>
+<td>Enabled</td>
+<td>Allows multiple notebooks to share a session</td>
+</tr>
+<tr>
+<td>Autotune</td>
+<td>Enabled</td>
+<td>Automatically optimises shuffle partitions</td>
+</tr>
+<tr>
+<td>Default pool</td>
+<td>Starter pool</td>
+<td>Sufficient for dev workloads</td>
+</tr>
+<tr>
+<td>Native execution engine</td>
+<td>Enabled</td>
+<td>Improves Parquet/Delta performance</td>
+</tr>
+</tbody></table>
+<p><strong>Commit</strong> the following file to the repo:</p>
+<p><code>workspace/spark-settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;runtime&quot;: &quot;1.3&quot;,
+  &quot;highConcurrencyMode&quot;: true,
+  &quot;autotuneEnabled&quot;: true,
+  &quot;defaultPool&quot;: &quot;StarterPool&quot;,
+  &quot;nativeExecutionEngine&quot;: true,
+  &quot;environmentName&quot;: null
+}
+</code></pre>
+<hr>
+<h3>4.5 Configure Domain Workspace Settings</h3>
+<p><strong>Action:</strong> If your Fabric tenant has domain management enabled, assign the <code>retailiq-dev</code> workspace to a domain named <code>Retail Analytics</code>. If domains are not available on your tenant, document this as a known limitation in <code>docs/architecture.md</code>.</p>
+<p><strong>Steps (if domains are available):</strong></p>
+<ol>
+<li>Go to the Fabric <strong>Admin portal → Domains</strong></li>
+<li>Create a domain named <code>Retail Analytics</code> if it does not exist</li>
+<li>Assign all three workspaces (<code>retailiq-dev</code>, <code>retailiq-test</code>, <code>retailiq-prod</code>) to this domain</li>
+</ol>
+<hr>
+<h3>4.6 Implement Workspace-Level Access Controls</h3>
+<p><strong>Action:</strong> Assign roles to simulated team members across all three workspaces.</p>
+<p>For the purposes of this project, create the following <strong>fictitious user groups</strong> (or use real Entra ID groups if available in your tenant). Document the intended assignments in <code>security/workspace-roles.json</code> even if you cannot create real groups.</p>
+<p><strong>Role assignments:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Group / User</th>
+<th>Workspace</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>grp-fabric-admins</code></td>
+<td>retailiq-dev, test, prod</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><code>grp-data-engineers</code></td>
+<td>retailiq-dev</td>
+<td>Member</td>
+</tr>
+<tr>
+<td><code>grp-data-engineers</code></td>
+<td>retailiq-test</td>
+<td>Contributor</td>
+</tr>
+<tr>
+<td><code>grp-data-engineers</code></td>
+<td>retailiq-prod</td>
+<td>Viewer</td>
+</tr>
+<tr>
+<td><code>grp-data-analysts</code></td>
+<td>retailiq-prod</td>
+<td>Viewer</td>
+</tr>
+<tr>
+<td><code>grp-regional-managers</code></td>
+<td>retailiq-prod</td>
+<td>Viewer</td>
+</tr>
+</tbody></table>
+<p><strong>Rationale to document:</strong> Engineers have full edit rights in dev but are restricted in prod. Analysts and managers are read-only in prod only.</p>
+<p><code>security/workspace-roles.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;roleAssignments&quot;: [
+    { &quot;group&quot;: &quot;grp-fabric-admins&quot;, &quot;workspace&quot;: &quot;retailiq-dev&quot;, &quot;role&quot;: &quot;Admin&quot; },
+    { &quot;group&quot;: &quot;grp-fabric-admins&quot;, &quot;workspace&quot;: &quot;retailiq-test&quot;, &quot;role&quot;: &quot;Admin&quot; },
+    { &quot;group&quot;: &quot;grp-fabric-admins&quot;, &quot;workspace&quot;: &quot;retailiq-prod&quot;, &quot;role&quot;: &quot;Admin&quot; },
+    { &quot;group&quot;: &quot;grp-data-engineers&quot;, &quot;workspace&quot;: &quot;retailiq-dev&quot;, &quot;role&quot;: &quot;Member&quot; },
+    { &quot;group&quot;: &quot;grp-data-engineers&quot;, &quot;workspace&quot;: &quot;retailiq-test&quot;, &quot;role&quot;: &quot;Contributor&quot; },
+    { &quot;group&quot;: &quot;grp-data-engineers&quot;, &quot;workspace&quot;: &quot;retailiq-prod&quot;, &quot;role&quot;: &quot;Viewer&quot; },
+    { &quot;group&quot;: &quot;grp-data-analysts&quot;, &quot;workspace&quot;: &quot;retailiq-prod&quot;, &quot;role&quot;: &quot;Viewer&quot; },
+    { &quot;group&quot;: &quot;grp-regional-managers&quot;, &quot;workspace&quot;: &quot;retailiq-prod&quot;, &quot;role&quot;: &quot;Viewer&quot; }
+  ]
+}
+</code></pre>
+<hr>
+<h3>4.7 Implement Row-Level Security (RLS)</h3>
+<p><strong>Action:</strong> Define RLS rules that will be applied to the <code>fact_sales</code> table once it is created in Project 3. Write the SQL now and store it so it is ready to apply.</p>
+<p>The business rule is: <strong>Regional managers should only see sales data for their own region.</strong></p>
+<p><code>security/row-level-security.sql</code>:</p>
+<pre><code class="language-sql">-- ============================================================
+-- RetailIQ Row-Level Security Policy
+-- Applied to: retailiq_lakehouse.gold.fact_sales
+-- ============================================================
+
+-- Step 1: Create a mapping table (to be created in Project 3)
+-- This table maps user principal names to their allowed regions
+CREATE TABLE IF NOT EXISTS retailiq_lakehouse.gold.dim_user_region_access (
+    user_principal_name STRING NOT NULL,
+    allowed_region      STRING NOT NULL
+);
+
+-- Seed data (representative — expand as needed)
+INSERT INTO retailiq_lakehouse.gold.dim_user_region_access VALUES
+(&#39;manager.north@retailiq.com&#39;,   &#39;North&#39;),
+(&#39;manager.south@retailiq.com&#39;,   &#39;South&#39;),
+(&#39;manager.east@retailiq.com&#39;,    &#39;East&#39;),
+(&#39;manager.west@retailiq.com&#39;,    &#39;West&#39;),
+(&#39;analyst@retailiq.com&#39;,         NULL),   -- NULL means access to all regions
+(&#39;dataengineer@retailiq.com&#39;,    NULL);
+
+-- Step 2: RLS Filter Definition
+-- In Fabric Warehouse or Power BI semantic model, apply this logic:
+-- A user can see a row in fact_sales IF:
+--   a) Their UPN maps to NULL (all-access), OR
+--   b) Their UPN maps to the store_region of the row
+
+-- Pseudocode for semantic model RLS filter on fact_sales:
+-- [store_region] = LOOKUPVALUE(
+--     dim_user_region_access[allowed_region],
+--     dim_user_region_access[user_principal_name], USERPRINCIPALNAME()
+-- ) || ISBLANK(
+--     LOOKUPVALUE(
+--         dim_user_region_access[allowed_region],
+--         dim_user_region_access[user_principal_name], USERPRINCIPALNAME()
+--     )
+-- )
+
+-- Note: In Fabric Data Warehouse, RLS is implemented via security policies:
+-- CREATE SECURITY POLICY SalesRegionFilter
+-- ADD FILTER PREDICATE dbo.fn_region_access_predicate(store_region)
+-- ON dbo.fact_sales
+-- WITH (STATE = ON);
+</code></pre>
+<hr>
+<h3>4.8 Implement Column-Level Security</h3>
+<p><strong>Action:</strong> Define which columns in <code>fact_sales</code> should be restricted from <code>grp-data-analysts</code>. Analysts should not see raw cost price or margin data.</p>
+<p>Add the following section to <code>security/row-level-security.sql</code>:</p>
+<pre><code class="language-sql">-- ============================================================
+-- Column-Level Security
+-- Restrict cost/margin columns from analysts
+-- ============================================================
+
+-- In Fabric Data Warehouse, use DENY on specific columns:
+-- DENY SELECT ON dbo.fact_sales (unit_cost, gross_margin_pct)
+-- TO [grp-data-analysts];
+
+-- Columns restricted from grp-data-analysts:
+--   - unit_cost
+--   - gross_margin_pct
+--   - supplier_price
+
+-- Columns accessible to all roles:
+--   - sale_id, sale_date, store_id, product_id,
+--     quantity_sold, unit_price, total_revenue, region
+</code></pre>
+<hr>
+<h3>4.9 Implement Dynamic Data Masking</h3>
+<p><strong>Action:</strong> Define a masking policy so that customer-identifiable fields in any future customer table are masked for non-admin users.</p>
+<p>Add to <code>security/row-level-security.sql</code>:</p>
+<pre><code class="language-sql">-- ============================================================
+-- Dynamic Data Masking
+-- Applied to: any table containing customer PII
+-- ============================================================
+
+-- Example: if a dim_customer table is added in future
+-- ALTER TABLE dbo.dim_customer
+-- ALTER COLUMN customer_email ADD MASKED WITH (FUNCTION = &#39;email()&#39;);
+
+-- ALTER TABLE dbo.dim_customer
+-- ALTER COLUMN customer_phone ADD MASKED WITH (FUNCTION = &#39;partial(0,&quot;XXX-XXX-&quot;,4)&#39;);
+
+-- ALTER TABLE dbo.dim_customer
+-- ALTER COLUMN customer_name ADD MASKED WITH (FUNCTION = &#39;partial(1,&quot;...&quot;,1)&#39;);
+
+-- Grant unmask to admins and engineers only:
+-- GRANT UNMASK ON dbo.dim_customer TO [grp-fabric-admins];
+-- GRANT UNMASK ON dbo.dim_customer TO [grp-data-engineers];
+</code></pre>
+<hr>
+<h3>4.10 Apply Sensitivity Labels</h3>
+<p><strong>Action:</strong> Document the sensitivity label strategy for RetailIQ&#39;s Fabric items. Apply labels in the portal where possible.</p>
+<p><code>security/sensitivity-labels.md</code>:</p>
+<pre><code class="language-markdown"># RetailIQ Sensitivity Label Strategy
+
+## Label Definitions (from Microsoft Purview)
+
+| Label | Description | Applied To |
+|---|---|---|
+| Public | No restrictions | docs/, architecture diagrams |
+| General | Internal use only | Bronze layer tables, raw files |
+| Confidential | Business sensitive | Silver layer tables, gold dim tables |
+| Highly Confidential | Restricted access | fact_sales, cost/margin columns, any PII |
+
+## Application Rules
+
+- All **Gold layer** Lakehouse tables → `Confidential`
+- `fact_sales` → `Highly Confidential`
+- Any column containing cost, margin, or supplier data → `Highly Confidential`
+- Notebooks and pipelines → `General`
+- Deployment pipeline configuration → `Confidential`
+
+## How to Apply in Fabric Portal
+1. Open the item (e.g. the Lakehouse)
+2. Click the item&#39;s &quot;...&quot; menu → Sensitivity label
+3. Select the appropriate label
+4. Click Save
+
+Note: Sensitivity labels require Microsoft Purview to be configured
+at the tenant level. If unavailable, document intended labels only.
+</code></pre>
+<hr>
+<h3>4.11 Endorse Items</h3>
+<p><strong>Action:</strong> Once the lakehouse is confirmed working, endorse it in the Fabric portal.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Open <code>retailiq_lakehouse</code> in <code>retailiq-prod</code> (after deployment)</li>
+<li>Click <strong>&quot;...&quot; → Endorsement</strong></li>
+<li>Set to <strong>Certified</strong> (requires admin rights) or <strong>Promoted</strong> if certification is unavailable</li>
+<li>Add the description: <code>&quot;Certified RetailIQ production lakehouse. Managed by the data engineering team.&quot;</code></li>
+</ol>
+<hr>
+<h3>4.12 Configure Workspace Logging</h3>
+<p><strong>Action:</strong> Enable logging so that all workspace activity is captured.</p>
+<p>In <code>retailiq-dev</code>, go to <strong>Workspace settings → Monitoring → Workspace logging</strong>.</p>
+<p>Enable the following log categories:</p>
+<ul>
+<li>Item operations (create, update, delete)</li>
+<li>Access operations (who accessed what)</li>
+<li>Pipeline run logs</li>
+<li>Spark session logs</li>
+</ul>
+<p>Set log destination to a new Eventhouse item named <code>retailiq_logs</code> (create this item in the workspace — it will be used in Project 5 for monitoring).</p>
+<hr>
+<h3>4.13 Create and Configure the Deployment Pipeline</h3>
+<p><strong>Action:</strong> Create a Fabric deployment pipeline that promotes content from Dev → Test → Prod.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In the Fabric portal, go to <strong>Deployment pipelines → New pipeline</strong></li>
+<li>Name it <code>retailiq-deploy</code></li>
+<li>Assign workspaces:<ul>
+<li>Stage 1 (Development): <code>retailiq-dev</code></li>
+<li>Stage 2 (Test): <code>retailiq-test</code></li>
+<li>Stage 3 (Production): <code>retailiq-prod</code></li>
+</ul>
+</li>
+</ol>
+<p><strong>Configure deployment rules</strong> (these override settings when promoting between stages):</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule Type</th>
+<th>Dev Value</th>
+<th>Prod Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Lakehouse connection</td>
+<td>Parameter</td>
+<td><code>retailiq-dev-connection</code></td>
+<td><code>retailiq-prod-connection</code></td>
+</tr>
+<tr>
+<td>Pipeline schedule</td>
+<td>On/Off</td>
+<td>Off</td>
+<td>On</td>
+</tr>
+<tr>
+<td>Spark pool</td>
+<td>Parameter</td>
+<td><code>StarterPool</code></td>
+<td><code>MediumPool</code></td>
+</tr>
+</tbody></table>
+<p><strong>Commit</strong> the pipeline definition to <code>workspace/deployment-pipelines/retailiq-pipeline.json</code> after export.</p>
+<hr>
+<h2>5. Validation Checklist</h2>
+<p>Before marking this project complete, verify every item below:</p>
+<ul>
+<li><input disabled="" type="checkbox"> Three workspaces exist: <code>retailiq-dev</code>, <code>retailiq-test</code>, <code>retailiq-prod</code></li>
+<li><input disabled="" type="checkbox"> <code>retailiq-dev</code> is connected to Git on the <code>dev</code> branch</li>
+<li><input disabled="" type="checkbox"> <code>retailiq_lakehouse</code> exists in <code>retailiq-dev</code> with the full bronze/silver/gold folder structure</li>
+<li><input disabled="" type="checkbox"> Spark settings are configured with high concurrency, autotune, and native execution engine enabled</li>
+<li><input disabled="" type="checkbox"> <code>workspace/spark-settings.json</code> and <code>workspace/onelake-settings.json</code> are committed to the repo</li>
+<li><input disabled="" type="checkbox"> <code>security/workspace-roles.json</code> documents all role assignments</li>
+<li><input disabled="" type="checkbox"> <code>security/row-level-security.sql</code> contains RLS, CLS, and DDM definitions</li>
+<li><input disabled="" type="checkbox"> <code>security/sensitivity-labels.md</code> documents the label strategy</li>
+<li><input disabled="" type="checkbox"> Workspace logging is enabled and pointing to <code>retailiq_logs</code> eventhouse</li>
+<li><input disabled="" type="checkbox"> Deployment pipeline <code>retailiq-deploy</code> exists with all three stages assigned</li>
+<li><input disabled="" type="checkbox"> Lakehouse is endorsed (Promoted or Certified) in prod</li>
+</ul>
+<hr>
+<h2>6. Exam Topics Covered</h2>
+<table>
+<thead>
+<tr>
+<th>Exam Objective</th>
+<th>Covered In</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Configure Spark workspace settings</td>
+<td>Step 4.4</td>
+</tr>
+<tr>
+<td>Configure domain workspace settings</td>
+<td>Step 4.5</td>
+</tr>
+<tr>
+<td>Configure OneLake workspace settings</td>
+<td>Step 4.2</td>
+</tr>
+<tr>
+<td>Implement workspace-level access controls</td>
+<td>Step 4.6</td>
+</tr>
+<tr>
+<td>Implement row-level, column-level, and object-level access controls</td>
+<td>Steps 4.7, 4.8</td>
+</tr>
+<tr>
+<td>Implement dynamic data masking</td>
+<td>Step 4.9</td>
+</tr>
+<tr>
+<td>Apply sensitivity labels to items</td>
+<td>Step 4.10</td>
+</tr>
+<tr>
+<td>Endorse items</td>
+<td>Step 4.11</td>
+</tr>
+<tr>
+<td>Implement and use workspace logging</td>
+<td>Step 4.12</td>
+</tr>
+<tr>
+<td>Create and configure deployment pipelines</td>
+<td>Step 4.13</td>
+</tr>
+<tr>
+<td>Configure version control</td>
+<td>Step 4.2</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Further Reading</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/fabric/get-started/workspaces">Microsoft Fabric workspace settings</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/onelake/security/get-started-security">OneLake security</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-warehouse/row-level-security">Row-level security in Fabric</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/cicd/deployment-pipelines/intro-to-deployment-pipelines">Deployment pipelines</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/governance/information-protection">Sensitivity labels in Fabric</a></li>
+</ul>
+
+</div>
+</body>
+</html>

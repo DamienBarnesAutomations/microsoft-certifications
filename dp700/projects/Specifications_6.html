@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Specifications_6</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.7;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+h1{font-size:24px;margin:28px 0 12px 0;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px;color:#00cec9;margin:24px 0 10px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
+h3{font-size:16px;color:#e4e6eb;margin:18px 0 8px 0}
+h4{font-size:14px;color:#8b8fa3;margin:12px 0 6px 0}
+p{margin:8px 0}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin-bottom:4px}
+code{background:#0a0c12;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
+pre{background:#0a0c12;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:10px 0;border:1px solid #2a2e3a}
+pre code{background:none;padding:0;border-radius:0;color:#e4e6eb;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
+th{background:#1a1d27;font-weight:600;color:#00cec9}
+td{background:#0f1117}
+blockquote{border-left:3px solid #6c5ce7;padding:8px 14px;margin:10px 0;background:#1a1d27;border-radius:0 8px 8px 0;color:#b0b4c0}
+blockquote p{margin:2px 0}
+hr{border:none;border-top:1px solid #2a2e3a;margin:20px 0}
+a{color:#6c5ce7;text-decoration:none}
+a:hover{text-decoration:underline}
+input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+strong{color:#e4e6eb}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+@media(max-width:640px){.container{padding:12px}h1{font-size:20px}h2{font-size:17px}.container{font-size:14px}table{font-size:12px}th,td{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="../../projects.html" class="back">← Back to Projects</a>
+<h1>Specifications_6.md</h1>
+<h1>RetailIQ — Project 6: Optimize for Scale</h1>
+<p><strong>Domain:</strong> Monitor &amp; Optimize an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Modified:</strong> Lakehouse tables, pipelines, data warehouse, eventstreams, Spark configuration, KQL queries</p>
+<hr>
+<h2>1. Overview</h2>
+<p>RetailIQ has been running for two years and the platform is showing its age — query times are creeping up, nightly pipelines are taking longer to complete, and the eventhouse is under increasing load. This project systematically identifies and resolves performance bottlenecks across every layer of the platform. For each optimization, you will measure before and after so results are quantifiable.</p>
+<p>This is the final project and ties together every component built in Projects 1–5.</p>
+<hr>
+<h2>2. Prerequisites</h2>
+<ul>
+<li>Projects 1–5 completed</li>
+<li>At least some data in the silver and gold layers (from Project 3)</li>
+<li>At least some streaming data in SensorDB (from Project 4)</li>
+<li>Monitoring notebook from Project 5 is working</li>
+</ul>
+<hr>
+<h2>3. Repository Structure for This Project</h2>
+<pre><code>retailiq-fabric/
+└── optimization/
+    └── notebooks/
+        ├── nb_optimize_lakehouse.py
+        ├── nb_optimize_spark.py
+        ├── nb_benchmark.py
+        └── optimization_results.md
+</code></pre>
+<hr>
+<h2>4. Benchmarking Before Optimization</h2>
+<p>Before making any changes, establish a baseline. Run this benchmark notebook and record all results in <code>optimization/notebooks/optimization_results.md</code>.</p>
+<p><code>optimization/notebooks/nb_benchmark.py</code>:</p>
+<pre><code class="language-python"># ============================================================
+# RetailIQ — Benchmark Notebook
+# Run BEFORE and AFTER each optimization to measure improvement
+# Record results in optimization_results.md
+# ============================================================
+
+# Cell 1 — Setup
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+import time
+
+spark = SparkSession.builder.getOrCreate()
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+results = {}
+
+def timed_query(name, fn):
+    &quot;&quot;&quot;Run fn(), measure elapsed time, print and store result&quot;&quot;&quot;
+    start = time.time()
+    result = fn()
+    elapsed = round(time.time() - start, 2)
+    results[name] = {&quot;elapsed_seconds&quot;: elapsed}
+    if hasattr(result, &#39;count&#39;):
+        results[name][&quot;row_count&quot;] = result.count()
+    print(f&quot;[{name}]: {elapsed}s&quot;)
+    return result
+
+# Cell 2 — Benchmark 1: Full scan of silver_sales
+def query_silver_full_scan():
+    return spark.read.format(&quot;delta&quot;) \
+        .load(f&quot;{LAKEHOUSE_PATH}/Files/silver/sales&quot;) \
+        .agg(F.sum(&quot;total_revenue&quot;), F.count(&quot;*&quot;))
+
+timed_query(&quot;silver_full_scan&quot;, query_silver_full_scan)
+
+# Cell 3 — Benchmark 2: Regional filter on silver_sales (partition pruning test)
+def query_silver_regional():
+    return spark.read.format(&quot;delta&quot;) \
+        .load(f&quot;{LAKEHOUSE_PATH}/Files/silver/sales&quot;) \
+        .filter(F.col(&quot;region&quot;) == &quot;North&quot;) \
+        .agg(F.sum(&quot;total_revenue&quot;))
+
+timed_query(&quot;silver_regional_filter&quot;, query_silver_regional)
+
+# Cell 4 — Benchmark 3: fact_sales join to dim_store
+def query_fact_join():
+    df_fact = spark.read.format(&quot;delta&quot;).load(f&quot;{LAKEHOUSE_PATH}/Files/gold/fact_sales&quot;)
+    df_store = spark.read.format(&quot;delta&quot;).load(f&quot;{LAKEHOUSE_PATH}/Files/gold/dim_store&quot;)
+    return df_fact.join(df_store, on=&quot;store_key&quot;).groupBy(&quot;region&quot;) \
+        .agg(F.sum(&quot;total_revenue&quot;).alias(&quot;revenue&quot;))
+
+timed_query(&quot;fact_store_join&quot;, query_fact_join)
+
+# Cell 5 — Benchmark 4: Count of small files in silver
+def count_files():
+    files = mssparkutils.fs.ls(f&quot;{LAKEHOUSE_PATH}/Files/silver/sales&quot;)
+    total = len(files)
+    print(f&quot;Total files in silver/sales: {total}&quot;)
+    results[&quot;silver_file_count&quot;] = {&quot;count&quot;: total}
+    return None
+
+count_files()
+
+# Cell 6 — Print full benchmark summary
+print(&quot;\n===== Benchmark Results =====&quot;)
+for test, metrics in results.items():
+    print(f&quot;  {test}: {metrics}&quot;)
+print(&quot;Record these in optimization_results.md BEFORE making any changes.&quot;)
+print(&quot;==============================&quot;)
+</code></pre>
+<p><strong>After running:</strong> Copy the output to <code>optimization_results.md</code> under the heading <code>## Baseline (Before Optimization)</code>.</p>
+<hr>
+<h2>5. Optimize the Lakehouse</h2>
+<h3>5.1 Understand the Small Files Problem</h3>
+<p>When the nightly pipeline runs <code>nb_transform_bronze_to_silver_sales</code> in incremental mode, each daily run appends a new set of small Parquet/Delta files. After 365 runs, the <code>silver/sales</code> directory has hundreds of small files. Delta Lake must open and scan each file individually, making reads slow.</p>
+<p><strong>Diagnose:</strong></p>
+<pre><code class="language-python"># Run this to see current file sizes
+files = mssparkutils.fs.ls(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;)
+sizes = [f.size for f in files if f.size &gt; 0]
+print(f&quot;File count: {len(sizes)}&quot;)
+print(f&quot;Average file size: {sum(sizes)/len(sizes)/1024/1024:.2f} MB&quot;)
+print(f&quot;Files &lt; 128MB: {sum(1 for s in sizes if s &lt; 128*1024*1024)}&quot;)
+</code></pre>
+<p>Target: files should be 128MB–1GB each. If most are under 128MB, compaction is needed.</p>
+<h3>5.2 OPTIMIZE and Z-ORDER</h3>
+<p><code>optimization/notebooks/nb_optimize_lakehouse.py</code>:</p>
+<pre><code class="language-python"># ============================================================
+# RetailIQ — Lakehouse Optimization
+# ============================================================
+
+# Cell 1 — Setup
+from pyspark.sql import SparkSession
+import time
+
+spark = SparkSession.builder.getOrCreate()
+
+# Cell 2 — OPTIMIZE silver_sales (compacts small files)
+# This rewrites small files into larger ones within each partition
+print(&quot;Running OPTIMIZE on silver_sales...&quot;)
+start = time.time()
+spark.sql(&quot;OPTIMIZE retailiq_lakehouse.silver_sales&quot;)
+print(f&quot;OPTIMIZE complete in {round(time.time()-start, 2)}s&quot;)
+
+# Cell 3 — OPTIMIZE with Z-ORDER on commonly filtered columns
+# Z-ORDER co-locates related data within each file, improving skip rates
+# Use for columns that appear in WHERE clauses but are NOT partition columns
+print(&quot;Running OPTIMIZE with ZORDER on fact_sales...&quot;)
+start = time.time()
+spark.sql(&quot;&quot;&quot;
+    OPTIMIZE retailiq_lakehouse.gold_fact_sales
+    ZORDER BY (store_key, product_key, date_key)
+&quot;&quot;&quot;)
+print(f&quot;OPTIMIZE ZORDER complete in {round(time.time()-start, 2)}s&quot;)
+
+# Cell 4 — VACUUM to remove old file versions (saves storage)
+# Default: removes files older than 7 days (168 hours)
+# WARNING: Do not reduce the retention period below 7 days if time travel is needed
+print(&quot;Running VACUUM on silver_sales...&quot;)
+spark.sql(&quot;VACUUM retailiq_lakehouse.silver_sales RETAIN 168 HOURS&quot;)
+print(&quot;VACUUM complete.&quot;)
+
+# Cell 5 — Enable V-Order on new writes
+# V-Order is a Microsoft extension to Parquet that improves read performance
+# It is enabled by default in Fabric but verify:
+spark.conf.set(&quot;spark.sql.parquet.vorder.enabled&quot;, &quot;true&quot;)
+spark.conf.set(&quot;spark.microsoft.delta.optimizeWrite.enabled&quot;, &quot;true&quot;)
+spark.conf.set(&quot;spark.microsoft.delta.optimizeWrite.binSize&quot;, &quot;1073741824&quot;)  # 1GB target
+print(&quot;V-Order and Optimized Write enabled&quot;)
+
+# Cell 6 — Analyze table statistics (helps query optimizer)
+spark.sql(&quot;ANALYZE TABLE retailiq_lakehouse.silver_sales COMPUTE STATISTICS FOR ALL COLUMNS&quot;)
+spark.sql(&quot;ANALYZE TABLE retailiq_lakehouse.gold_fact_sales COMPUTE STATISTICS FOR ALL COLUMNS&quot;)
+print(&quot;Statistics computed for silver_sales and gold_fact_sales&quot;)
+
+# Cell 7 — Verify improvement: check file count after OPTIMIZE
+files_after = mssparkutils.fs.ls(
+    &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;
+)
+sizes_after = [f.size for f in files_after if f.size &gt; 0]
+print(f&quot;\nAfter OPTIMIZE:&quot;)
+print(f&quot;  File count: {len(sizes_after)}&quot;)
+if sizes_after:
+    print(f&quot;  Average size: {sum(sizes_after)/len(sizes_after)/1024/1024:.2f} MB&quot;)
+</code></pre>
+<h3>5.3 Partition Strategy Review</h3>
+<p><strong>Assess the current partitioning:</strong></p>
+<ul>
+<li><code>silver_sales</code> is partitioned by <code>(region, transaction_date)</code> — is this optimal?</li>
+<li><code>region</code> has 4 values × <code>transaction_date</code> has ~1095 values = ~4,380 partitions over 3 years</li>
+<li>Each partition directory contains one or more small files per incremental run</li>
+<li>This is actually a <strong>partition explosion problem</strong> — too many small partitions</li>
+</ul>
+<p><strong>Recommended fix:</strong> Change the partitioning strategy to <code>(region, year, month)</code> instead:</p>
+<pre><code class="language-python"># Cell 8 — Repartition silver_sales with better partition strategy
+df_silver = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;)
+
+df_silver_repartitioned = df_silver \
+    .withColumn(&quot;year&quot;, F.year(&quot;transaction_date&quot;)) \
+    .withColumn(&quot;month&quot;, F.month(&quot;transaction_date&quot;))
+
+df_silver_repartitioned.write \
+    .format(&quot;delta&quot;) \
+    .mode(&quot;overwrite&quot;) \
+    .option(&quot;overwriteSchema&quot;, &quot;true&quot;) \
+    .partitionBy(&quot;region&quot;, &quot;year&quot;, &quot;month&quot;) \
+    .save(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales_optimized&quot;)
+
+print(&quot;Repartitioned silver_sales written to silver/sales_optimized&quot;)
+print(&quot;After validating, rename this to replace the original&quot;)
+</code></pre>
+<hr>
+<h2>6. Optimize Pipelines</h2>
+<h3>6.1 Identify Slow Pipeline Stages</h3>
+<p>In the Monitor hub, review the last 5 runs of <code>master_pipeline</code>:</p>
+<p>Look for:</p>
+<ul>
+<li>Which child pipeline consistently takes the longest?</li>
+<li>Is there a single activity that accounts for &gt; 50% of total runtime?</li>
+<li>Are any activities running sequentially that could run in parallel?</li>
+</ul>
+<p><strong>Common findings and fixes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pl_load_silver_sales</code> takes 45 min</td>
+<td>Notebook is doing a full scan instead of partition-pruned incremental read — fix the WHERE clause to use the date parameter</td>
+</tr>
+<tr>
+<td><code>pl_load_dimensions</code> takes 20 min</td>
+<td>Dataflow is refreshing unnecessarily on days when product data hasn&#39;t changed — add a conditional check before triggering the dataflow</td>
+</tr>
+<tr>
+<td>Bronze copy and silver transform run sequentially</td>
+<td>They are already sequential by design (silver needs bronze) — cannot parallelise without changing architecture</td>
+</tr>
+<tr>
+<td>For-each over 4 regions runs serially</td>
+<td>Set <code>batchCount = 4</code> on the ForEach to run all regions in parallel</td>
+</tr>
+</tbody></table>
+<h3>6.2 Add Pipeline-Level Optimisations</h3>
+<p><strong>Update <code>pl_load_bronze_sales</code></strong> to skip processing if no new source file exists:</p>
+<pre><code class="language-json">// Add a &quot;Get Metadata&quot; activity before the Copy activity:
+// Activity: GetSourceFileMetadata
+// Dataset: the source HTTP/ADLS path
+// Field list: [&quot;exists&quot;, &quot;size&quot;]
+//
+// Then add an If Condition:
+// Condition: @equals(activity(&#39;GetSourceFileMetadata&#39;).output.exists, true)
+// If True: run CopyRawSalesToBronze
+// If False: skip (log &quot;No source file for {date}, skipping&quot;)
+</code></pre>
+<p><strong>Add a timeout</strong> to the master pipeline:</p>
+<ul>
+<li>Pipeline settings → Timeout: <code>04:00:00</code> (4 hours)</li>
+<li>This prevents hung pipelines from blocking the next day&#39;s run</li>
+</ul>
+<hr>
+<h2>7. Optimize the Data Warehouse</h2>
+<p>If a Fabric Data Warehouse has been added (optional extension), apply these optimisations.</p>
+<h3>7.1 Statistics</h3>
+<pre><code class="language-sql">-- Create statistics on join columns
+-- (Fabric Data Warehouse does not auto-create statistics like SQL Server)
+
+CREATE STATISTICS stat_fact_store_key ON fact_sales (store_key);
+CREATE STATISTICS stat_fact_product_key ON fact_sales (product_key);
+CREATE STATISTICS stat_fact_date_key ON fact_sales (date_key);
+CREATE STATISTICS stat_store_key ON dim_store (store_key);
+CREATE STATISTICS stat_product_key ON dim_product (product_key);
+CREATE STATISTICS stat_date_key ON dim_date (date_key);
+</code></pre>
+<h3>7.2 Query Optimisation — Result Set Caching</h3>
+<pre><code class="language-sql">-- Enable result set caching for expensive queries that don&#39;t change frequently
+-- In Fabric Data Warehouse, use query hints:
+
+-- Original slow query (runs full aggregation each time):
+SELECT
+    d.year,
+    d.month_name,
+    s.region,
+    p.category,
+    SUM(f.total_revenue) AS total_revenue,
+    SUM(f.gross_margin) AS total_margin,
+    COUNT(DISTINCT f.customer_id) AS unique_customers
+FROM fact_sales f
+JOIN dim_date d ON f.date_key = d.date_key
+JOIN dim_store s ON f.store_key = s.store_key
+JOIN dim_product p ON f.product_key = p.product_key
+GROUP BY d.year, d.month_name, s.region, p.category;
+
+-- Materialise this as a pre-aggregated table:
+CREATE TABLE gold_monthly_summary AS
+SELECT
+    d.year,
+    d.month_number,
+    d.month_name,
+    d.quarter,
+    s.region,
+    s.city,
+    p.category,
+    p.subcategory,
+    SUM(f.total_revenue)       AS total_revenue,
+    SUM(f.gross_margin)        AS total_margin,
+    SUM(f.quantity_sold)       AS total_units,
+    COUNT(DISTINCT f.customer_id) AS unique_customers,
+    COUNT(*)                   AS transaction_count
+FROM fact_sales f
+JOIN dim_date d    ON f.date_key    = d.date_key
+JOIN dim_store s   ON f.store_key   = s.store_key
+JOIN dim_product p ON f.product_key = p.product_key
+GROUP BY d.year, d.month_number, d.month_name, d.quarter,
+         s.region, s.city, p.category, p.subcategory;
+
+-- Refresh this table nightly at the end of master_pipeline
+</code></pre>
+<h3>7.3 Identify Slow Query Execution Plans</h3>
+<pre><code class="language-sql">-- Use EXPLAIN to inspect query plan (Fabric Data Warehouse)
+EXPLAIN
+SELECT s.region, SUM(f.total_revenue)
+FROM fact_sales f
+JOIN dim_store s ON f.store_key = s.store_key
+GROUP BY s.region;
+
+-- Look for:
+-- &quot;BroadcastHashJoin&quot; = good (dim table is small, broadcast is fast)
+-- &quot;SortMergeJoin&quot; = potentially slow if no statistics exist
+-- &quot;Repartition&quot; steps = indicates missing or wrong partition keys
+</code></pre>
+<hr>
+<h2>8. Optimize Eventstreams and Eventhouses</h2>
+<h3>8.1 Eventhouse Caching Policy Review</h3>
+<pre><code class="language-kql">// Check current caching policy
+.show table sensor_raw policy caching
+
+// If queries frequently go beyond the 30-day hot cache window,
+// increase the cache. If the eventhouse is memory-constrained,
+// decrease it for less-queried tables.
+
+// Update caching for sensor_alerts (frequently queried, keep 90 days hot):
+.alter table sensor_alerts policy caching
+    hot = 90d
+
+// Update caching for sensor_raw (raw events, mostly queried within 7 days):
+.alter table sensor_raw policy caching
+    hot = 7d
+</code></pre>
+<h3>8.2 Materialized View Refresh Health</h3>
+<pre><code class="language-kql">// Check materialized view health and freshness
+.show materialized-views
+| project Name, IsHealthy, LastRunTime,
+          AgeInMinutes = datetime_diff(&#39;minute&#39;, now(), LastRunTime),
+          RowCount
+| extend status = iif(AgeInMinutes &gt; 10, &quot;LAGGING&quot;, &quot;OK&quot;)
+
+// If a materialized view is lagging, check if the source table
+// has excessive ingestion load. Options:
+// 1. Reduce ingestion frequency (batch events, not per-event)
+// 2. Increase eventhouse capacity
+// 3. Simplify the materialized view query
+</code></pre>
+<h3>8.3 Eventstream Throughput Optimisation</h3>
+<p>In the eventstream <code>es_sensor_events</code>, add a <strong>Transform</strong> step between source and destination to:</p>
+<ol>
+<li><p><strong>Filter</strong> out <code>DOOR_EVENT</code> events that are not needed in the hot path (reduce volume):</p>
+<ul>
+<li>Add a Filter transform: <code>event_type != &quot;DOOR_EVENT&quot;</code></li>
+<li>Route <code>DOOR_EVENT</code> events to the OneLake archive destination only</li>
+</ul>
+</li>
+<li><p><strong>Project</strong> only needed columns before writing to Eventhouse (reduce payload size):</p>
+<pre><code>Keep columns: event_id, event_type, store_id, sensor_id, timestamp_utc, value, region
+Drop columns: firmware_ver, battery_pct (only needed for low-battery alert, infrequent)
+</code></pre>
+</li>
+<li><p><strong>Aggregate</strong> foot traffic at the eventstream level (optional — reduces write volume):</p>
+<ul>
+<li>Add a Group By transform: group by <code>store_id</code>, window 1 minute, aggregate <code>avg(value)</code></li>
+<li>This writes 20 rows/minute instead of 20 rows/30 seconds (50% volume reduction)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>9. Optimize Spark Performance</h2>
+<p><code>optimization/notebooks/nb_optimize_spark.py</code>:</p>
+<pre><code class="language-python"># ============================================================
+# RetailIQ — Spark Performance Optimisation
+# ============================================================
+
+# Cell 1 — Understand current Spark configuration
+spark = SparkSession.builder.getOrCreate()
+print(&quot;Current shuffle partitions:&quot;, spark.conf.get(&quot;spark.sql.shuffle.partitions&quot;))
+print(&quot;AQE enabled:&quot;, spark.conf.get(&quot;spark.sql.adaptive.enabled&quot;))
+print(&quot;Default parallelism:&quot;, spark.sparkContext.defaultParallelism)
+
+# Cell 2 — Enable Adaptive Query Execution (AQE)
+# AQE dynamically adjusts shuffle partitions, join strategies, and skew handling
+spark.conf.set(&quot;spark.sql.adaptive.enabled&quot;, &quot;true&quot;)
+spark.conf.set(&quot;spark.sql.adaptive.coalescePartitions.enabled&quot;, &quot;true&quot;)
+spark.conf.set(&quot;spark.sql.adaptive.coalescePartitions.minPartitionNum&quot;, &quot;1&quot;)
+spark.conf.set(&quot;spark.sql.adaptive.skewJoin.enabled&quot;, &quot;true&quot;)
+
+# Cell 3 — Tune shuffle partitions
+# Default is 200, which is often too high for small-medium datasets
+# and too low for very large ones.
+# Rule of thumb: aim for ~128MB per partition
+
+df_silver = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;)
+
+total_bytes = sum(
+    f.size for f in mssparkutils.fs.ls(
+        &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;
+    ) if f.size &gt; 0
+)
+target_partition_size_bytes = 128 * 1024 * 1024  # 128MB
+optimal_partitions = max(1, total_bytes // target_partition_size_bytes)
+
+print(f&quot;Total data size: {total_bytes/1024/1024:.0f} MB&quot;)
+print(f&quot;Recommended shuffle partitions: {optimal_partitions}&quot;)
+
+spark.conf.set(&quot;spark.sql.shuffle.partitions&quot;, str(optimal_partitions))
+
+# Cell 4 — Broadcast join optimisation
+# When joining a large fact table to a small dimension table,
+# broadcast the small table to avoid shuffle
+
+from pyspark.sql import functions as F
+
+df_fact = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/gold/fact_sales&quot;)
+
+df_dim_store = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/gold/dim_store&quot;)
+
+# Hint to broadcast dim_store (it&#39;s small — 20 rows)
+df_optimised_join = df_fact.join(
+    F.broadcast(df_dim_store),
+    on=&quot;store_key&quot;,
+    how=&quot;left&quot;
+)
+
+# Explain to verify BroadcastHashJoin is used
+df_optimised_join.groupBy(&quot;region&quot;).agg(F.sum(&quot;total_revenue&quot;)).explain(mode=&quot;formatted&quot;)
+
+# Cell 5 — Cache frequently reused DataFrames
+# If a DataFrame is used multiple times in the same notebook session,
+# cache it to avoid recomputing from disk
+
+df_dim_product = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/gold/dim_product&quot;)
+
+df_dim_product.cache()
+df_dim_product.count()  # Trigger the cache
+print(&quot;dim_product cached in memory&quot;)
+
+# Important: unpersist when done to free memory
+# df_dim_product.unpersist()
+
+# Cell 6 — Partition pruning verification
+# Verify that partition filters are being pushed down (not scanning all partitions)
+
+df_pruned = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;) \
+    .filter((F.col(&quot;region&quot;) == &quot;North&quot;) &amp; (F.col(&quot;year&quot;) == 2024))
+
+# Check the physical plan — look for &quot;PartitionFilters&quot; in the output
+df_pruned.explain(mode=&quot;formatted&quot;)
+# Expected: you should see PartitionFilters: [isnotnull(region), (region = North), ...]
+# If you see a full scan: the filter columns are not partition columns — restructure
+
+# Cell 7 — Skew detection and handling
+# Check if any partition has significantly more data than others
+df_silver_with_partition = spark.read.format(&quot;delta&quot;) \
+    .load(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sales&quot;) \
+    .withColumn(&quot;partition_id&quot;, F.spark_partition_id())
+
+partition_sizes = df_silver_with_partition.groupBy(&quot;partition_id&quot;).count()
+partition_sizes.orderBy(F.desc(&quot;count&quot;)).show(10)
+
+# If one partition has 10x more rows: data is skewed
+# Fix: use salting on the skewed join key, or enable AQE skew join handling (already enabled in Cell 2)
+</code></pre>
+<hr>
+<h2>10. Optimize Query Performance</h2>
+<h3>10.1 Query Optimisation in KQL</h3>
+<pre><code class="language-kql">// ============================================================
+// KQL Query Performance Optimisation
+// ============================================================
+
+// BEFORE (slow — full table scan):
+sensor_raw
+| where event_type == &quot;FOOT_TRAFFIC&quot;
+| summarize avg_traffic = avg(value) by store_id
+
+// AFTER (fast — use datetime filter to leverage time index):
+sensor_raw
+| where timestamp_utc &gt; ago(24h)    // Always filter by time first in KQL
+| where event_type == &quot;FOOT_TRAFFIC&quot;
+| summarize avg_traffic = avg(value) by store_id
+
+// Rule: In KQL, the datetime column is always the primary index.
+// Filtering by timestamp first reduces the scan range dramatically.
+// Never run an aggregation without a time filter in production.
+
+// ----
+
+// BEFORE (slow — string search):
+sensor_raw
+| where store_id contains &quot;STR_00&quot;
+
+// AFTER (fast — exact match or has_any):
+sensor_raw
+| where store_id in (&quot;STR_001&quot;, &quot;STR_002&quot;, &quot;STR_003&quot;)
+// or for dynamic lists:
+| where store_id has_any (&quot;STR_001&quot;, &quot;STR_002&quot;, &quot;STR_003&quot;)
+
+// ----
+
+// BEFORE (slow — computing on every row):
+sensor_raw
+| extend hour_of_day = hourofday(timestamp_utc)
+| where hour_of_day between (8 .. 18)
+
+// AFTER (fast — use datetime arithmetic directly):
+sensor_raw
+| where timestamp_utc &gt; ago(24h)
+| where timestamp_utc % 1d between (8h .. 18h)
+</code></pre>
+<h3>10.2 Delta Table Query Optimisation in SQL/PySpark</h3>
+<pre><code class="language-sql">-- Check if Delta table has statistics
+DESCRIBE DETAIL retailiq_lakehouse.gold_fact_sales;
+-- Look for &quot;numFiles&quot;, &quot;sizeInBytes&quot;, and &quot;statistics&quot; fields
+
+-- Check data skipping effectiveness using Delta log:
+-- After running a filtered query, check the Spark UI → SQL tab
+-- Look for &quot;files pruned&quot; vs &quot;files read&quot;
+-- Good: 90%+ pruning on filtered columns
+-- Bad: 0% pruning = no data skipping = slow
+
+-- Force a query to use a specific partition:
+SELECT * FROM fact_sales
+WHERE region = &#39;North&#39;   -- This should prune all non-North partitions
+AND date_key BETWEEN 20240101 AND 20240131;
+</code></pre>
+<hr>
+<h2>11. Run Post-Optimization Benchmark</h2>
+<p>Re-run <code>nb_benchmark.py</code> after all optimisations and record results in <code>optimization_results.md</code>:</p>
+<pre><code class="language-markdown"># optimization_results.md
+
+## Baseline (Before Optimization)
+
+| Test | Elapsed (s) | Row Count | Notes |
+|---|---|---|---|
+| silver_full_scan | ___ | ___ | |
+| silver_regional_filter | ___ | ___ | |
+| fact_store_join | ___ | ___ | |
+| silver_file_count | ___ files | — | |
+
+## After Optimization
+
+| Test | Elapsed (s) | Row Count | Improvement | Change Made |
+|---|---|---|---|---|
+| silver_full_scan | ___ | ___ | ___% | V-Order, OPTIMIZE |
+| silver_regional_filter | ___ | ___ | ___% | Re-partitioned to (region, year, month) |
+| fact_store_join | ___ | ___ | ___% | Z-ORDER on store_key, broadcast join |
+| silver_file_count | ___ files | — | ___% fewer files | OPTIMIZE compaction |
+
+## Key Takeaways
+- (Fill in after running benchmarks)
+- Which optimization had the biggest impact?
+- What surprised you?
+- What would you do differently on a larger dataset?
+</code></pre>
+<hr>
+<h2>12. Validation Checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Baseline benchmark results recorded before any changes</li>
+<li><input disabled="" type="checkbox"> <code>OPTIMIZE</code> and <code>ZORDER</code> run on <code>silver_sales</code> and <code>gold_fact_sales</code></li>
+<li><input disabled="" type="checkbox"> <code>VACUUM</code> run on <code>silver_sales</code></li>
+<li><input disabled="" type="checkbox"> V-Order and Optimized Write are confirmed enabled</li>
+<li><input disabled="" type="checkbox"> Table statistics computed on all gold tables</li>
+<li><input disabled="" type="checkbox"> Partition strategy reviewed — <code>silver_sales</code> repartitioned to <code>(region, year, month)</code> if applicable</li>
+<li><input disabled="" type="checkbox"> Pipeline timeout configured, ForEach batch count set to 4</li>
+<li><input disabled="" type="checkbox"> Eventhouse caching policies updated per table access patterns</li>
+<li><input disabled="" type="checkbox"> Materialized view health verified in KQL</li>
+<li><input disabled="" type="checkbox"> Eventstream transform added to filter and project events before destination</li>
+<li><input disabled="" type="checkbox"> AQE enabled in Spark configuration</li>
+<li><input disabled="" type="checkbox"> Shuffle partition count set based on data size calculation</li>
+<li><input disabled="" type="checkbox"> Broadcast join confirmed via <code>.explain()</code> for fact/dim join</li>
+<li><input disabled="" type="checkbox"> KQL time-first filter pattern applied to all analysis queries</li>
+<li><input disabled="" type="checkbox"> Post-optimization benchmark results recorded</li>
+<li><input disabled="" type="checkbox"> <code>optimization_results.md</code> completed with before/after comparison</li>
+<li><input disabled="" type="checkbox"> All optimization notebooks committed to <code>optimization/notebooks/</code></li>
+</ul>
+<hr>
+<h2>13. Exam Topics Covered</h2>
+<table>
+<thead>
+<tr>
+<th>Exam Objective</th>
+<th>Covered In</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Optimize a lakehouse table</td>
+<td>Sections 5.1, 5.2, 5.3</td>
+</tr>
+<tr>
+<td>Optimize a pipeline</td>
+<td>Section 6</td>
+</tr>
+<tr>
+<td>Optimize a data warehouse</td>
+<td>Section 7</td>
+</tr>
+<tr>
+<td>Optimize eventstreams and eventhouses</td>
+<td>Section 8</td>
+</tr>
+<tr>
+<td>Optimize Spark performance</td>
+<td>Section 9</td>
+</tr>
+<tr>
+<td>Optimize query performance</td>
+<td>Section 10</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>14. Further Reading</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/delta-optimization-and-v-order">Delta Lake OPTIMIZE in Fabric</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/delta-optimization-and-v-order">V-Order write optimisation</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/databricks/optimizations/aqe">Adaptive Query Execution in Spark</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/best-practices">KQL best practices</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/eventhouse">Eventhouse performance tuning</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-warehouse/guidelines-warehouse-performance">Fabric Data Warehouse performance</a></li>
+</ul>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Specifications_5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.7;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+h1{font-size:24px;margin:28px 0 12px 0;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px;color:#00cec9;margin:24px 0 10px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
+h3{font-size:16px;color:#e4e6eb;margin:18px 0 8px 0}
+h4{font-size:14px;color:#8b8fa3;margin:12px 0 6px 0}
+p{margin:8px 0}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin-bottom:4px}
+code{background:#0a0c12;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
+pre{background:#0a0c12;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:10px 0;border:1px solid #2a2e3a}
+pre code{background:none;padding:0;border-radius:0;color:#e4e6eb;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
+th{background:#1a1d27;font-weight:600;color:#00cec9}
+td{background:#0f1117}
+blockquote{border-left:3px solid #6c5ce7;padding:8px 14px;margin:10px 0;background:#1a1d27;border-radius:0 8px 8px 0;color:#b0b4c0}
+blockquote p{margin:2px 0}
+hr{border:none;border-top:1px solid #2a2e3a;margin:20px 0}
+a{color:#6c5ce7;text-decoration:none}
+a:hover{text-decoration:underline}
+input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+strong{color:#e4e6eb}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+@media(max-width:640px){.container{padding:12px}h1{font-size:20px}h2{font-size:17px}.container{font-size:14px}table{font-size:12px}th,td{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="../../projects.html" class="back">← Back to Projects</a>
+<h1>Specifications_5.md</h1>
+<h1>RetailIQ — Project 5: Monitor the Platform</h1>
+<p><strong>Domain:</strong> Monitor &amp; Optimize an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Alert rules, monitoring notebook (completed), Data Activator, diagnostic queries</p>
+<hr>
+<h2>1. Overview</h2>
+<p>Things go wrong in production. This project simulates a series of realistic failure scenarios across the RetailIQ platform — pipeline failures, dataflow hangs, notebook Spark errors, eventhouse ingestion drops, and shortcut misconfiguration — and walks through how to diagnose and resolve each one. You will also build a proactive monitoring notebook and configure alerting.</p>
+<p>This project is deliberately structured as a <strong>break/fix exercise</strong>: each section introduces a fault, explains how to find it, and explains the fix.</p>
+<hr>
+<h2>2. Prerequisites</h2>
+<ul>
+<li>Projects 1–4 completed</li>
+<li>Data is flowing (at least some batch runs have completed, some sensor data in SensorDB)</li>
+<li>Workspace logging is enabled (from Project 1, Step 4.12)</li>
+</ul>
+<hr>
+<h2>3. Repository Structure for This Project</h2>
+<pre><code>retailiq-fabric/
+└── monitoring/
+    ├── notebooks/
+    │   └── nb_monitoring_check.py        (completed from Project 2 stub)
+    └── alerts/
+        ├── alert_pipeline_failure.json
+        ├── alert_ingestion_freshness.json
+        └── alert_queue_threshold.kql
+</code></pre>
+<hr>
+<h2>4. Monitor Data Ingestion</h2>
+<h3>4.1 Monitor Pipeline Run History</h3>
+<p><strong>Action:</strong> In the Fabric portal, go to <code>retailiq-dev</code> → <strong>Monitor hub</strong> (left sidebar, monitor icon).</p>
+<p>The Monitor hub shows all activity in the workspace. Learn to navigate:</p>
+<ul>
+<li><strong>Pipeline runs tab</strong>: Shows all pipeline executions, their status, duration, start/end times</li>
+<li><strong>Filter by</strong>: Pipeline name, status (Succeeded/Failed/Running), date range</li>
+<li><strong>Click any run</strong>: Drill into individual activity-level status and logs</li>
+<li><strong>Input/Output</strong>: Click on a specific activity to see its input parameters and output metrics (rows copied, bytes written, etc.)</li>
+</ul>
+<p><strong>Exercise:</strong> Find the most recent run of <code>master_pipeline</code>. Identify:</p>
+<ol>
+<li>How long each child pipeline took</li>
+<li>Whether the parallel streaming validation branch ran independently</li>
+<li>The total rows processed by <code>pl_load_bronze_sales</code></li>
+</ol>
+<h3>4.2 Monitor Data Transformation</h3>
+<p><strong>Action:</strong> In the Monitor hub, check the <strong>Spark job definitions</strong> and <strong>Notebook runs</strong> tabs.</p>
+<p>For <code>nb_transform_bronze_to_silver_sales</code>:</p>
+<ul>
+<li>Find the run and click into it</li>
+<li>The Spark UI link is available — click it to see the Spark execution plan, stage details, task distribution</li>
+<li>Check for any skewed partitions (one task taking 10x longer than others — indicates data skew)</li>
+<li>Check shuffle read/write bytes — excessive shuffle indicates missing partition pruning</li>
+</ul>
+<h3>4.3 Monitor Semantic Model Refresh</h3>
+<p>If you have a Power BI semantic model connected to the gold layer (optional):</p>
+<ul>
+<li>Go to the workspace → click the semantic model → <strong>Refresh history</strong></li>
+<li>Check refresh duration and any error messages</li>
+<li>For the exam: know that slow semantic model refreshes are often caused by large delta tables without proper partitioning, or DirectQuery without aggregations</li>
+</ul>
+<h3>4.4 Configure Alerts</h3>
+<p><strong>Alert 1: Pipeline Failure Alert</strong></p>
+<p>In the Monitor hub, find <code>master_pipeline</code> → click <strong>Set alert</strong>:</p>
+<p><code>monitoring/alerts/alert_pipeline_failure.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;alertName&quot;: &quot;master_pipeline_failure&quot;,
+  &quot;description&quot;: &quot;Fires when master_pipeline fails or is cancelled&quot;,
+  &quot;triggerCondition&quot;: {
+    &quot;pipelineName&quot;: &quot;master_pipeline&quot;,
+    &quot;status&quot;: [&quot;Failed&quot;, &quot;Cancelled&quot;]
+  },
+  &quot;notificationChannels&quot;: [
+    {
+      &quot;type&quot;: &quot;Email&quot;,
+      &quot;recipients&quot;: [&quot;dataengineer@retailiq.com&quot;]
+    }
+  ],
+  &quot;cooldownPeriodMinutes&quot;: 60
+}
+</code></pre>
+<p><strong>Alert 2: Ingestion Freshness Alert</strong></p>
+<p>Use <strong>Data Activator</strong> to trigger an alert when the silver table hasn&#39;t been updated in 26 hours (the nightly job should complete by 03:00 UTC, so anything older than 26h at 04:00 UTC is a problem).</p>
+<p>In the Fabric portal → <strong>Data Activator</strong> → New Reflex:</p>
+<ul>
+<li>Data source: <code>retailiq_lakehouse</code> → <code>silver_sales</code> table</li>
+<li>Property to monitor: <code>max(_ingestion_timestamp)</code></li>
+<li>Condition: <code>value &lt; now() - 26h</code></li>
+<li>Action: Send email to <code>dataengineer@retailiq.com</code></li>
+<li>Name the reflex: <code>reflex_ingestion_freshness</code></li>
+</ul>
+<p><code>monitoring/alerts/alert_ingestion_freshness.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;reflexName&quot;: &quot;reflex_ingestion_freshness&quot;,
+  &quot;dataSource&quot;: &quot;retailiq_lakehouse.silver_sales&quot;,
+  &quot;property&quot;: &quot;max(_ingestion_timestamp)&quot;,
+  &quot;condition&quot;: {
+    &quot;operator&quot;: &quot;lessThan&quot;,
+    &quot;value&quot;: &quot;now() - 26h&quot;
+  },
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;email&quot;,
+    &quot;to&quot;: &quot;dataengineer@retailiq.com&quot;,
+    &quot;subject&quot;: &quot;RetailIQ: Silver layer ingestion is stale&quot;,
+    &quot;body&quot;: &quot;The silver_sales table has not been updated in over 26 hours.&quot;
+  }
+}
+</code></pre>
+<p><strong>Alert 3: KQL Queue Threshold Alert</strong></p>
+<p>In the Eventhouse, create an alert on the anomaly detection query:</p>
+<p><code>monitoring/alerts/alert_queue_threshold.kql</code>:</p>
+<pre><code class="language-kql">// Alert definition — run this in SensorDB to create the alert
+// This fires when any store has a queue &gt; 15 people for &gt; 5 consecutive minutes
+
+sensor_raw
+| where ingested_at &gt; ago(6m)
+| where event_type == &quot;QUEUE_LENGTH&quot;
+| where value &gt; 15
+| summarize consecutive_readings = count() by store_id
+| where consecutive_readings &gt;= 5
+| project store_id, consecutive_readings,
+          alert_message = strcat(&quot;CRITICAL: Queue at &quot;, store_id,
+                                 &quot; has exceeded 15 for 5+ consecutive readings&quot;)
+</code></pre>
+<hr>
+<h2>5. Identify and Resolve Errors — Break/Fix Scenarios</h2>
+<h3>5.1 Pipeline Error: Silent Copy Activity Failure</h3>
+<p><strong>The symptom:</strong> <code>master_pipeline</code> shows as &quot;Succeeded&quot; but no new data appears in the bronze layer.</p>
+<p><strong>How to find it:</strong></p>
+<ol>
+<li>In the Monitor hub, click into the <code>master_pipeline</code> run</li>
+<li>Click the <code>RunBronzeLoad</code> → <code>CopyRawSalesToBronze</code> activity</li>
+<li>Click the <strong>Output</strong> tab</li>
+<li>You will see <code>rowsCopied: 0</code> and a warning: <code>&quot;No files matched the source path pattern&quot;</code></li>
+</ol>
+<p><strong>Root cause:</strong> The source path in the Copy Activity used a hardcoded date (<code>2024-01-15</code>) instead of the dynamic expression <code>@formatDateTime(utcnow(), &#39;yyyy-MM-dd&#39;)</code>.</p>
+<p><strong>Fix:</strong></p>
+<ol>
+<li>Open <code>pl_load_bronze_sales</code> in edit mode</li>
+<li>Click <code>CopyRawSalesToBronze</code> → Source settings</li>
+<li>Change the file path from the hardcoded date to:<pre><code>@concat(&#39;sales_&#39;, formatDateTime(utcnow(), &#39;yyyy-MM-dd&#39;), &#39;.csv&#39;)
+</code></pre>
+</li>
+<li>Save and re-run the pipeline</li>
+<li>Verify <code>rowsCopied &gt; 0</code> in the output</li>
+</ol>
+<p><strong>Exam takeaway:</strong> Always check activity-level output, not just pipeline-level status. A pipeline can succeed even when individual activities copy zero rows.</p>
+<hr>
+<h3>5.2 Dataflow Error: Refresh Timeout</h3>
+<p><strong>The symptom:</strong> <code>df_dim_product</code> fails with error <code>&quot;Mashup Engine timed out after 600 seconds&quot;</code>.</p>
+<p><strong>How to find it:</strong></p>
+<ol>
+<li>In the Monitor hub → <strong>Dataflow runs</strong> tab</li>
+<li>Click the failed run → <strong>Error details</strong></li>
+<li>Error: <code>DataSource.Error: The operation was cancelled after 600 seconds</code></li>
+</ol>
+<p><strong>Root cause:</strong> The CSV source file has grown too large for the default Dataflow timeout. Alternatively, the source connection is misconfigured and hanging.</p>
+<p><strong>Fix options (choose one based on root cause):</strong></p>
+<ol>
+<li><strong>If the file is too large:</strong> Switch the dataflow to use chunked reads via pagination, or migrate the transformation to a PySpark notebook which handles large files natively.</li>
+<li><strong>If it&#39;s a connection hang:</strong> In Power Query, check the data source credentials — go to the dataflow settings → Data source credentials → verify the connection string and key are valid.</li>
+<li><strong>If it&#39;s a gateway issue:</strong> In dataflow settings → Gateway connection → ensure no gateway is configured (for cloud sources, gateway should be set to None).</li>
+</ol>
+<p><strong>Exam takeaway:</strong> Dataflow timeouts are a common failure mode. The exam tests whether you know to check the data source credentials, gateway config, and query fold (pushed-down queries execute faster than local ones).</p>
+<hr>
+<h3>5.3 Notebook Error: PySpark AnalysisException</h3>
+<p><strong>The symptom:</strong> <code>nb_transform_bronze_to_silver_sales</code> fails with:</p>
+<pre><code>AnalysisException: Cannot resolve column name &#39;transaction_date&#39; among
+(transaction_id, sale_date, store_id, ...)
+</code></pre>
+<p><strong>How to find it:</strong></p>
+<ol>
+<li>Monitor hub → <strong>Notebook runs</strong> tab → find the failed run</li>
+<li>The error is visible in the run output, including the cell number and full stack trace</li>
+<li>The Spark UI link shows the failed job and the last attempted stage</li>
+</ol>
+<p><strong>Root cause:</strong> The source CSV column was renamed from <code>transaction_date</code> to <code>sale_date</code> in a schema update, but the notebook still references the old column name.</p>
+<p><strong>Fix:</strong></p>
+<pre><code class="language-python"># Before (broken):
+F.to_date(F.col(&quot;transaction_date&quot;), &quot;yyyy-MM-dd&quot;).alias(&quot;transaction_date&quot;)
+
+# After (fixed):
+F.to_date(F.col(&quot;sale_date&quot;), &quot;yyyy-MM-dd&quot;).alias(&quot;transaction_date&quot;)
+
+# Better practice — add schema validation at the top of the notebook:
+expected_columns = {
+    &quot;transaction_id&quot;, &quot;sale_date&quot;, &quot;store_id&quot;, &quot;product_id&quot;,
+    &quot;quantity_sold&quot;, &quot;unit_price&quot;, &quot;unit_cost&quot;, &quot;discount_pct&quot;,
+    &quot;customer_id&quot;, &quot;payment_method&quot;, &quot;region&quot;
+}
+actual_columns = set(df_bronze.columns)
+missing = expected_columns - actual_columns
+if missing:
+    raise ValueError(f&quot;Source schema mismatch. Missing columns: {missing}&quot;)
+</code></pre>
+<p><strong>Exam takeaway:</strong> Always validate schema at ingestion. Use explicit selects with known column names rather than <code>select *</code>. Know how to navigate to a failed Spark stage in the Spark UI.</p>
+<hr>
+<h3>5.4 Eventhouse Error: Ingestion Failures</h3>
+<p><strong>The symptom:</strong> <code>sensor_raw</code> table row count stops increasing despite the eventstream showing events passing through.</p>
+<p><strong>How to find it:</strong>
+Run this KQL query in SensorDB:</p>
+<pre><code class="language-kql">// Check ingestion failures in the last hour
+.show ingestion failures
+| where FailedOn &gt; ago(1h)
+| project FailedOn, Table, IngestionSourcePath, Details, ErrorCode
+| order by FailedOn desc
+</code></pre>
+<p><strong>Common error codes and fixes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Error Code</th>
+<th>Meaning</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>BadRequest_InvalidBlob</code></td>
+<td>JSON is malformed</td>
+<td>Validate event payload schema; add error handling in the eventstream transform</td>
+</tr>
+<tr>
+<td><code>Schema_DataTypeMismatch</code></td>
+<td>A field&#39;s type doesn&#39;t match the table schema</td>
+<td>Fix the ingestion mapping or update the table schema</td>
+</tr>
+<tr>
+<td><code>General_LimitsExceeded</code></td>
+<td>Ingestion rate limit hit</td>
+<td>Reduce event frequency or upgrade Eventhouse capacity</td>
+</tr>
+<tr>
+<td><code>BadRequest_EmptyBlob</code></td>
+<td>Empty event received</td>
+<td>Add a filter in the eventstream to drop empty events</td>
+</tr>
+</tbody></table>
+<p><strong>Fix for Schema_DataTypeMismatch</strong> (most common for this project):</p>
+<p>If the <code>value</code> field sometimes arrives as a string <code>&quot;42&quot;</code> instead of a number <code>42</code>:</p>
+<pre><code class="language-kql">// Update the table to accept both types via update policy
+.alter table sensor_raw policy update
+@&#39;[{&quot;Source&quot;: &quot;sensor_raw_staging&quot;, &quot;Query&quot;: &quot;sensor_raw_staging | extend value = todouble(value)&quot;, &quot;IsEnabled&quot;: true}]&#39;
+</code></pre>
+<p><strong>Exam takeaway:</strong> Know the <code>.show ingestion failures</code> command. Understand that eventhouse ingestion errors are silent — rows are simply not written, with no pipeline-level error raised.</p>
+<hr>
+<h3>5.5 Eventstream Error: Source Disconnection</h3>
+<p><strong>The symptom:</strong> The eventstream shows 0 events/second for the past 30 minutes.</p>
+<p><strong>How to find it:</strong></p>
+<ol>
+<li>In the Fabric portal, open <code>es_sensor_events</code></li>
+<li>The eventstream canvas shows a red indicator on the source node</li>
+<li>Click the source node → <strong>Details</strong> panel → Error: <code>&quot;Connection to Event Hub lost. Last successful connection: 30 minutes ago&quot;</code></li>
+</ol>
+<p><strong>Fix:</strong></p>
+<ol>
+<li>Click the source node → <strong>Edit</strong></li>
+<li>Verify the Event Hub connection string (SAS key may have expired — Event Hub SAS keys have configurable expiry)</li>
+<li>Regenerate the SAS key in the Azure portal → Event Hub → Shared Access Policies</li>
+<li>Update the connection string in the eventstream source</li>
+<li>Click <strong>Save and restart</strong></li>
+</ol>
+<p><strong>Exam takeaway:</strong> Eventstream sources can lose connectivity silently. Always configure ingestion freshness alerts (as in Step 4.4) to catch this.</p>
+<hr>
+<h3>5.6 T-SQL Error: Warehouse Query Failure</h3>
+<p>If a Fabric Data Warehouse is used alongside the lakehouse (optional extension), a common exam scenario is:</p>
+<p><strong>The symptom:</strong></p>
+<pre><code class="language-sql">-- This query fails:
+SELECT s.region, SUM(f.total_revenue) AS revenue
+FROM fact_sales f
+JOIN dim_store s ON f.store_key = s.store_key
+GROUP BY s.region
+</code></pre>
+<p>Error: <code>Msg 8120: Column &#39;dim_store.store_key&#39; is invalid in the select list because it is not contained in either an aggregate function or the GROUP BY clause</code></p>
+<p><strong>Fix:</strong> The <code>store_key</code> referenced in the JOIN must either be in GROUP BY or wrapped in an aggregate. The correct query is:</p>
+<pre><code class="language-sql">SELECT s.region, SUM(f.total_revenue) AS revenue
+FROM fact_sales f
+JOIN dim_store s ON f.store_key = s.store_key
+GROUP BY s.region  -- region is the grouping column, not store_key
+</code></pre>
+<hr>
+<h3>5.7 Shortcut Error: Access Denied</h3>
+<p><strong>The symptom:</strong> Querying the <code>external_sales_archive</code> shortcut (created in Project 3) returns:
+<code>Error: Access to the shortcut target is denied. Check the credential configuration.</code></p>
+<p><strong>How to find it:</strong></p>
+<ol>
+<li>In the lakehouse, right-click the shortcut → <strong>Properties</strong></li>
+<li>The credential type shows <code>Anonymous</code> — the ADLS source requires authentication</li>
+</ol>
+<p><strong>Fix:</strong></p>
+<ol>
+<li>Delete the shortcut</li>
+<li>Recreate it: in the shortcut wizard, select <strong>Authentication kind: Account key</strong> or <strong>Service principal</strong></li>
+<li>Enter the ADLS storage account key from Azure Portal → Storage Account → Access keys</li>
+<li>Save and re-test by querying the shortcut</li>
+</ol>
+<hr>
+<h2>6. Complete the Monitoring Notebook</h2>
+<p>This completes the <code>nb_monitoring_check</code> stub from Project 2.</p>
+<p><code>monitoring/notebooks/nb_monitoring_check.py</code>:</p>
+<pre><code class="language-python"># ============================================================
+# RetailIQ — Platform Monitoring Check
+# Run daily after master_pipeline completes
+# Checks ingestion freshness, table sizes, error counts
+# ============================================================
+
+# Cell 1 — Imports
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from datetime import datetime, date, timedelta
+import json
+
+spark = SparkSession.builder.getOrCreate()
+LAKEHOUSE_PATH = &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com&quot;
+report = {}
+
+# Cell 2 — Check silver_sales ingestion freshness
+df_silver = spark.read.format(&quot;delta&quot;) \
+    .load(f&quot;{LAKEHOUSE_PATH}/Files/silver/sales&quot;)
+
+latest_ingestion = df_silver.agg(
+    F.max(&quot;_ingestion_timestamp&quot;).alias(&quot;latest_ts&quot;),
+    F.count(&quot;*&quot;).alias(&quot;total_records&quot;)
+).collect()[0]
+
+freshness_hours = (datetime.utcnow() - latest_ingestion[&quot;latest_ts&quot;].replace(tzinfo=None)).total_seconds() / 3600
+is_fresh = freshness_hours &lt; 26
+
+report[&quot;silver_sales&quot;] = {
+    &quot;latest_ingestion&quot;: str(latest_ingestion[&quot;latest_ts&quot;]),
+    &quot;freshness_hours&quot;: round(freshness_hours, 2),
+    &quot;total_records&quot;: latest_ingestion[&quot;total_records&quot;],
+    &quot;status&quot;: &quot;OK&quot; if is_fresh else &quot;STALE&quot;
+}
+
+print(f&quot;Silver sales freshness: {round(freshness_hours, 2)}h | Status: {report[&#39;silver_sales&#39;][&#39;status&#39;]}&quot;)
+
+# Cell 3 — Check gold fact_sales
+df_fact = spark.read.format(&quot;delta&quot;) \
+    .load(f&quot;{LAKEHOUSE_PATH}/Files/gold/fact_sales&quot;)
+
+fact_count = df_fact.count()
+report[&quot;fact_sales&quot;] = {
+    &quot;total_records&quot;: fact_count,
+    &quot;status&quot;: &quot;OK&quot; if fact_count &gt; 0 else &quot;EMPTY&quot;
+}
+print(f&quot;fact_sales record count: {fact_count:,} | Status: {report[&#39;fact_sales&#39;][&#39;status&#39;]}&quot;)
+
+# Cell 4 — Check Delta table history for recent operations
+df_history = spark.sql(&quot;DESCRIBE HISTORY retailiq_lakehouse.silver_sales LIMIT 5&quot;)
+df_history.show(truncate=False)
+
+# Cell 5 — Check for quarantined late-arriving records
+try:
+    df_quarantine = spark.read.parquet(f&quot;{LAKEHOUSE_PATH}/Files/bronze/sales_quarantine/&quot;)
+    quarantine_count = df_quarantine.count()
+    report[&quot;quarantine&quot;] = {
+        &quot;records&quot;: quarantine_count,
+        &quot;status&quot;: &quot;WARNING&quot; if quarantine_count &gt; 1000 else &quot;OK&quot;
+    }
+    print(f&quot;Quarantined records: {quarantine_count:,}&quot;)
+except Exception:
+    report[&quot;quarantine&quot;] = {&quot;records&quot;: 0, &quot;status&quot;: &quot;OK&quot;}
+    print(&quot;No quarantine records found&quot;)
+
+# Cell 6 — Overall health summary
+all_statuses = [v.get(&quot;status&quot;, &quot;UNKNOWN&quot;) for v in report.values()]
+overall = &quot;HEALTHY&quot; if all(s == &quot;OK&quot; for s in all_statuses) else &quot;DEGRADED&quot;
+
+print(&quot;\n===== RetailIQ Platform Health Report =====&quot;)
+print(f&quot;Run time: {datetime.utcnow()} UTC&quot;)
+print(f&quot;Overall status: {overall}&quot;)
+for item, details in report.items():
+    print(f&quot;  {item}: {details}&quot;)
+print(&quot;===========================================&quot;)
+
+# Cell 7 — Exit with status for pipeline to consume
+mssparkutils.notebook.exit(json.dumps({&quot;overall_status&quot;: overall, &quot;report&quot;: report}))
+</code></pre>
+<hr>
+<h2>7. Validation Checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Monitor hub explored — can navigate to pipeline runs, activity details, and Spark UI</li>
+<li><input disabled="" type="checkbox"> Alert <code>master_pipeline_failure</code> configured and tested (manually cancel a run to trigger it)</li>
+<li><input disabled="" type="checkbox"> Data Activator reflex <code>reflex_ingestion_freshness</code> configured</li>
+<li><input disabled="" type="checkbox"> KQL queue alert query runs successfully in <code>qs_sensor_analysis</code></li>
+<li><input disabled="" type="checkbox"> All 7 break/fix scenarios have been worked through and documented</li>
+<li><input disabled="" type="checkbox"> <code>.show ingestion failures</code> query has been run and results interpreted</li>
+<li><input disabled="" type="checkbox"> <code>nb_monitoring_check</code> runs end-to-end and outputs a valid health report JSON</li>
+<li><input disabled="" type="checkbox"> Monitoring notebook is wired into <code>master_pipeline</code> as the final activity (verify in Project 2 pipeline)</li>
+<li><input disabled="" type="checkbox"> All monitoring artefacts committed to <code>monitoring/</code> in the repo</li>
+</ul>
+<hr>
+<h2>8. Exam Topics Covered</h2>
+<table>
+<thead>
+<tr>
+<th>Exam Objective</th>
+<th>Covered In</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Monitor data ingestion</td>
+<td>Sections 4.1, 4.2</td>
+</tr>
+<tr>
+<td>Monitor data transformation</td>
+<td>Section 4.2</td>
+</tr>
+<tr>
+<td>Monitor semantic model refresh</td>
+<td>Section 4.3</td>
+</tr>
+<tr>
+<td>Configure alerts</td>
+<td>Section 4.4</td>
+</tr>
+<tr>
+<td>Identify and resolve pipeline errors</td>
+<td>Section 5.1</td>
+</tr>
+<tr>
+<td>Identify and resolve dataflow errors</td>
+<td>Section 5.2</td>
+</tr>
+<tr>
+<td>Identify and resolve notebook errors</td>
+<td>Section 5.3</td>
+</tr>
+<tr>
+<td>Identify and resolve eventhouse errors</td>
+<td>Section 5.4</td>
+</tr>
+<tr>
+<td>Identify and resolve eventstream errors</td>
+<td>Section 5.5</td>
+</tr>
+<tr>
+<td>Identify and resolve T-SQL errors</td>
+<td>Section 5.6</td>
+</tr>
+<tr>
+<td>Identify and resolve shortcut errors</td>
+<td>Section 5.7</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Further Reading</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-factory/monitor-pipeline-runs">Monitor pipeline runs in Fabric</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/data-explorer/kusto/management/ingestionfailures">Eventhouse ingestion failure diagnostics</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-activator/data-activator-introduction">Data Activator overview</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/admin/monitoring-hub">Fabric Monitor hub</a></li>
+</ul>
+
+</div>
+</body>
+</html>

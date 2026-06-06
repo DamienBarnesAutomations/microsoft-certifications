@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Specifications_4</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.7;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.back{display:inline-block;margin-bottom:16px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s}
+.back:hover{color:#e4e6eb;border-color:#6c5ce7}
+h1{font-size:24px;margin:28px 0 12px 0;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:19px;color:#00cec9;margin:24px 0 10px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
+h3{font-size:16px;color:#e4e6eb;margin:18px 0 8px 0}
+h4{font-size:14px;color:#8b8fa3;margin:12px 0 6px 0}
+p{margin:8px 0}
+ul,ol{padding-left:22px;margin:8px 0}
+li{margin-bottom:4px}
+code{background:#0a0c12;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
+pre{background:#0a0c12;padding:14px 16px;border-radius:8px;overflow-x:auto;margin:10px 0;border:1px solid #2a2e3a}
+pre code{background:none;padding:0;border-radius:0;color:#e4e6eb;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
+th{background:#1a1d27;font-weight:600;color:#00cec9}
+td{background:#0f1117}
+blockquote{border-left:3px solid #6c5ce7;padding:8px 14px;margin:10px 0;background:#1a1d27;border-radius:0 8px 8px 0;color:#b0b4c0}
+blockquote p{margin:2px 0}
+hr{border:none;border-top:1px solid #2a2e3a;margin:20px 0}
+a{color:#6c5ce7;text-decoration:none}
+a:hover{text-decoration:underline}
+input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+strong{color:#e4e6eb}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+@media(max-width:640px){.container{padding:12px}h1{font-size:20px}h2{font-size:17px}.container{font-size:14px}table{font-size:12px}th,td{padding:6px 8px}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="../../projects.html" class="back">← Back to Projects</a>
+<h1>Specifications_4.md</h1>
+<h1>RetailIQ — Project 4: Stream Live Sensor Data</h1>
+<p><strong>Domain:</strong> Ingest &amp; Transform Data<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Eventhouse, KQL Database, Eventstream, KQL Querysets, Real-Time Dashboard (optional)</p>
+<hr>
+<h2>1. Overview</h2>
+<p>RetailIQ&#39;s 20 stores each have IoT sensors that emit real-time events — foot traffic counts, checkout queue lengths, and door open/close events. This project builds the entire real-time data pipeline: an eventstream to ingest the sensor data, an eventhouse and KQL database to store and query it, KQL queries for anomaly detection, and windowing aggregations to compute 5-minute rolling averages.</p>
+<p>This project runs in parallel with the batch pipeline from Project 3 and feeds the monitoring layer in Project 5.</p>
+<hr>
+<h2>2. Prerequisites</h2>
+<ul>
+<li>Projects 1 and 2 completed (<code>retailiq-dev</code> workspace, orchestration layer in place)</li>
+<li>Project 3 is not required — streaming is independent of batch</li>
+<li>A way to simulate IoT events: either Azure Event Hubs (if available) or Fabric&#39;s built-in <strong>sample data</strong> eventstream source</li>
+</ul>
+<hr>
+<h2>3. Repository Structure for This Project</h2>
+<pre><code>retailiq-fabric/
+└── ingestion/
+    └── streaming/
+        ├── eventstreams/
+        │   └── es_sensor_events_config.md
+        ├── kql/
+        │   ├── schema.kql
+        │   ├── anomaly_detection.kql
+        │   ├── windowing_aggregations.kql
+        │   └── materialized_views.kql
+        └── docs/
+            └── streaming_architecture.md
+</code></pre>
+<hr>
+<h2>4. Streaming Architecture</h2>
+<p>Document this in <code>ingestion/streaming/docs/streaming_architecture.md</code>:</p>
+<pre><code>[IoT Sensors (20 stores)]
+        |
+        | (HTTPS / AMQP events)
+        v
+[Azure Event Hub: retailiq-sensor-hub]
+  OR
+[Fabric Eventstream Sample Data Source]
+        |
+        v
+[Fabric Eventstream: es_sensor_events]
+        |
+        |---&gt; [Eventhouse: retailiq_eventhouse]
+        |         └── KQL Database: SensorDB
+        |               ├── Table: sensor_raw          (all events, retained 90 days)
+        |               ├── Table: sensor_alerts        (anomaly events only)
+        |               └── Materialized View: mv_5min_averages
+        |
+        |---&gt; [OneLake shortcut] (optional: archive raw events to bronze/sensors/)
+        |
+        v
+[KQL Queryset: qs_sensor_analysis]
+        |
+        v
+[Real-Time Dashboard: RetailIQ Live Ops] (optional)
+</code></pre>
+<hr>
+<h2>5. Sensor Event Schema</h2>
+<h3>5.1 Raw Event Schema</h3>
+<p>Each IoT sensor emits JSON events via Event Hub. The schema is:</p>
+<pre><code class="language-json">{
+  &quot;event_id&quot;:       &quot;uuid-v4&quot;,
+  &quot;event_type&quot;:     &quot;FOOT_TRAFFIC | QUEUE_LENGTH | DOOR_EVENT&quot;,
+  &quot;store_id&quot;:       &quot;STR_001 to STR_020&quot;,
+  &quot;sensor_id&quot;:      &quot;SENSOR_STR001_01&quot;,
+  &quot;timestamp_utc&quot;:  &quot;2024-01-15T10:23:45.123Z&quot;,
+  &quot;value&quot;:          42,
+  &quot;unit&quot;:           &quot;count | people | open/closed&quot;,
+  &quot;region&quot;:         &quot;North | South | East | West&quot;,
+  &quot;metadata&quot;: {
+    &quot;firmware_version&quot;: &quot;2.1.4&quot;,
+    &quot;battery_pct&quot;: 87
+  }
+}
+</code></pre>
+<p><strong>Event type definitions:</strong></p>
+<ul>
+<li><code>FOOT_TRAFFIC</code>: number of people who entered the store in the last 60 seconds (<code>value</code> = integer count)</li>
+<li><code>QUEUE_LENGTH</code>: current number of people in checkout queues (<code>value</code> = integer count)</li>
+<li><code>DOOR_EVENT</code>: door open/close (<code>value</code> = 1 for open, 0 for closed)</li>
+</ul>
+<p><strong>Emit frequency:</strong></p>
+<ul>
+<li><code>FOOT_TRAFFIC</code>: every 60 seconds per store</li>
+<li><code>QUEUE_LENGTH</code>: every 30 seconds per store</li>
+<li><code>DOOR_EVENT</code>: on change only</li>
+</ul>
+<hr>
+<h2>6. Create the Eventhouse and KQL Database</h2>
+<h3>6.1 Create Eventhouse</h3>
+<p><strong>Action:</strong> In <code>retailiq-dev</code>, create a new <strong>Eventhouse</strong> named <code>retailiq_eventhouse</code>.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>In the workspace, click <strong>New → Eventhouse</strong></li>
+<li>Name: <code>retailiq_eventhouse</code></li>
+<li>This automatically creates a KQL database with the same name — rename the default database to <code>SensorDB</code></li>
+</ol>
+<p><strong>Eventhouse settings to configure:</strong></p>
+<ul>
+<li>Retention period: 90 days (data older than 90 days is automatically dropped from hot cache)</li>
+<li>Caching period: 30 days (data within 30 days is cached for fast queries)</li>
+</ul>
+<hr>
+<h3>6.2 Create KQL Database Tables</h3>
+<p>Open the KQL queryset inside <code>SensorDB</code> and run the following DDL statements.</p>
+<p><code>ingestion/streaming/kql/schema.kql</code>:</p>
+<pre><code class="language-kql">// ============================================================
+// RetailIQ SensorDB — Schema Definition
+// Run in order: tables first, then policies, then views
+// ============================================================
+
+// --- Table: sensor_raw ---
+// Stores all raw events from all sensor types
+.create table sensor_raw (
+    event_id:       string,
+    event_type:     string,
+    store_id:       string,
+    sensor_id:      string,
+    timestamp_utc:  datetime,
+    value:          real,
+    unit:           string,
+    region:         string,
+    firmware_ver:   string,
+    battery_pct:    real,
+    ingested_at:    datetime
+)
+
+// Set retention policy (90 days)
+.alter table sensor_raw policy retention
+</code></pre>
+<p>{
+  &quot;SoftDeletePeriod&quot;: &quot;90.00:00:00&quot;,
+  &quot;Recoverability&quot;: &quot;Disabled&quot;
+}</p>
+<pre><code>
+// Set caching policy (30 days hot cache)
+.alter table sensor_raw policy caching
+    hot = 30d
+
+// --- Table: sensor_alerts ---
+// Stores only anomaly events (queue &gt; 10, foot traffic spikes)
+.create table sensor_alerts (
+    alert_id:       string,
+    alert_type:     string,
+    store_id:       string,
+    region:         string,
+    timestamp_utc:  datetime,
+    metric_value:   real,
+    threshold:      real,
+    severity:       string,   // LOW | MEDIUM | HIGH | CRITICAL
+    acknowledged:   bool,
+    created_at:     datetime
+)
+
+// --- Ingestion mapping for JSON events ---
+.create table sensor_raw ingestion json mapping &#39;sensor_raw_mapping&#39;
+</code></pre>
+<p>[
+  { &quot;column&quot;: &quot;event_id&quot;,      &quot;path&quot;: &quot;$.event_id&quot; },
+  { &quot;column&quot;: &quot;event_type&quot;,    &quot;path&quot;: &quot;$.event_type&quot; },
+  { &quot;column&quot;: &quot;store_id&quot;,      &quot;path&quot;: &quot;$.store_id&quot; },
+  { &quot;column&quot;: &quot;sensor_id&quot;,     &quot;path&quot;: &quot;$.sensor_id&quot; },
+  { &quot;column&quot;: &quot;timestamp_utc&quot;, &quot;path&quot;: &quot;$.timestamp_utc&quot; },
+  { &quot;column&quot;: &quot;value&quot;,         &quot;path&quot;: &quot;$.value&quot; },
+  { &quot;column&quot;: &quot;unit&quot;,          &quot;path&quot;: &quot;$.unit&quot; },
+  { &quot;column&quot;: &quot;region&quot;,        &quot;path&quot;: &quot;$.region&quot; },
+  { &quot;column&quot;: &quot;firmware_ver&quot;,  &quot;path&quot;: &quot;$.metadata.firmware_version&quot; },
+  { &quot;column&quot;: &quot;battery_pct&quot;,   &quot;path&quot;: &quot;$.metadata.battery_pct&quot; },
+  { &quot;column&quot;: &quot;ingested_at&quot;,   &quot;path&quot;: &quot;&quot; }
+]</p>
+<pre><code>
+</code></pre>
+<hr>
+<h2>7. Create and Configure the Eventstream</h2>
+<h3>7.1 Create the Eventstream</h3>
+<p><strong>Action:</strong> In <code>retailiq-dev</code>, create a new <strong>Eventstream</strong> named <code>es_sensor_events</code>.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Click <strong>New → Eventstream</strong></li>
+<li>Name: <code>es_sensor_events</code></li>
+<li>Enable <strong>&quot;Enhanced capabilities&quot;</strong> if prompted (allows routing, filtering, transformations)</li>
+</ol>
+<h3>7.2 Configure the Source</h3>
+<p><strong>Option A — If you have Azure Event Hubs:</strong></p>
+<ul>
+<li>Source type: <code>Azure Event Hubs</code></li>
+<li>Namespace: your Event Hub namespace</li>
+<li>Event Hub name: <code>retailiq-sensor-hub</code></li>
+<li>Consumer group: <code>$Default</code></li>
+<li>Shared Access Key: your key</li>
+<li>Data format: <code>JSON</code></li>
+</ul>
+<p><strong>Option B — If using Fabric Sample Data (recommended for beginners):</strong></p>
+<ul>
+<li>Source type: <code>Sample data</code></li>
+<li>Sample: <code>Bicycles</code> or <code>Stock market</code> (use as a stand-in — the schema won&#39;t match exactly but the eventstream mechanics are identical)</li>
+<li>Note in <code>es_sensor_events_config.md</code> that in a real implementation this would be replaced with Event Hubs</li>
+</ul>
+<h3>7.3 Configure the Destination</h3>
+<p>Add a destination to the eventstream:</p>
+<ul>
+<li>Destination type: <code>Eventhouse</code></li>
+<li>Workspace: <code>retailiq-dev</code></li>
+<li>Eventhouse: <code>retailiq_eventhouse</code></li>
+<li>KQL Database: <code>SensorDB</code></li>
+<li>Table: <code>sensor_raw</code></li>
+<li>Input data format: <code>JSON</code></li>
+<li>Mapping: <code>sensor_raw_mapping</code></li>
+<li><strong>Ingestion mode:</strong> Direct ingestion (not via intermediate storage)</li>
+</ul>
+<h3>7.4 Configure an OneLake Archive Destination (Optional)</h3>
+<p>Add a second destination:</p>
+<ul>
+<li>Destination type: <code>Lakehouse</code></li>
+<li>Workspace: <code>retailiq-dev</code></li>
+<li>Lakehouse: <code>retailiq_lakehouse</code></li>
+<li>Root folder: <code>Files/bronze/sensors/</code></li>
+<li>File format: <code>Parquet</code></li>
+<li>Partitioning: <code>By date (YYYY/MM/DD)</code></li>
+</ul>
+<p><strong>Exam note to document:</strong> This configures native storage in the Eventhouse AND a shortcut/archive in OneLake simultaneously. Understand the trade-offs:</p>
+<ul>
+<li>Eventhouse native storage: optimised for time-series KQL queries, hot cache, fast analytics</li>
+<li>OneLake archive: for long-term retention beyond 90 days, accessible by PySpark/SQL</li>
+</ul>
+<hr>
+<h2>8. KQL Anomaly Detection Queries</h2>
+<p>Create a KQL Queryset named <code>qs_sensor_analysis</code> in <code>SensorDB</code>. Add the following queries.</p>
+<p><code>ingestion/streaming/kql/anomaly_detection.kql</code>:</p>
+<pre><code class="language-kql">// ============================================================
+// RetailIQ — Anomaly Detection Queries
+// Run against SensorDB.sensor_raw
+// ============================================================
+
+// --- Query 1: Current queue lengths above threshold ---
+// Find any store where checkout queues currently exceed 10 people
+let queue_threshold = 10;
+sensor_raw
+| where ingested_at &gt; ago(5m)                    // Last 5 minutes
+| where event_type == &quot;QUEUE_LENGTH&quot;
+| summarize
+    latest_value = arg_max(timestamp_utc, value) by store_id, region
+| where value &gt; queue_threshold
+| extend
+    severity = case(
+        value &gt; 20, &quot;CRITICAL&quot;,
+        value &gt; 15, &quot;HIGH&quot;,
+        value &gt; 10, &quot;MEDIUM&quot;,
+        &quot;LOW&quot;
+    ),
+    alert_message = strcat(&quot;Queue at &quot;, store_id, &quot; is &quot;, tostring(toint(value)), &quot; people&quot;)
+| project store_id, region, latest_queue_length = value, severity, alert_message
+| order by latest_queue_length desc
+
+
+// --- Query 2: Foot traffic spikes (&gt;2 std deviations from hourly average) ---
+// Detect unusual spikes in foot traffic per store
+let lookback = 1h;
+let spike_multiplier = 2.0;
+let baseline =
+    sensor_raw
+    | where timestamp_utc between (ago(24h) .. ago(lookback))
+    | where event_type == &quot;FOOT_TRAFFIC&quot;
+    | summarize
+        avg_traffic = avg(value),
+        stdev_traffic = stdev(value)
+      by store_id, bin(timestamp_utc, 1h)
+    | summarize
+        mean_hourly = avg(avg_traffic),
+        mean_stdev = avg(stdev_traffic)
+      by store_id;
+sensor_raw
+| where timestamp_utc &gt; ago(lookback)
+| where event_type == &quot;FOOT_TRAFFIC&quot;
+| summarize current_avg = avg(value) by store_id, bin(timestamp_utc, 5m)
+| join kind=inner baseline on store_id
+| where current_avg &gt; mean_hourly + (spike_multiplier * mean_stdev)
+| extend spike_factor = round(current_avg / mean_hourly, 2)
+| project store_id, timestamp_utc, current_traffic = current_avg,
+          expected_avg = mean_hourly, spike_factor
+| order by spike_factor desc
+
+
+// --- Query 3: Low battery sensor alerts ---
+// Identify sensors with battery below 20%
+sensor_raw
+| where ingested_at &gt; ago(1h)
+| summarize latest_battery = arg_max(ingested_at, battery_pct) by sensor_id, store_id, region
+| where battery_pct &lt; 20
+| extend urgency = iif(battery_pct &lt; 10, &quot;REPLACE NOW&quot;, &quot;Replace Soon&quot;)
+| project sensor_id, store_id, region, battery_pct, urgency
+| order by battery_pct asc
+
+
+// --- Query 4: Stores with no events in last 10 minutes (sensor offline detection) ---
+let all_stores = datatable(expected_store_id: string) [
+    &quot;STR_001&quot;,&quot;STR_002&quot;,&quot;STR_003&quot;,&quot;STR_004&quot;,&quot;STR_005&quot;,
+    &quot;STR_006&quot;,&quot;STR_007&quot;,&quot;STR_008&quot;,&quot;STR_009&quot;,&quot;STR_010&quot;,
+    &quot;STR_011&quot;,&quot;STR_012&quot;,&quot;STR_013&quot;,&quot;STR_014&quot;,&quot;STR_015&quot;,
+    &quot;STR_016&quot;,&quot;STR_017&quot;,&quot;STR_018&quot;,&quot;STR_019&quot;,&quot;STR_020&quot;
+];
+let active_stores =
+    sensor_raw
+    | where ingested_at &gt; ago(10m)
+    | summarize by store_id;
+all_stores
+| join kind=leftanti active_stores on $left.expected_store_id == $right.store_id
+| extend alert = &quot;No sensor events received in last 10 minutes&quot;
+| project store_id = expected_store_id, alert
+</code></pre>
+<hr>
+<h2>9. KQL Windowing Aggregations</h2>
+<p><code>ingestion/streaming/kql/windowing_aggregations.kql</code>:</p>
+<pre><code class="language-kql">// ============================================================
+// RetailIQ — Windowing Aggregations
+// ============================================================
+
+// --- Tumbling Window: 5-minute foot traffic averages ---
+// Non-overlapping 5-minute windows, one value per window per store
+sensor_raw
+| where timestamp_utc &gt; ago(24h)
+| where event_type == &quot;FOOT_TRAFFIC&quot;
+| summarize
+    avg_foot_traffic = avg(value),
+    max_foot_traffic = max(value),
+    min_foot_traffic = min(value),
+    event_count = count()
+  by store_id, region, bin(timestamp_utc, 5m)
+| order by store_id asc, timestamp_utc asc
+
+
+// --- Sliding Window: 15-minute rolling average queue length ---
+// Overlapping windows — use series functions for true sliding window
+sensor_raw
+| where timestamp_utc &gt; ago(6h)
+| where event_type == &quot;QUEUE_LENGTH&quot;
+| make-series
+    avg_queue = avg(value)
+  on timestamp_utc
+  from ago(6h) to now()
+  step 1m
+  by store_id
+| extend rolling_15m = series_fir(avg_queue, repeat(1, 15), true, true)
+| project store_id, timestamp_utc, avg_queue, rolling_15m
+
+
+// --- Session Window: Detect sustained high-queue periods ---
+// A &quot;session&quot; is a continuous period where queue &gt; 8 people
+// Sessions end when queue drops below threshold for &gt; 5 minutes
+let queue_threshold = 8;
+let gap_duration = 5m;
+sensor_raw
+| where timestamp_utc &gt; ago(12h)
+| where event_type == &quot;QUEUE_LENGTH&quot;
+| where value &gt; queue_threshold
+| summarize
+    session_start = min(timestamp_utc),
+    session_end = max(timestamp_utc),
+    avg_queue = avg(value),
+    peak_queue = max(value),
+    readings = count()
+  by store_id, session = bin(timestamp_utc, gap_duration)
+| where readings &gt; 2   // At least 3 readings in window (not a one-off spike)
+| extend duration_minutes = datetime_diff(&#39;minute&#39;, session_end, session_start)
+| project store_id, session_start, session_end, duration_minutes,
+          avg_queue, peak_queue
+| order by duration_minutes desc
+
+
+// --- Hourly summary by region ---
+sensor_raw
+| where timestamp_utc &gt; ago(24h)
+| summarize
+    total_foot_traffic = sumif(value, event_type == &quot;FOOT_TRAFFIC&quot;),
+    avg_queue_length   = avgif(value, event_type == &quot;QUEUE_LENGTH&quot;),
+    max_queue_length   = maxif(value, event_type == &quot;QUEUE_LENGTH&quot;),
+    event_count        = count()
+  by region, bin(timestamp_utc, 1h)
+| order by region asc, timestamp_utc asc
+</code></pre>
+<hr>
+<h2>10. Materialized Views</h2>
+<p><code>ingestion/streaming/kql/materialized_views.kql</code>:</p>
+<pre><code class="language-kql">// ============================================================
+// RetailIQ — Materialized Views
+// Pre-compute expensive aggregations for dashboard queries
+// ============================================================
+
+// Materialized view: 5-minute foot traffic averages (auto-updated)
+.create materialized-view with (backfill=true) mv_5min_foot_traffic on table sensor_raw
+{
+    sensor_raw
+    | where event_type == &quot;FOOT_TRAFFIC&quot;
+    | summarize
+        avg_traffic = avg(value),
+        max_traffic = max(value),
+        event_count = count()
+      by store_id, region, bin(timestamp_utc, 5m)
+}
+
+// Materialized view: Latest queue length per store (current state)
+.create materialized-view with (backfill=true) mv_latest_queue on table sensor_raw
+{
+    sensor_raw
+    | where event_type == &quot;QUEUE_LENGTH&quot;
+    | summarize
+        latest_queue  = arg_max(timestamp_utc, value),
+        avg_queue_1h  = avg(value)
+      by store_id, region
+}
+
+// Verify materialized views are healthy
+.show materialized-views
+| project Name, SourceTable, IsHealthy, LastRunTime, RowCount
+</code></pre>
+<hr>
+<h2>11. Eventstream vs Spark Structured Streaming</h2>
+<p><strong>Exam note:</strong> Document in <code>docs/architecture.md</code> when you would choose each:</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Recommended Engine</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sub-second latency, KQL analytics</td>
+<td>Eventstream → Eventhouse</td>
+<td>Native integration, no code required, fastest path</td>
+</tr>
+<tr>
+<td>Complex stateful streaming (joins across streams)</td>
+<td>Spark Structured Streaming (notebook)</td>
+<td>More expressive, full PySpark API</td>
+</tr>
+<tr>
+<td>ML inference on streaming data</td>
+<td>Spark Structured Streaming</td>
+<td>Access to MLflow models</td>
+</tr>
+<tr>
+<td>Simple filtering/routing to multiple destinations</td>
+<td>Eventstream</td>
+<td>Visual no-code configuration</td>
+</tr>
+<tr>
+<td>Aggregations in KQL windows</td>
+<td>Eventstream → Eventhouse + KQL</td>
+<td>KQL&#39;s <code>make-series</code> and <code>bin()</code> are purpose-built</td>
+</tr>
+</tbody></table>
+<p><strong>Implement the Spark Structured Streaming alternative</strong> (as a comparison exercise):</p>
+<pre><code class="language-python"># nb_spark_streaming_alternative.py
+# This shows how the same foot traffic aggregation would look in Spark
+
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import *
+
+spark = SparkSession.builder \
+    .config(&quot;spark.sql.streaming.checkpointLocation&quot;,
+            &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/checkpoints/sensor_stream&quot;) \
+    .getOrCreate()
+
+# Define schema matching the IoT event JSON
+sensor_schema = StructType([
+    StructField(&quot;event_id&quot;, StringType()),
+    StructField(&quot;event_type&quot;, StringType()),
+    StructField(&quot;store_id&quot;, StringType()),
+    StructField(&quot;sensor_id&quot;, StringType()),
+    StructField(&quot;timestamp_utc&quot;, TimestampType()),
+    StructField(&quot;value&quot;, DoubleType()),
+    StructField(&quot;unit&quot;, StringType()),
+    StructField(&quot;region&quot;, StringType())
+])
+
+# Read from Event Hub (replace connection string)
+df_stream = spark.readStream \
+    .format(&quot;eventhubs&quot;) \
+    .option(&quot;eventhubs.connectionString&quot;, &quot;&lt;YOUR_EVENTHUB_CONNECTION_STRING&gt;&quot;) \
+    .load() \
+    .select(F.from_json(F.col(&quot;body&quot;).cast(&quot;string&quot;), sensor_schema).alias(&quot;data&quot;)) \
+    .select(&quot;data.*&quot;)
+
+# 5-minute tumbling window aggregation
+df_windowed = df_stream \
+    .filter(F.col(&quot;event_type&quot;) == &quot;FOOT_TRAFFIC&quot;) \
+    .withWatermark(&quot;timestamp_utc&quot;, &quot;10 minutes&quot;) \
+    .groupBy(
+        F.col(&quot;store_id&quot;),
+        F.col(&quot;region&quot;),
+        F.window(F.col(&quot;timestamp_utc&quot;), &quot;5 minutes&quot;)
+    ) \
+    .agg(
+        F.avg(&quot;value&quot;).alias(&quot;avg_foot_traffic&quot;),
+        F.max(&quot;value&quot;).alias(&quot;max_foot_traffic&quot;),
+        F.count(&quot;*&quot;).alias(&quot;event_count&quot;)
+    ) \
+    .select(
+        &quot;store_id&quot;, &quot;region&quot;,
+        F.col(&quot;window.start&quot;).alias(&quot;window_start&quot;),
+        F.col(&quot;window.end&quot;).alias(&quot;window_end&quot;),
+        &quot;avg_foot_traffic&quot;, &quot;max_foot_traffic&quot;, &quot;event_count&quot;
+    )
+
+# Write to lakehouse
+query = df_windowed.writeStream \
+    .format(&quot;delta&quot;) \
+    .outputMode(&quot;append&quot;) \
+    .option(&quot;checkpointLocation&quot;,
+            &quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/checkpoints/sensor_agg&quot;) \
+    .start(&quot;abfss://retailiq_lakehouse@onelake.dfs.fabric.microsoft.com/Files/silver/sensors/&quot;)
+
+query.awaitTermination(timeout=300)  # Run for 5 minutes then stop
+</code></pre>
+<hr>
+<h2>12. Native vs Mirrored Storage Decision</h2>
+<p><strong>Exam note to document:</strong> In <code>ingestion/streaming/docs/streaming_architecture.md</code>, explain the decision:</p>
+<pre><code>## Storage Strategy for Real-Time Intelligence
+
+### Native Storage (chosen for sensor_raw)
+- Data is stored directly inside the Eventhouse KQL database
+- Optimised for KQL queries and time-series analytics
+- Supports materialized views, retention policies, caching policies
+- Use when: primary consumption is via KQL, low-latency dashboards
+
+### Mirrored Storage
+- Data in an external source (e.g. Azure SQL, Cosmos DB) is replicated into OneLake
+- The mirrored copy is queryable via Fabric SQL analytics endpoint
+- Use when: existing operational database needs to be queried in Fabric without ETL
+
+### Shortcuts in Real-Time Intelligence
+- Accelerated shortcuts: data is indexed and cached in the Eventhouse for fast querying
+- Non-accelerated shortcuts: data is read directly from OneLake/ADLS each query (slower)
+- Use accelerated when: frequently queried reference data (e.g. store dimension)
+- Use non-accelerated when: occasional ad-hoc queries on large historical files
+
+### Decision for RetailIQ:
+- sensor_raw → Native Eventhouse storage (real-time, KQL-optimised)
+- sensors archive → OneLake via eventstream destination (long-term, Parquet)
+- store dimension → Accelerated shortcut in Eventhouse (fast lookup in KQL joins)
+</code></pre>
+<hr>
+<h2>13. Validation Checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Eventhouse <code>retailiq_eventhouse</code> exists in <code>retailiq-dev</code></li>
+<li><input disabled="" type="checkbox"> KQL database <code>SensorDB</code> exists with tables <code>sensor_raw</code> and <code>sensor_alerts</code></li>
+<li><input disabled="" type="checkbox"> JSON ingestion mapping <code>sensor_raw_mapping</code> is created</li>
+<li><input disabled="" type="checkbox"> Retention policy set to 90 days, caching policy set to 30 days on <code>sensor_raw</code></li>
+<li><input disabled="" type="checkbox"> Eventstream <code>es_sensor_events</code> exists and is connected to a source</li>
+<li><input disabled="" type="checkbox"> Eventstream destination is connected to <code>sensor_raw</code> in <code>SensorDB</code></li>
+<li><input disabled="" type="checkbox"> Data is flowing into <code>sensor_raw</code> (run <code>sensor_raw | count</code> to verify)</li>
+<li><input disabled="" type="checkbox"> All 4 anomaly detection queries run without error in <code>qs_sensor_analysis</code></li>
+<li><input disabled="" type="checkbox"> All windowing queries (tumbling, sliding, session) run without error</li>
+<li><input disabled="" type="checkbox"> Both materialized views are created and healthy</li>
+<li><input disabled="" type="checkbox"> Storage strategy decisions documented in <code>streaming_architecture.md</code></li>
+<li><input disabled="" type="checkbox"> All KQL files committed to <code>ingestion/streaming/kql/</code></li>
+</ul>
+<hr>
+<h2>14. Exam Topics Covered</h2>
+<table>
+<thead>
+<tr>
+<th>Exam Objective</th>
+<th>Covered In</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Choose an appropriate streaming engine</td>
+<td>Sections 11, 12</td>
+</tr>
+<tr>
+<td>Choose between native storage, mirrored storage, or shortcuts</td>
+<td>Section 12</td>
+</tr>
+<tr>
+<td>Choose between accelerated and non-accelerated shortcuts</td>
+<td>Section 12</td>
+</tr>
+<tr>
+<td>Process data by using eventstreams</td>
+<td>Sections 7, 8</td>
+</tr>
+<tr>
+<td>Process data by using Spark structured streaming</td>
+<td>Section 11</td>
+</tr>
+<tr>
+<td>Process data by using KQL</td>
+<td>Sections 8, 9</td>
+</tr>
+<tr>
+<td>Create windowing functions</td>
+<td>Section 9</td>
+</tr>
+<tr>
+<td>Design and implement a loading pattern for streaming data</td>
+<td>Section 4</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>15. Further Reading</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/eventhouse">Eventhouse overview</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/data-explorer/kql-quick-reference">KQL quick reference</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/overview">Eventstream overview</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/data-explorer/kusto/management/materialized-views/materialized-view-overview">Materialized views in KQL</a></li>
+<li><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook">Spark Structured Streaming</a></li>
+</ul>
+
+</div>
+</body>
+</html>
