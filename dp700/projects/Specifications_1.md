@@ -2,7 +2,7 @@
 # RetailIQ — Project 1: Build the Foundation
 **Domain:** Implement & Manage an Analytics Solution  
 **Estimated Effort:** 4–6 hours  
-**Fabric Items Created:** Workspace, Lakehouse, Deployment Pipeline, Security Rules, Sensitivity Labels
+**Fabric Items Created:** Workspace, Lakehouse, Deployment Pipeline, Eventhouse (logging)
 
 ---
 
@@ -211,13 +211,17 @@ Set log destination to a new Eventhouse item named `retailiq_logs` (create this 
    - Stage 2 (Test): `retailiq-test`
    - Stage 3 (Production): `retailiq-prod`
 
-**Configure deployment rules** (these override settings when promoting between stages):
+**Configure deployment rules** — these override specific item properties when promoting between stages. Fabric supports three rule types: Data source, Parameter, and Default lakehouse. For our project:
 
-| Item | Rule Type | Dev Value | Prod Value |
-|---|---|---|---|
-| Lakehouse connection | Parameter | `retailiq-dev-connection` | `retailiq-prod-connection` |
-| Pipeline schedule | On/Off | Off | On |
-| Spark pool | Parameter | `StarterPool` | `MediumPool` |
+1. **Default lakehouse rule for notebooks:** In the Test stage, set a rule so every notebook uses the Test lakehouse instead of the Dev lakehouse:
+   - In the pipeline, select the **Test** stage
+   - Click **Deployment rules** (or stage settings gear → Deployment rules)
+   - Find your notebooks (e.g., `nb_transform_bronze_to_silver_sales`)
+   - Rule type: **Default lakehouse** → select `retailiq_lakehouse` (this will be the Test lakehouse after deployment — note: in reality you'd have a separate Test lakehouse; for this demo, the rule shows the concept)
+   - Click **Add**
+2. Repeat for the **Production** stage with the Prod lakehouse
+
+**Note:** You won't see rules for pipelines, connections, or Spark pools in the deployment rules UI — those aren't supported rule types. The exam tests what rules exist and which items they apply to (see table below).
 
 **Commit** the pipeline definition to `workspace/deployment-pipelines/retailiq-pipeline.json` after export.
 

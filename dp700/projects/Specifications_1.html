@@ -40,7 +40,7 @@ img{max-width:100%;border-radius:8px;margin:10px 0}
 <a href="../../projects.html" class="back">← Back to Projects</a>
 <h1>Specifications_1.md</h1>
 <h1>RetailIQ — Project 1: Build the Foundation</h1>
-<p><strong>Domain:</strong> Implement &amp; Manage an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Workspace, Lakehouse, Deployment Pipeline, Security Rules, Sensitivity Labels</p>
+<p><strong>Domain:</strong> Implement &amp; Manage an Analytics Solution<br><strong>Estimated Effort:</strong> 4–6 hours<br><strong>Fabric Items Created:</strong> Workspace, Lakehouse, Deployment Pipeline, Eventhouse (logging)</p>
 <hr>
 <h2>1. Overview</h2>
 <p>This project establishes the entire foundational infrastructure for RetailIQ&#39;s Microsoft Fabric analytics platform. You will create and configure a Fabric workspace, set up a lakehouse with a medallion architecture folder structure, configure Spark and OneLake settings, implement a full security and governance model, and create a three-stage deployment pipeline (Dev → Test → Prod).</p>
@@ -261,35 +261,19 @@ img{max-width:100%;border-radius:8px;margin:10px 0}
 </ul>
 </li>
 </ol>
-<p><strong>Configure deployment rules</strong> (these override settings when promoting between stages):</p>
-<table>
-<thead>
-<tr>
-<th>Item</th>
-<th>Rule Type</th>
-<th>Dev Value</th>
-<th>Prod Value</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Lakehouse connection</td>
-<td>Parameter</td>
-<td><code>retailiq-dev-connection</code></td>
-<td><code>retailiq-prod-connection</code></td>
-</tr>
-<tr>
-<td>Pipeline schedule</td>
-<td>On/Off</td>
-<td>Off</td>
-<td>On</td>
-</tr>
-<tr>
-<td>Spark pool</td>
-<td>Parameter</td>
-<td><code>StarterPool</code></td>
-<td><code>MediumPool</code></td>
-</tr>
-</tbody></table>
+<p><strong>Configure deployment rules</strong> — these override specific item properties when promoting between stages. Fabric supports three rule types: Data source, Parameter, and Default lakehouse. For our project:</p>
+<ol>
+<li><strong>Default lakehouse rule for notebooks:</strong> In the Test stage, set a rule so every notebook uses the Test lakehouse instead of the Dev lakehouse:<ul>
+<li>In the pipeline, select the <strong>Test</strong> stage</li>
+<li>Click <strong>Deployment rules</strong> (or stage settings gear → Deployment rules)</li>
+<li>Find your notebooks (e.g., <code>nb_transform_bronze_to_silver_sales</code>)</li>
+<li>Rule type: <strong>Default lakehouse</strong> → select <code>retailiq_lakehouse</code> (this will be the Test lakehouse after deployment — note: in reality you&#39;d have a separate Test lakehouse; for this demo, the rule shows the concept)</li>
+<li>Click <strong>Add</strong></li>
+</ul>
+</li>
+<li>Repeat for the <strong>Production</strong> stage with the Prod lakehouse</li>
+</ol>
+<p><strong>Note:</strong> You won&#39;t see rules for pipelines, connections, or Spark pools in the deployment rules UI — those aren&#39;t supported rule types. The exam tests what rules exist and which items they apply to (see table below).</p>
 <p><strong>Commit</strong> the pipeline definition to <code>workspace/deployment-pipelines/retailiq-pipeline.json</code> after export.</p>
 <hr>
 <h3>4.8 Configure Domain Workspace Settings</h3>
