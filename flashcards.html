@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP-700 Flashcards — Microsoft Fabric Study</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;min-height:100vh}
+body,html{height:100%}
+.container{max-width:900px;margin:0 auto;padding:20px;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.back-link{display:inline-block;margin-bottom:12px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s;align-self:flex-start}
+.back-link:hover{background:#232733;border-color:#6c5ce7}
+h1{font-size:28px;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.subtitle{color:#8b8fa3;font-size:14px;margin-bottom:16px}
+
+/* Controls */
+.controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:end}
+.control-group{display:flex;flex-direction:column;gap:4px}
+.control-group label{font-size:11px;color:#8b8fa3;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.control-group select{background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#e4e6eb;padding:8px 12px;font-size:13px;outline:none;cursor:pointer;min-width:140px}
+.control-group select:focus{border-color:#6c5ce7}
+.btn{background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#e4e6eb;padding:8px 16px;font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:hover{background:#232733;border-color:#6c5ce7}
+.btn-primary{background:#6c5ce7;border-color:#6c5ce7;color:#fff}
+.btn-primary:hover{background:#5a4bd1}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* Progress bar */
+.progress-section{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.progress-bar-wrap{flex:1;min-width:100px;height:6px;background:#1a1d27;border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#6c5ce7,#00cec9);border-radius:3px;transition:width .3s}
+.progress-stats{display:flex;gap:16px;font-size:12px;color:#8b8fa3}
+.progress-stats span{white-space:nowrap}
+.progress-stats .num{color:#e4e6eb;font-weight:600}
+
+/* Card area */
+.card-area{flex:1;display:flex;align-items:center;justify-content:center;perspective:1200px;margin-bottom:16px;min-height:0}
+.flip-card{width:100%;max-width:680px;height:360px;cursor:pointer;position:relative}
+.flip-card-inner{position:relative;width:100%;height:100%;transition:transform .5s ease;transform-style:preserve-3d}
+.flip-card.flipped .flip-card-inner{transform:rotateY(180deg)}
+.flip-card-front,.flip-card-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;padding:32px;display:flex;flex-direction:column;overflow-y:auto}
+.flip-card-front{background:#1a1d27;border:1px solid #2a2e3a}
+.flip-card-back{background:#1a1d27;border:1px solid #6c5ce7;transform:rotateY(180deg)}
+
+/* Card meta */
+.card-meta{display:flex;align-items:center;gap:12px;margin-bottom:16px;font-size:12px;flex-wrap:wrap}
+.card-type-badge{padding:2px 10px;border-radius:20px;font-weight:600;font-size:11px;text-transform:uppercase}
+.card-type-term{background:#1e2540;color:#3b82f6}
+.card-type-compare{background:#1e2a1a;color:#10b981}
+.card-type-scenario{background:#2a1e1a;color:#f59e0b}
+.card-type-edge{background:#2a1a2a;color:#a855f7}
+.card-topic{color:#8b8fa3}
+.card-count{color:#555;margin-left:auto}
+
+.card-front-content{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px;line-height:1.6;padding:10px 0}
+.card-back-content{flex:1;font-size:14px;line-height:1.7;color:#d0d2d6;overflow-y:auto;padding:4px 0}
+.card-back-content b{color:#e4e6eb}
+.card-back-content code{background:#141620;padding:1px 5px;border-radius:3px;font-size:13px;color:#00cec9;font-family:'Fira Code',Consolas,monospace}
+.card-back-content table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+.card-back-content td,.card-back-content th{padding:6px 10px;border:1px solid #2a2e3a;text-align:left}
+.card-back-content th{background:#232733;color:#00cec9}
+.card-back-content td{background:#141620}
+
+.hint{color:#555;font-size:12px;text-align:center;margin-top:8px}
+
+/* Rating bar */
+.rating-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:4px}
+.rating-bar .btn{min-width:90px;font-weight:600;font-size:14px;padding:10px 20px}
+.rating-gotit{border-color:#10b981!important;color:#10b981!important}
+.rating-gotit:hover,.rating-gotit.active{background:#0a2e1f!important;border-color:#10b981!important;color:#10b981!important}
+.rating-almost{border-color:#f59e0b!important;color:#f59e0b!important}
+.rating-almost:hover,.rating-almost.active{background:#2a1e0a!important;border-color:#f59e0b!important;color:#f59e0b!important}
+.rating-notyet{border-color:#ef4444!important;color:#ef4444!important}
+.rating-notyet:hover,.rating-notyet.active{background:#2e0a0a!important;border-color:#ef4444!important;color:#ef4444!important}
+
+.rating-bar .btn.active{opacity:1!important}
+.rating-bar .btn:disabled,.rating-bar .btn.disabled{opacity:.35;cursor:default;pointer-events:none}
+.rating-bar .next-btn{background:#6c5ce7;border-color:#6c5ce7;color:#fff;min-width:100px}
+.rating-bar .next-btn:hover{background:#5a4bd1}
+.rating-bar .next-btn:disabled{opacity:.35;cursor:default}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px;color:#555}
+.empty-state h2{font-size:22px;margin-bottom:8px;color:#8b8fa3}
+.empty-state p{font-size:14px}
+
+/* Keyboard tips */
+.kbd-tips{text-align:center;font-size:11px;color:#444;margin-top:8px;line-height:1.8}
+.kbd-tips kbd{background:#1a1d27;border:1px solid #2a2e3a;border-radius:3px;padding:1px 6px;font-size:10px;font-family:inherit;color:#666}
+
+/* Shuffle animation */
+@keyframes cardOut{0%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(.95) translateY(-10px)}}
+@keyframes cardIn{0%{opacity:0;transform:scale(.95) translateY(10px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.card-anim-out .flip-card-inner{animation:cardOut .2s ease forwards}
+.card-anim-in .flip-card-inner{animation:cardIn .2s ease forwards}
+
+@media(max-width:640px){
+  .container{padding:12px}
+  h1{font-size:22px}
+  .controls{flex-direction:column;gap:8px}
+  .control-group select{min-width:100%;width:100%}
+  .btn{width:100%;text-align:center}
+  .progress-section{flex-direction:column;gap:8px;align-items:stretch}
+  .progress-stats{justify-content:space-between}
+  .flip-card{height:300px}
+  .flip-card-front,.flip-card-back{padding:20px}
+  .card-front-content{font-size:16px}
+  .card-back-content{font-size:13px}
+  .rating-bar{gap:6px}
+  .rating-bar .btn{min-width:0;flex:1;font-size:13px;padding:10px 8px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="back-link">&#8592; Back to Menu</a>
+  <h1>DP-700 Flashcards</h1>
+  <p class="subtitle">Fabric Data Engineer — 240 cards covering all 6 modules</p>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Module</label>
+      <select id="filterModule" onchange="applyFilters()">
+        <option value="all">All Modules</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Card Type</label>
+      <select id="filterType" onchange="applyFilters()">
+        <option value="all">All Types</option>
+        <option value="term">Term</option>
+        <option value="compare">Compare</option>
+        <option value="scenario">Scenario</option>
+        <option value="edge">Edge Case</option>
+      </select>
+    </div>
+    <button class="btn btn-sm" onclick="toggleShuffle()" id="shuffleBtn" title="Shuffle card order">&#x1f500; Shuffle: ON</button>
+    <button class="btn btn-sm" onclick="resetProgress()" style="color:#ef4444;border-color:#3a1a1a">Reset Progress</button>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-stats">
+      <span id="progressText">0 / 240</span>
+      <span>&#10003; <span class="num" id="countGotIt">0</span></span>
+      <span>&#8801; <span class="num" id="countAlmost">0</span></span>
+      <span>&#10007; <span class="num" id="countNotYet">0</span></span>
+    </div>
+  </div>
+
+  <div class="card-area" id="cardArea">
+    <div class="flip-card" id="flipCard" onclick="flipCard(event)">
+      <div class="flip-card-inner">
+        <div class="flip-card-front" id="cardFront">
+          <div class="card-meta">
+            <span class="card-type-badge card-type-term" id="typeBadge">TERM</span>
+            <span class="card-topic" id="topicLabel">Topic</span>
+            <span class="card-count" id="countLabel">1 / 240</span>
+          </div>
+          <div class="card-front-content" id="frontContent">
+            Click a module to start studying.
+          </div>
+        </div>
+        <div class="flip-card-back" id="cardBack">
+          <div class="card-meta">
+            <span class="card-type-badge card-type-term" id="typeBadgeBack">TERM</span>
+            <span class="card-topic" id="topicLabelBack">Topic</span>
+          </div>
+          <div class="card-back-content" id="backContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hint" id="flipHint">Click the card to flip</div>
+
+  <div class="rating-bar" id="ratingBar">
+    <button class="btn rating-gotit" id="btnGotIt" onclick="rate('got_it')">Got It</button>
+    <button class="btn rating-almost" id="btnAlmost" onclick="rate('almost')">Almost</button>
+    <button class="btn rating-notyet" id="btnNotYet" onclick="rate('not_yet')">Not Yet</button>
+    <button class="btn next-btn" id="btnNext" onclick="nextCard()" disabled>Next &#8594;</button>
+  </div>
+
+  <div class="kbd-tips">
+    <kbd>Space</kbd> flip &nbsp; <kbd>1</kbd> Got It &nbsp; <kbd>2</kbd> Almost &nbsp; <kbd>3</kbd> Not Yet &nbsp; <kbd>N</kbd> next &nbsp; <kbd>P</kbd> prev &nbsp; <kbd>S</kbd> shuffle
+  </div>
+</div>
+
+<script src="flashcards/dp700-module1.js"></script>
+<script src="dp-700/module2-cards.js"></script>
+<script src="flashcards-m3.js"></script>
+<script src="MODULE4_CARDS.js"></script>
+<script src="flashcards_m5.js"></script>
+<script src="flashcards_m6.js"></script>
+<script src="flashcards_dp700.js"></script>
+<script>
+var state = {
+  allCards: [],
+  filteredCards: [],
+  currentIdx: 0,
+  flipped: false,
+  rated: false,
+  shuffle: true,
+  progress: {}
+};
+
+var TYPE_LABELS = {
+  term: 'term', compare: 'compare', scenario: 'scenario', edge: 'edge'
+};
+var TYPE_CLASSES = {
+  term: 'card-type-term', compare: 'card-type-compare',
+  scenario: 'card-type-scenario', edge: 'card-type-edge'
+};
+
+function init() {
+  loadProgress();
+  var sel = document.getElementById('filterModule');
+  FLASHCARDS_DP700.forEach(function(m, i) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = m.module + ': ' + m.title;
+    sel.appendChild(opt);
+  });
+  buildCardList();
+  applyFilters();
+}
+
+function buildCardList() {
+  state.allCards = [];
+  FLASHCARDS_DP700.forEach(function(mod, mi) {
+    mod.cards.forEach(function(c) {
+      state.allCards.push({
+        id: c.id,
+        type: c.type,
+        topic: c.topic,
+        front: c.front,
+        back: c.back,
+        moduleIdx: mi,
+        module: mod.module,
+        moduleTitle: mod.title
+      });
+    });
+  });
+}
+
+function applyFilters() {
+  var modVal = document.getElementById('filterModule').value;
+  var typeVal = document.getElementById('filterType').value;
+
+  state.filteredCards = state.allCards.filter(function(c) {
+    if (modVal !== 'all' && c.moduleIdx !== parseInt(modVal)) return false;
+    if (typeVal !== 'all' && c.type !== typeVal) return false;
+    return true;
+  });
+
+  if (state.shuffle) shuffleArray(state.filteredCards);
+  state.currentIdx = 0;
+  state.flipped = false;
+  state.rated = false;
+  renderCard();
+  updateProgress();
+}
+
+function shuffleArray(arr) {
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+}
+
+function toggleShuffle() {
+  state.shuffle = !state.shuffle;
+  document.getElementById('shuffleBtn').textContent = state.shuffle ? '\u{1F500} Shuffle: ON' : '\u{1F500} Shuffle: OFF';
+  applyFilters();
+}
+
+function renderCard() {
+  var card = state.filteredCards[state.currentIdx];
+  var total = state.filteredCards.length;
+  var flip = document.getElementById('flipCard');
+  flip.classList.remove('flipped');
+
+  if (!card) {
+    document.getElementById('frontContent').textContent = 'No cards match your filters. Try a different module or type.';
+    document.getElementById('backContent').innerHTML = '';
+    document.getElementById('typeBadge').textContent = '---';
+    document.getElementById('topicLabel').textContent = '';
+    document.getElementById('countLabel').textContent = '0 / 0';
+    document.getElementById('typeBadgeBack').textContent = '---';
+    document.getElementById('topicLabelBack').textContent = '';
+    document.getElementById('flipHint').textContent = '';
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnGotIt').disabled = true;
+    document.getElementById('btnAlmost').disabled = true;
+    document.getElementById('btnNotYet').disabled = true;
+    return;
+  }
+
+  document.getElementById('frontContent').textContent = card.front;
+  document.getElementById('backContent').innerHTML = card.back;
+  document.getElementById('typeBadge').textContent = card.type.toUpperCase();
+  document.getElementById('typeBadgeBack').textContent = card.type.toUpperCase();
+  document.getElementById('typeBadge').className = 'card-type-badge ' + (TYPE_CLASSES[card.type] || 'card-type-term');
+  document.getElementById('typeBadgeBack').className = 'card-type-badge ' + (TYPE_CLASSES[card.type] || 'card-type-term');
+  document.getElementById('topicLabel').textContent = card.topic;
+  document.getElementById('topicLabelBack').textContent = card.topic + ' \u2022 ' + card.module;
+  document.getElementById('countLabel').textContent = (state.currentIdx + 1) + ' / ' + total;
+
+  document.getElementById('flipHint').textContent = state.rated ? '' : 'Click the card to flip';
+
+  var prevRating = state.progress[card.id];
+  document.getElementById('btnGotIt').className = 'btn rating-gotit' + (prevRating === 'got_it' ? ' active' : '');
+  document.getElementById('btnAlmost').className = 'btn rating-almost' + (prevRating === 'almost' ? ' active' : '');
+  document.getElementById('btnNotYet').className = 'btn rating-notyet' + (prevRating === 'not_yet' ? ' active' : '');
+
+  state.flipped = false;
+  state.rated = !!prevRating;
+  updateRatingButtons();
+
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnGotIt').disabled = false;
+  document.getElementById('btnAlmost').disabled = false;
+  document.getElementById('btnNotYet').disabled = false;
+}
+
+function flipCard(e) {
+  if (e && e.target.closest('.card-meta')) return;
+  var flip = document.getElementById('flipCard');
+  flip.classList.toggle('flipped');
+  state.flipped = flip.classList.contains('flipped');
+  if (state.flipped) {
+    document.getElementById('flipHint').textContent = '';
+  } else {
+    document.getElementById('flipHint').textContent = state.rated ? '' : 'Click the card to flip';
+  }
+}
+
+function rate(val) {
+  if (!state.filteredCards[state.currentIdx]) return;
+  var card = state.filteredCards[state.currentIdx];
+  if (state.progress[card.id] === val) {
+    delete state.progress[card.id];
+  } else {
+    state.progress[card.id] = val;
+  }
+  state.rated = true;
+  saveProgress();
+  updateRatingButtons();
+  updateProgress();
+}
+
+function updateRatingButtons() {
+  if (!state.filteredCards[state.currentIdx]) return;
+  var card = state.filteredCards[state.currentIdx];
+  var r = state.progress[card.id];
+  document.getElementById('btnGotIt').className = 'btn rating-gotit' + (r === 'got_it' ? ' active' : '');
+  document.getElementById('btnAlmost').className = 'btn rating-almost' + (r === 'almost' ? ' active' : '');
+  document.getElementById('btnNotYet').className = 'btn rating-notyet' + (r === 'not_yet' ? ' active' : '');
+  document.getElementById('flipHint').textContent = '';
+}
+
+function nextCard() {
+  if (state.currentIdx < state.filteredCards.length - 1) {
+    state.currentIdx++;
+    if (!state.flipped) {
+      renderCard();
+    } else {
+      var flip = document.getElementById('flipCard');
+      flip.classList.remove('flipped');
+      state.flipped = false;
+      setTimeout(renderCard, 50);
+    }
+  }
+}
+
+function prevCard() {
+  if (state.currentIdx > 0) {
+    state.currentIdx--;
+    var flip = document.getElementById('flipCard');
+    flip.classList.remove('flipped');
+    state.flipped = false;
+    setTimeout(renderCard, 50);
+  }
+}
+
+function updateProgress() {
+  var total = state.allCards.length;
+  var rated = Object.keys(state.progress).length;
+  var pct = total > 0 ? Math.round((rated / total) * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = rated + ' / ' + total;
+
+  var gotIt = 0, almost = 0, notYet = 0;
+  for (var k in state.progress) {
+    if (state.progress[k] === 'got_it') gotIt++;
+    else if (state.progress[k] === 'almost') almost++;
+    else if (state.progress[k] === 'not_yet') notYet++;
+  }
+  document.getElementById('countGotIt').textContent = gotIt;
+  document.getElementById('countAlmost').textContent = almost;
+  document.getElementById('countNotYet').textContent = notYet;
+}
+
+function loadProgress() {
+  try {
+    var saved = localStorage.getItem('flashcards_dp700_progress');
+    state.progress = saved ? JSON.parse(saved) : {};
+  } catch(e) { state.progress = {}; }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem('flashcards_dp700_progress', JSON.stringify(state.progress));
+  } catch(e) {}
+}
+
+function resetProgress() {
+  if (confirm('Reset all flashcard progress for DP-700? This cannot be undone.')) {
+    state.progress = {};
+    saveProgress();
+    updateProgress();
+    renderCard();
+  }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  switch(e.key) {
+    case ' ': e.preventDefault(); flipCard(); break;
+    case '1': rate('got_it'); break;
+    case '2': rate('almost'); break;
+    case '3': rate('not_yet'); break;
+    case 'n': case 'N': case 'ArrowRight': nextCard(); break;
+    case 'p': case 'P': case 'ArrowLeft': prevCard(); break;
+    case 's': case 'S': toggleShuffle(); break;
+  }
+});
+
+init();
+</script>
+</body>
+</html>
