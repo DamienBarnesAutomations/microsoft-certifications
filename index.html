@@ -1,49 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Microsoft Fabric Study</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.container{text-align:center;padding:60px 40px;width:100%;max-width:700px}
-h1{font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-.subtitle{color:#8b8fa3;font-size:1rem;margin-bottom:48px}
-.options{display:flex;flex-direction:column;gap:16px;align-items:center}
-.option{background:#1a1d27;border:1px solid #2a2e3a;border-radius:16px;padding:32px 28px;cursor:pointer;transition:all .2s;width:100%;max-width:520px;text-decoration:none;color:inherit;display:flex;align-items:center;gap:24px;text-align:left}
-.option:hover{background:#232733;border-color:#6c5ce7;transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.2)}
-.option h2{font-size:1.2rem;font-weight:700;margin-bottom:2px}
-.option p{color:#8b8fa3;font-size:.85rem;line-height:1.4}
-.icon{font-size:2rem;flex-shrink:0}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Microsoft Certification Study Portal - DP-300, DP-600, DP-700 & DP-750 Study Materials, Flashcards & Practice Exams.">
+  <title>Microsoft Certification Prep Portal</title>
+  
+  <!-- Global Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Markdown Parser CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Certification Conceptual Card Data -->
+  <script src="cards_dp600.js" defer></script>
+  <script src="cards_dp700.js" defer></script>
+  <script src="cards_dp300.js" defer></script>
+  
+  <!-- Flashcard Databases (DP-700) -->
+  <script src="flashcards/dp700-module1.js" defer></script>
+  <script src="dp-700/module2-cards.js" defer></script>
+  <script src="flashcards-m3.js" defer></script>
+  <script src="MODULE4_CARDS.js" defer></script>
+  <script src="flashcards_m5.js" defer></script>
+  <script src="flashcards_m6.js" defer></script>
+  <script src="flashcards_dp700.js" defer></script>
+  
+  <!-- Practice Exams Databases (DP-300, DP-600, DP-700) -->
+  <script src="tests/dp600/dp600_module1.js" defer></script>
+  <script src="tests/dp600/dp600_module2.js" defer></script>
+  <script src="tests/dp600/dp600_module3.js" defer></script>
+  <script src="tests/dp600/dp600_module4.js" defer></script>
+  <script src="tests/dp600/dp600_module5.js" defer></script>
+  <script src="tests/dp600/dp600.js" defer></script>
+  
+  <script src="tests/dp700/dp700_module1.js" defer></script>
+  <script src="tests/dp700/dp700_module2.js" defer></script>
+  <script src="tests/dp700/dp700_module3.js" defer></script>
+  <script src="tests/dp700/dp700_module4.js" defer></script>
+  <script src="tests/dp700/dp700_module5.js" defer></script>
+  <script src="tests/dp700/dp700_module6.js" defer></script>
+  <script src="tests/dp700/dp700.js" defer></script>
+  
+  <script src="tests/dp300/dp300_module1.js" defer></script>
+  <script src="tests/dp300/dp300_module2.js" defer></script>
+  <script src="tests/dp300/dp300_module3.js" defer></script>
+  <script src="tests/dp300/dp300_module4.js" defer></script>
+  <script src="tests/dp300/dp300_module5.js" defer></script>
+  <script src="tests/dp300/dp300_module6.js" defer></script>
+  <script src="tests/dp300/dp300.js" defer></script>
+  
+  <!-- Core App Controller Logic -->
+  <script src="app.js" defer></script>
 </head>
 <body>
-<div class="container">
-<h1>Microsoft Fabric</h1>
-<p class="subtitle">DP-600, DP-700 &amp; DP-300 Certification Prep</p>
-<div class="options">
-<a href="cards.html" class="option">
-<div class="icon">&#128218;</div>
-<h2>Study</h2>
-<p>Browse topic cards for DP-600, DP-700 &amp; DP-300 concepts</p>
-</a>
-<a href="flashcards.html" class="option">
-<div class="icon">&#128161;</div>
-<h2>Flashcards</h2>
-<p>Interactive DP-700 flashcards — flip, rate, track progress across 240 cards</p>
-</a>
-<a href="test.html" class="option">
-<div class="icon">&#9998;</div>
-<h2>Test</h2>
-<p>Practice exam questions with instant feedback</p>
-</a>
-<a href="projects.html" class="option">
-<div class="icon">&#128187;</div>
-<h2>Projects</h2>
-<p>Hands-on DP-700 implementation labs</p>
-</a>
-</div>
-</div>
+
+  <!-- Loading Splash Overlay -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <h2 style="font-weight:700; font-size:1.5rem; background: linear-gradient(135deg, #6366f1, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Fabric Study Portal</h2>
+    <p style="color:#64748b; font-size:0.9rem; margin-top:8px;">Initializing study data engines...</p>
+  </div>
+
+  <!-- App Structure Container -->
+  <div class="app-container">
+    
+    <!-- Sidebar navigation menu (Desktop) -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div>
+          <span class="brand-logo">FabricPrep</span>
+          <div class="brand-sub">Certification Hub</div>
+        </div>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item active" id="nav-dashboard">
+          <a href="#/dashboard">
+            <span class="nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-study">
+          <a href="#/study">
+            <span class="nav-icon">📖</span>
+            <span>Study Guides</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-cards">
+          <a href="#/cards">
+            <span class="nav-icon">🗂️</span>
+            <span>Concept Cards</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-flashcards">
+          <a href="#/flashcards">
+            <span class="nav-icon">⚡</span>
+            <span>Flashcards</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-test">
+          <a href="#/test">
+            <span class="nav-icon">📝</span>
+            <span>Practice Exams</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-projects">
+          <a href="#/projects">
+            <span class="nav-icon">🛠️</span>
+            <span>Hands-on Labs</span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <p>Current version 2.1</p>
+      </div>
+    </aside>
+
+    <!-- Bottom Navigation Bar (Mobile Viewports) -->
+    <nav class="bottom-nav">
+      <a href="#/dashboard" class="bottom-nav-item active">
+        <span class="bottom-nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="#/study" class="bottom-nav-item">
+        <span class="bottom-nav-icon">📖</span>
+        <span>Guides</span>
+      </a>
+      <a href="#/cards" class="bottom-nav-item">
+        <span class="bottom-nav-icon">🗂️</span>
+        <span>Cards</span>
+      </a>
+      <a href="#/flashcards" class="bottom-nav-item">
+        <span class="bottom-nav-icon">⚡</span>
+        <span>Flash</span>
+      </a>
+      <a href="#/test" class="bottom-nav-item">
+        <span class="bottom-nav-icon">📝</span>
+        <span>Exams</span>
+      </a>
+      <a href="#/projects" class="bottom-nav-item">
+        <span class="bottom-nav-icon">🛠️</span>
+        <span>Labs</span>
+      </a>
+    </nav>
+
+    <!-- Main Content Frame -->
+    <main class="main-content">
+      
+      <!-- 🏠 DASHBOARD VIEW CONTAINER -->
+      <section id="view-dashboard" class="view-section active">
+        <h1>Welcome Back, Candidate</h1>
+        <p class="subtitle">Here is a summary of your Microsoft Certification progress.</p>
+        
+        <div class="dashboard-grid">
+          <!-- Left Panel: Streak & Quick Stats -->
+          <div class="glass-panel welcome-panel" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <h2 style="margin-bottom:8px;">Ready to Level Up?</h2>
+              <p style="color:var(--text-secondary); line-height:1.6;">Maintain your momentum. Read module docs daily and run flashcard drills to secure your knowledge.</p>
+            </div>
+            
+            <div class="dashboard-stats">
+              <div class="stat-card" style="border-color: rgba(245, 158, 11, 0.2);">
+                <div class="stat-val" id="dash-streak-count" style="color: var(--color-warning);">0</div>
+                <div class="stat-lbl">🔥 Day Streak</div>
+              </div>
+              <div class="stat-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                <div class="stat-val" id="dash-completed-guides" style="color: var(--color-success);">0</div>
+                <div class="stat-lbl">📖 Units Read</div>
+              </div>
+              <div class="stat-card" style="border-color: rgba(99, 102, 241, 0.2);">
+                <div class="stat-val" id="dash-mastered-cards" style="color: var(--accent-indigo);">0</div>
+                <div class="stat-lbl">⚡ Mastered</div>
+              </div>
+              <div class="stat-card" style="border-color: rgba(20, 184, 166, 0.2);">
+                <div class="stat-val" id="dash-practice-score" style="color: var(--accent-teal);">0%</div>
+                <div class="stat-lbl">📝 Avg Exam</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Panel: Streak motivational card -->
+          <div class="glass-panel" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
+            <div style="font-size: 3rem; margin-bottom: 8px;">🎯</div>
+            <h3>Study Goal</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height:1.5;">Master Fabric Architecture, Delta lakes, and real-time event analytics.</p>
+          </div>
+        </div>
+        
+        <h2 style="margin-top:40px; margin-bottom:8px;">Certifications Overview</h2>
+        <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Select an exam package to view its modules and study guides.</p>
+        <div class="certs-grid" id="dash-certs-grid"></div>
+      </section>
+
+      <!-- 📖 STUDY VIEW CONTAINER -->
+      <section id="view-study" class="view-section"></section>
+
+      <!-- 🗂️ CONCEPT CARDS VIEW CONTAINER -->
+      <section id="view-cards" class="view-section"></section>
+
+      <!-- ⚡ FLASHCARDS VIEW CONTAINER -->
+      <section id="view-flashcards" class="view-section"></section>
+
+      <!-- 📝 MOCK TEST VIEW CONTAINER -->
+      <section id="view-test" class="view-section"></section>
+
+      <!-- 🛠️ HANDS-ON PROJECTS VIEW CONTAINER -->
+      <section id="view-projects" class="view-section">
+        <h1>Hands-on Implementation Labs</h1>
+        <p class="subtitle">Complete end-to-end scenarios on Microsoft Fabric to cement conceptual patterns.</p>
+        <div id="concepts-projects-container" style="display: flex; flex-direction: column; gap: 20px;"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Detail Card Modal overlay -->
+  <div class="modal-overlay" id="card-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-card-title" style="margin: 0; font-size: 1.35rem; font-weight: 700;">Card Details</h2>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="modal-card-body"></div>
+    </div>
+  </div>
+
 </body>
 </html>

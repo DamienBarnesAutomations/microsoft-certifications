@@ -1,126 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DP-600, DP-700 & DP-300 Study Cards</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f1117;color:#e4e6eb;line-height:1.6;min-height:100vh}
-.container{max-width:1100px;margin:0 auto;padding:20px}
-.breadcrumb{display:flex;align-items:center;gap:8px;padding:12px 0;font-size:14px;color:#8b8fa3;flex-wrap:wrap}
-.breadcrumb span{cursor:pointer;transition:color .2s}
-.breadcrumb span:hover{color:#6c5ce7}
-.breadcrumb .sep{opacity:.5}
-.breadcrumb .current{color:#e4e6eb;cursor:default}
-h1{font-size:28px;margin-bottom:24px;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-h2{font-size:22px;margin-bottom:16px;font-weight:600}
-h3{font-size:16px;margin-bottom:8px;font-weight:600}
-.search-box{width:100%;padding:12px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:10px;color:#e4e6eb;font-size:15px;margin-bottom:20px;outline:none;transition:border .2s}
-.search-box:focus{border-color:#6c5ce7}
-.search-box::placeholder{color:#8b8fa3}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;max-width:700px;margin:40px auto}
-.card{background:#1a1d27;border:1px solid #2a2e3a;border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;position:relative}
-.card:hover{background:#232733;border-color:#6c5ce7;transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.15)}
-.cert-card{padding:32px;text-align:center}
-.cert-card h2{font-size:24px;margin-bottom:8px}
-.cert-card p{color:#8b8fa3;font-size:14px}
-.badge{display:inline-block;background:#6c5ce7;color:#fff;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:8px}
-.topic-preview{color:#8b8fa3;font-size:13px;margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.topic-detail{background:#1a1d27;border:1px solid #2a2e3a;border-radius:12px;padding:24px;margin-bottom:20px}
-.section-header{font-size:15px;font-weight:600;color:#00cec9;margin:16px 0 8px 0;padding-bottom:4px;border-bottom:1px solid #2a2e3a}
-.section-content{display:none;padding:8px 0 8px 0;font-size:14px;line-height:1.7}
-.section-content.open{display:block}
-.section-content p{margin-bottom:10px}
-.section-content ul,.section-content ol{padding-left:20px;margin-bottom:10px}
-.section-content li{margin-bottom:4px}
-.section-content code{background:#141620;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code',Consolas,monospace;color:#00cec9}
-.section-content table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
-.section-content th,.section-content td{padding:8px 12px;text-align:left;border:1px solid #2a2e3a}
-.section-content th{background:#2d3148;font-weight:600;color:#00cec9}
-.section-content td{background:#141620}
-.hidden{display:none!important}
-@media(max-width:640px){.cert-grid,.card-grid{grid-template-columns:1fr}.container{padding:12px}h1{font-size:22px}.card{padding:16px!important}.topic-detail{padding:16px}.section-header{font-size:14px;margin:12px 0 6px 0}.search-box{font-size:16px;padding:14px}}
-</style>
+  <meta charset="UTF-8">
+  <title>Redirecting to Study Cards...</title>
+  <script>
+    window.location.replace("index.html#/cards");
+  </script>
+  <style>
+    body {
+      background-color: #080c14;
+      color: #94a3b8;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    a { color: #6366f1; text-decoration: none; }
+  </style>
 </head>
 <body>
-<div class="container">
-<a href="index.html" style="display:inline-block;margin-bottom:12px;padding:8px 16px;background:#1a1d27;border:1px solid #2a2e3a;border-radius:8px;color:#8b8fa3;text-decoration:none;font-size:14px;transition:all .2s">← Back to Menu</a>
-<div class="breadcrumb" id="breadcrumb"><span class="current">Home</span></div>
-<h1 id="mainTitle">Microsoft Fabric Certification Study Cards</h1>
-<input type="text" class="search-box hidden" id="searchBox" placeholder="Search topics...">
-<div id="app"></div>
-</div>
-<script>
-var DATA = {};
-</script>
-<script src="cards_dp600.js"></script>
-<script src="cards_dp700.js"></script>
-<script src="cards_dp300.js"></script>
-<script>
-DATA['DP-600']=DP600_DATA;DATA['DP-700']=DP700_DATA;DATA['DP-300']=DP300_DATA;
-var currentView='home',currentCert=null,currentModule=null,expandedTopics={};
-
-function render(){
-var app=document.getElementById('app'),title=document.getElementById('mainTitle'),search=document.getElementById('searchBox'),bc=document.getElementById('breadcrumb');
-if(currentView==='home'){
-title.textContent='Microsoft Fabric Certification Study Cards';
-search.classList.add('hidden');
-bc.innerHTML='<span class="current">Home</span>';
-app.innerHTML='<div class="cert-grid"><div class="card cert-card" onclick="selectCert(\'DP-600\')"><h2>DP-600</h2><p>Designing and Implementing Analytics Solutions Using Microsoft Fabric</p></div><div class="card cert-card" onclick="selectCert(\'DP-700\')"><h2>DP-700</h2><p>Fabric Data Engineer</p></div><div class="card cert-card" onclick="selectCert(\'DP-300\')"><h2>DP-300</h2><p>Designing and Implementing Azure Database Solutions</p></div></div>';
-return;}
-if(currentView==='modules'){
-var cert=DATA[currentCert];
-title.textContent=cert.title;
-search.classList.add('hidden');
-bc.innerHTML='<span onclick="goHome()">Home</span><span class="sep">&#8250;</span><span class="current">'+currentCert+'</span>';
-var html='<div class="card-grid">';
-var mods=Object.keys(cert.modules);
-for(var i=0;i<mods.length;i++){
-var mod=mods[i],count=Object.keys(cert.modules[mod].topics).length;
-html+='<div class="card" onclick="selectModule(\''+currentCert+'\','+i+')"><h3>'+mod+'</h3><span class="badge">'+count+' topics</span></div>';}
-html+='</div>';app.innerHTML=html;return;}
-if(currentView==='topics'){
-var cert=DATA[currentCert],mods=Object.keys(cert.modules),mod=cert.modules[mods[currentModule]];
-title.textContent=mods[currentModule];
-search.classList.remove('hidden');
-bc.innerHTML='<span onclick="goHome()">Home</span><span class="sep">&#8250;</span><span onclick="goToModules(\''+currentCert+'\')">'+currentCert+'</span><span class="sep">&#8250;</span><span class="current">'+mods[currentModule]+'</span>';
-renderTopics('');return;}
-}
-
-function renderTopics(query){
-var cert=DATA[currentCert],mods=Object.keys(cert.modules),mod=cert.modules[mods[currentModule]],app=document.getElementById('app'),html='';
-var names=Object.keys(mod.topics);
-for(var i=0;i<names.length;i++){
-var name=names[i],topic=mod.topics[name],preview=(topic.core || "").substring(0,120)+'...';
-if(query&&name.toLowerCase().indexOf(query.toLowerCase())===-1&&topic.core&&topic.core.toLowerCase().indexOf(query.toLowerCase())===-1)continue;
-var isOpen=expandedTopics[name];
-html+='<div class="card" style="margin-bottom:12px;cursor:default;padding:0;overflow:hidden">';
-html+='<div style="padding:16px 20px;cursor:pointer" onclick="toggleTopic(\''+name.replace(/'/g,"\\'")+'\')">';
-html+='<div style="display:flex;align-items:center;justify-content:space-between">';
-html+='<h3 style="margin:0">'+name+'</h3>';
-html+='<span style="color:#8b8fa3;font-size:12px;transition:transform .2s;transform:rotate('+(isOpen?'90':'0')+'deg)">&#9654;</span>';
-html+='</div>';
-if(!isOpen)html+='<div class="topic-preview">'+preview+'</div>';
-html+='</div>';
-html+='<div class="section-content '+(isOpen?'open':'')+'">';
-html+='<div class="topic-detail">';
-for (var key in topic) {
-  if (key === 'core') continue;
-  html += '<div class="section-header">' + key + '</div>';
-  html += '<div class="section-content open">' + topic[key] + '</div>';
-}
-html+='</div></div></div>';}
-app.innerHTML=html;}
-
-function selectCert(c){currentCert=c;currentView='modules';expandedTopics={};render();window.scrollTo(0,0);}
-function goToModules(c){currentCert=c;currentView='modules';expandedTopics={};render();window.scrollTo(0,0);}
-function selectModule(c,m){currentCert=c;currentModule=m;currentView='topics';expandedTopics={};render();window.scrollTo(0,0);}
-function goHome(){currentView='home';currentCert=null;currentModule=null;expandedTopics={};render();window.scrollTo(0,0);}
-function toggleTopic(n){expandedTopics[n]=!expandedTopics[n];renderTopics(document.getElementById('searchBox').value);}
-document.getElementById('searchBox').addEventListener('input',function(){renderTopics(this.value);});
-render();
-</script>
+  <p>Redirecting to study cards... If not redirected, <a href="index.html#/cards">click here</a>.</p>
 </body>
 </html>
