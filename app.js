@@ -1105,7 +1105,7 @@ function initExamHub() {
       <h1>Mock Practice Exams</h1>
       <p class="subtitle">Simulate real-world exam conditions with explanations and timer tracking.</p>
       
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;" id="exam-dashboard-columns">
+      <div class="exam-config-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;" id="exam-dashboard-columns">
         <div class="glass-panel">
           <h2>Configure Practice Exam</h2>
           <div style="display: flex; flex-direction: column; gap: 16px;">

@@ -306,6 +306,11 @@ body {
   background: var(--color-danger);
   color: white;
 }
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -500,6 +505,7 @@ h3 {
 .markdown-content {
   line-height: 1.7;
   font-size: 1.05rem;
+  max-width: 860px;
 }
 .markdown-content h1, 
 .markdown-content h2, 
@@ -594,11 +600,16 @@ h3 {
 /* ---------------------------------------------------- */
 .search-bar-wrap {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 .search-bar-wrap input {
   flex: 1;
+  min-width: 200px;
+}
+.search-bar-wrap select {
+  flex: 0 0 auto;
 }
 
 .concepts-grid {
@@ -1024,6 +1035,9 @@ h3 {
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+  .exam-config-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
