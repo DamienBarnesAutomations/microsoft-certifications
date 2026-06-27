@@ -893,6 +893,35 @@ h3 {
   color: var(--text-muted);
   margin-bottom: 12px;
 }
+.q-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+.q-type-multi { background: rgba(99,102,241,0.15); color: var(--accent-indigo); }
+.q-type-tf    { background: rgba(20,184,166,0.15); color: var(--accent-teal); }
+.multi-hint {
+  font-size: 0.82rem;
+  color: var(--accent-indigo);
+  margin-bottom: 14px;
+  font-style: italic;
+  opacity: 0.85;
+}
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent-indigo), #8b5cf6);
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-accent:hover { opacity: 0.85; }
 .question-text {
   font-size: 1.15rem;
   line-height: 1.6;

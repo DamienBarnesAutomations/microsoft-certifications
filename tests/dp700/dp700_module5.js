@@ -23,7 +23,7 @@
     ],
     "correct": 0,
     "module": 5,
-    "explanation": "Deployment pipelines are the builtâ€‘in Fabric feature for promoting content between workspaces (e.g., Dev â†’ Test â†’ Prod). Git integration connects to source control but does not directly deploy between workspaces. REST APIs can be used programmatically but are not the primary feature. Workspace apps are for distributing content to consumers."
+    "explanation": "Deployment pipelines are the built-in Fabric feature for promoting content between workspaces (e.g., Dev → Test → Prod). Git integration connects to source control but does not directly deploy between workspaces. REST APIs can be used programmatically but are not the primary feature. Workspace apps are for distributing content to consumers."
   },
   {
     "text": "Which of the following is true about Fabric Viewer role on a workspace?",
@@ -47,7 +47,7 @@
     ],
     "correct": 0,
     "module": 5,
-    "explanation": "Only Admin can manage workspace settings and access. Member can manage content but not permissions. Contributor can create and modify items but cannot manage settings. Viewer is readâ€‘only."
+    "explanation": "Only Admin can manage workspace settings and access. Member can manage content but not permissions. Contributor can create and modify items but cannot manage settings. Viewer is read-only."
   },
   {
     "text": "You need to create a Fabric domain. What is the primary purpose of a domain?",
@@ -83,7 +83,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "Git integration is configured per workspace, connecting to a branch in a GitHub or Azure DevOps repo. It is not tenantâ€‘only, does not require special capacity (works with any capacity), and supports many Fabric items, not just Power BI."
+    "explanation": "Git integration is configured per workspace, connecting to a branch in a GitHub or Azure DevOps repo. It is not tenant-only, does not require special capacity (works with any capacity), and supports many Fabric items, not just Power BI."
   },
   {
     "text": "You need to monitor Fabric job execution. Which centralized view provides this?",
@@ -131,7 +131,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "Viewer role provides readâ€‘only access to item metadata, but to read data from a lakehouse, you must grant ReadData permission (via OneLake security roles or item permissions). Contributor and Member would allow modification. No workspace role would make it hard to discover the lakehouse."
+    "explanation": "Viewer role provides read-only access to item metadata, but to read data from a lakehouse, you must grant ReadData permission (via OneLake security roles or item permissions). Contributor and Member would allow modification. No workspace role would make it hard to discover the lakehouse."
   },
   {
     "text": "You connect a Fabric workspace to a Git repository. A developer makes changes in the workspace. How do the changes get synchronized with the Git branch?",
@@ -143,7 +143,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "Git integration in Fabric is manual: the developer must use the Source control panel to commit changes to the connected branch. Changes are not automatic, nor do they autoâ€‘create pull requests."
+    "explanation": "Git integration in Fabric is manual: the developer must use the Source control panel to commit changes to the connected branch. Changes are not automatic, nor do they auto-create pull requests."
   },
   {
     "text": "You create a deployment pipeline with three stages: Development, Test, and Production. Each stage is assigned to a different workspace. When you deploy from Development to Test, what happens to existing items in the Test workspace?",
@@ -179,7 +179,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "The Monitor Hub allows you to drill into a failed pipeline run and view activityâ€‘level details, including error messages. Audit logs show who did what, not error details. OneLake catalog Govern tab shows governance metadata. Capacity Metrics shows capacity usage."
+    "explanation": "The Monitor Hub allows you to drill into a failed pipeline run and view activity-level details, including error messages. Audit logs show who did what, not error details. OneLake catalog Govern tab shows governance metadata. Capacity Metrics shows capacity usage."
   },
   {
     "text": "A new lakehouse is created in a Fabric workspace. A Viewer role user tries to read data from it through the SQL analytics endpoint. What happens by default?",
@@ -203,7 +203,7 @@
     ],
     "correct": 3,
     "module": 5,
-    "explanation": "The Fabric admin (tenant admin) controls tenantâ€‘wide settings (feature availability, export policies, etc.). Capacity admin manages capacity, domain admin manages domains, workspace admin manages workspace."
+    "explanation": "The Fabric admin (tenant admin) controls tenant-wide settings (feature availability, export policies, etc.). Capacity admin manages capacity, domain admin manages domains, workspace admin manages workspace."
   },
   {
     "text": "A Fabric administrator enables the 'Export to Excel' tenant setting for the entire organization except the 'Finance Restricted' security group. What is the effect?",
@@ -215,7 +215,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "Tenant settings can include exceptions. Enabling for entire org except a security group means all users not in that group can export. The setting is effective and not overridden by itemâ€‘level controls unless stricter."
+    "explanation": "Tenant settings can include exceptions. Enabling for entire org except a security group means all users not in that group can export. The setting is effective and not overridden by item-level controls unless stricter."
   },
   {
     "text": "A Fabric administrator delegates the Certification setting to a domain admin. What can the domain admin now do?",
@@ -275,7 +275,7 @@
     ],
     "correct": 0,
     "module": 5,
-    "explanation": "Workspaces not assigned to a Fabric capacity run on shared capacity (free tier) with limited functionality and performance, not suitable for production. They are not autoâ€‘assigned, are accessible, and trial capacity is separate."
+    "explanation": "Workspaces not assigned to a Fabric capacity run on shared capacity (free tier) with limited functionality and performance, not suitable for production. They are not auto-assigned, are accessible, and trial capacity is separate."
   },
   {
     "text": "A developer branches out from a shared development workspace to create an isolated workspace for feature development. What is the purpose of this branching approach?",
@@ -287,7 +287,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "Branching workspaces in Fabric (using Git integration) allows developers to work in isolation without affecting the shared dev workspace. Changes are later merged via pull request. It does not create production copies, autoâ€‘deploy, or grant admin access."
+    "explanation": "Branching workspaces in Fabric (using Git integration) allows developers to work in isolation without affecting the shared dev workspace. Changes are later merged via pull request. It does not create production copies, auto-deploy, or grant admin access."
   },
   {
     "text": "You need to ensure that only designated data stewards can certify Fabric items as trusted. Which tenant setting should the administrator configure?",
@@ -311,7 +311,7 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "Monitor Hub is for detailed jobâ€‘level monitoring (pipeline runs, dataflow refreshes). The admin monitoring workspace (available to Fabric admins) provides aggregated platformâ€‘wide metrics, adoption trends, and capacity usage."
+    "explanation": "Monitor Hub is for detailed job-level monitoring (pipeline runs, dataflow refreshes). The admin monitoring workspace (available to Fabric admins) provides aggregated platform-wide metrics, adoption trends, and capacity usage."
   },
   {
     "text": "A Fabric administrator wants to assign licenses to 200 users. What is the most efficient approach?",
@@ -323,11 +323,11 @@
     ],
     "correct": 1,
     "module": 5,
-    "explanation": "The most efficient way is to use Microsoft Entra ID security groups and assign licenses to the groups in the Microsoft 365 admin center. This scales to many users. Individual assignment is manual. Licenses are not autoâ€‘assigned."
+    "explanation": "The most efficient way is to use Microsoft Entra ID security groups and assign licenses to the groups in the Microsoft 365 admin center. This scales to many users. Individual assignment is manual. Licenses are not auto-assigned."
   },
   {
     "module": 5,
-    "text": "You must enforce columnâ€‘level security on a salary column in a warehouse. Which Tâ€‘SQL statement is the correct way to deny access to a specific role?",
+    "text": "You must enforce column-level security on a salary column in a warehouse. Which T-SQL statement is the correct way to deny access to a specific role?",
     "options": [
       "DENY SELECT ON Employees(Salary) TO [FinanceRole]",
       "REVOKE SELECT ON Employees FROM [FinanceRole]",
@@ -335,7 +335,7 @@
       "ALTER TABLE Employees DISABLE COLUMN Salary"
     ],
     "correct": 0,
-    "explanation": "DENY SELECT ON table(column) TO role is the syntax for columnâ€‘level security. REVOKE removes a grant, not deny. DENY UPDATE is for updates, not selects. DISABLE COLUMN is not a Tâ€‘SQL command."
+    "explanation": "DENY SELECT ON table(column) TO role is the syntax for column-level security. REVOKE removes a grant, not deny. DENY UPDATE is for updates, not selects. DISABLE COLUMN is not a T-SQL command."
   },
   {
     "module": 5,
@@ -359,11 +359,11 @@
       "Viewer"
     ],
     "correct": 0,
-    "explanation": "Only Admin can manage workspace settings and assign permissions. Member can manage content but not permissions. Contributor can create/modify content. Viewer is readâ€‘only."
+    "explanation": "Only Admin can manage workspace settings and assign permissions. Member can manage content but not permissions. Contributor can create/modify content. Viewer is read-only."
   },
   {
     "module": 5,
-    "text": "You want to give a service principal readâ€‘only access to a specific lakehouse table. Which permission should you grant?",
+    "text": "You want to give a service principal read-only access to a specific lakehouse table. Which permission should you grant?",
     "options": [
       "GRANT SELECT ON TableName TO [ServicePrincipal]",
       "GRANT READ TO [ServicePrincipal]",
@@ -371,7 +371,7 @@
       "DENY UPDATE ON TableName TO [ServicePrincipal]"
     ],
     "correct": 0,
-    "explanation": "GRANT SELECT on the table grants read access to the service principal. GRANT READ is not a valid Tâ€‘SQL statement for tables. Adding to ReaderRole may grant broader access. DENY UPDATE does not grant read."
+    "explanation": "GRANT SELECT on the table grants read access to the service principal. GRANT READ is not a valid T-SQL statement for tables. Adding to ReaderRole may grant broader access. DENY UPDATE does not grant read."
   },
   {
     "module": 5,
@@ -390,12 +390,12 @@
     "text": "You need to schedule a pipeline to run every 15 minutes. Which trigger type should you configure?",
     "options": [
       "Scheduled trigger with recurrence of 15 minutes",
-      "Eventâ€‘driven trigger on blob creation",
+      "Event-driven trigger on blob creation",
       "Manual trigger only",
       "Dataflow refresh trigger"
     ],
     "correct": 0,
-    "explanation": "Scheduled trigger with recurrence is the correct way to run a pipeline on a fixed interval (every 15 minutes). Eventâ€‘driven trigger reacts to events, not time. Manual trigger requires manual start. Dataflow refresh trigger is for dataflows."
+    "explanation": "Scheduled trigger with recurrence is the correct way to run a pipeline on a fixed interval (every 15 minutes). Event-driven trigger reacts to events, not time. Manual trigger requires manual start. Dataflow refresh trigger is for dataflows."
   },
   {
     "module": 5,
@@ -534,12 +534,103 @@
     "text": "Which of the following describes the purpose of a deployment pipeline in Fabric?",
     "options": [
       "To synchronize workspace content with a Git repository",
-      "To promote content (e.g., lakehouses, reports) between stages (Dev â†’ Test â†’ Prod) using zeroâ€‘copy cloning and deployment rules",
+      "To promote content (e.g., lakehouses, reports) between stages (Dev → Test → Prod) using zero-copy cloning and deployment rules",
       "To automate the creation of Fabric capacities",
       "To deploy Fabric items to external cloud providers"
     ],
     "correct": 1,
-    "explanation": "Deployment pipelines allow you to assign workspaces to stages and then promote items from one stage to the next. Deployment rules can swap connection strings (e.g., Dev lakehouse â†’ Prod lakehouse) automatically."
+    "explanation": "Deployment pipelines allow you to assign workspaces to stages and then promote items from one stage to the next. Deployment rules can swap connection strings (e.g., Dev lakehouse → Prod lakehouse) automatically."
+  },
+
+  // ── True / False ──────────────────────────────────────────────────────────
+  {
+    "text": "True or False: Fabric workspace Git integration supports connecting a workspace to both GitHub and Azure DevOps repositories.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 5,
+    "explanation": "True. Fabric supports Git integration with both GitHub and Azure DevOps (Repos) as the remote Git provider. Only one repository branch can be connected to a workspace at a time."
+  },
+  {
+    "text": "True or False: In Fabric Git integration, an item's Git sync state of 'Conflict' means the item was modified in both the workspace and the remote Git branch simultaneously.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 5,
+    "explanation": "True. The 'Conflict' sync state occurs when the same item has been changed both in the Fabric workspace (uncommitted local changes) and in the remote Git branch (someone pushed a change). The conflict must be resolved before syncing."
+  },
+  {
+    "text": "True or False: In a Fabric deployment pipeline, promotion from Dev to Test requires all items to be promoted simultaneously — partial promotion of selected items is not supported.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 5,
+    "explanation": "False. Fabric deployment pipelines allow selective promotion — you can choose which specific items (e.g., only the updated notebook and its linked Lakehouse) to deploy to the next stage, rather than promoting everything at once."
+  },
+  {
+    "text": "True or False: The recommended best practice for Fabric CI/CD is to connect ALL workspace stages (Dev, Test, Prod) to the same Git repository branch.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 5,
+    "explanation": "False. The recommended pattern is to connect ONLY the Dev workspace to Git. The Dev workspace is where developers commit changes. Promotion to Test and Prod is handled via deployment pipelines, not by having Test/Prod workspaces connected to different Git branches. This avoids conflicting commits from pipeline-promoted content."
+  },
+  {
+    "text": "True or False: The Fabric REST API can be used to programmatically trigger a Git commit from a workspace to its connected repository.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 5,
+    "explanation": "True. The Fabric REST API exposes a 'Commit to Git' endpoint that allows automating the commit step from a CI/CD pipeline (e.g., Azure DevOps pipeline or GitHub Actions). This is used to build fully automated Git-based workflows without manual intervention in the Fabric UI."
+  },
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  {
+    "text": "Which of the following Git sync states can appear on a Fabric workspace item after connecting the workspace to a Git repository? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Synced (workspace matches the connected Git branch)",
+      "Uncommitted changes (workspace has changes not yet committed to Git)",
+      "Update required (Git branch has changes not yet pulled into the workspace)",
+      "Detached (workspace item has no Git history)"
+    ],
+    "correct": [0, 1, 2],
+    "module": 5,
+    "explanation": "A (Synced), B (Uncommitted changes), and C (Update required) are the three valid positive sync states, plus Conflict when both sides changed. D ('Detached') is not a real Fabric Git sync state — all connected items have a tracked state. Items that have never been committed would show as uncommitted, not detached."
+  },
+  {
+    "text": "Which of the following Fabric REST API operations relate to Git integration? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Commit workspace changes to Git",
+      "Update workspace from Git (pull latest)",
+      "Get Git connection status for a workspace",
+      "Deploy items from Dev stage to Test stage"
+    ],
+    "correct": [0, 1, 2],
+    "module": 5,
+    "explanation": "A (Commit to Git), B (Update from Git), and C (Get status) are all Fabric Git integration REST API operations. D (deploy between pipeline stages) is a Deployment Pipeline API operation, not a Git integration API. The two API groups are separate: Git APIs manage source control sync; Pipeline APIs manage promotion between environments."
+  },
+  {
+    "text": "Which of the following deployment pipeline capabilities help adapt items for each environment without manual editing? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Deployment rules to change data source connections per stage",
+      "Deployment rules to change parameter values per stage",
+      "Automatic renaming of items to include the stage name",
+      "Pre-deployment and post-deployment hooks via Azure DevOps"
+    ],
+    "correct": [0, 1],
+    "module": 5,
+    "explanation": "A and B are valid deployment rule capabilities. Deployment rules can swap the connected data source (e.g., Dev Lakehouse → Prod Lakehouse) and override parameter values per stage. C is wrong — Fabric does not automatically rename items with stage names. D is wrong — Fabric deployment pipelines do not natively integrate Azure DevOps hooks; REST API calls can be invoked from DevOps pipelines externally, but it is not a built-in hook mechanism."
+  },
+  {
+    "text": "Which of the following are valid reasons to use Fabric deployment pipelines INSTEAD OF (or in addition to) Git branches for environment promotion? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Deployment pipelines can swap data source connections per stage without code changes",
+      "Deployment pipelines support comparing item differences between stages visually",
+      "Deployment pipelines eliminate the need for code review before promotion",
+      "Deployment pipelines allow selective item promotion without deploying the entire workspace"
+    ],
+    "correct": [0, 1, 3],
+    "module": 5,
+    "explanation": "A, B, and D are valid reasons for deployment pipelines. Connection swapping (A) handles environment-specific config. Visual diff comparison (B) helps reviewers see what changed. Selective promotion (D) avoids promoting untested items. C is wrong — deployment pipelines do not eliminate the need for code review; they complement Git-based review, not replace it."
   }
 
   ];

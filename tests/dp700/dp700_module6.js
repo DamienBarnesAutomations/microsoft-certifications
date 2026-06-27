@@ -1,4 +1,4 @@
-// Module 6: Activator
+﻿// Module 6: Activator
 (function() {
   var questions = [
   {
@@ -300,6 +300,97 @@
     "correct": 1,
     "module": 6,
     "explanation": "Property filters restrict the scope of a rule to objects where specific categorical properties match given values (e.g., only evaluate packages where ColdChainType = 'medicine'). The Monitor section selects which property to watch. The Condition section defines the evaluation logic. Step size controls evaluation frequency."
+  },
+
+  // ── True / False ──────────────────────────────────────────────────────────
+  {
+    "text": "True or False: Activator can only be triggered by data arriving through an Eventstream destination — it cannot monitor Fabric workspace system events directly.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 6,
+    "explanation": "False. Activator supports system event alerts that monitor Fabric workspace events (such as pipeline failures or OneLake file operations) without requiring an Eventstream. It can also be triggered from Real-Time Dashboard alerts and KQL query alerts."
+  },
+  {
+    "text": "True or False: In Activator, a separate object instance is created for each unique value of the identifier field selected when configuring the data stream connection.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 6,
+    "explanation": "True. When you select a field as the unique identifier (e.g., PackageId), Activator creates and maintains a separate object instance for each distinct value that appears in the stream. Rules then evaluate per-object, enabling entity-level monitoring (e.g., each package is monitored independently)."
+  },
+  {
+    "text": "True or False: Activator's 'When it has been true for N minutes' occurrence setting causes an alert to fire on every individual event that meets the condition during those N minutes.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 6,
+    "explanation": "False. 'When it has been true for N minutes' is a debounce mechanism that fires only once, after the condition has been continuously true for the full N-minute duration. This suppresses transient spikes. 'Every time' is the setting that fires on each individual qualifying event."
+  },
+  {
+    "text": "True or False: A maximum of 3 property filters can be applied to a single Activator rule.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 6,
+    "explanation": "True. Activator supports up to 3 property filters per rule, combined with AND logic. If you need more complex filtering, consider splitting into multiple rules or pre-filtering in the Eventstream before the data reaches Activator."
+  },
+  {
+    "text": "True or False: Power Automate is the correct Activator action type when the required response involves executing a multi-step workflow that integrates with external SaaS applications.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 6,
+    "explanation": "True. Power Automate has hundreds of connectors to external SaaS systems (Salesforce, ServiceNow, Slack, etc.) and can orchestrate multi-step workflows. Email and Teams are single-notification actions. Fabric item action triggers Fabric-native items, not external systems."
+  },
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  {
+    "text": "Which of the following are valid action types available in Activator? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Email notification",
+      "Microsoft Teams message",
+      "Power Automate flow",
+      "Azure Function (direct invocation)"
+    ],
+    "correct": [0, 1, 2],
+    "module": 6,
+    "explanation": "A (Email), B (Teams), and C (Power Automate) are the three built-in Activator notification/action types, plus Fabric item (triggering a pipeline or notebook). D (Azure Function direct invocation) is not a native Activator action type — you could reach an Azure Function indirectly via Power Automate, but Activator has no direct Azure Function action."
+  },
+  {
+    "text": "Which of the following Activator rule sections directly determine WHEN the action fires (i.e., what must be true and for how long)? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Monitor section (selects which property and configures summarization)",
+      "Condition section (defines the threshold or change-detection rule)",
+      "Occurrence setting (debounce — how long the condition must hold)",
+      "Property filter section (restricts which objects the rule applies to)"
+    ],
+    "correct": [1, 2],
+    "module": 6,
+    "explanation": "B (Condition) and C (Occurrence) together control when the action fires. The Condition defines what must be true (e.g., Temperature > 68). Occurrence defines for how long or how often (e.g., every time vs. after 5 continuous minutes). The Monitor section (A) determines what data is fed into the condition. Property filters (D) restrict scope but do not control firing timing directly."
+  },
+  {
+    "text": "Which of the following alerting approaches in Microsoft Fabric use the Activator engine under the hood? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Real-Time Dashboard alerts configured on a visualization",
+      "KQL Queryset alerts set on a query result",
+      "Fabric system event alerts (e.g., pipeline failure notifications)",
+      "Azure Monitor alerts on a Fabric capacity"
+    ],
+    "correct": [0, 1, 2],
+    "module": 6,
+    "explanation": "A, B, and C all use Activator as their underlying engine. Real-Time Dashboard alerts, KQL query alerts, and system event alerts are all entry points into the Activator evaluation and action system. D (Azure Monitor alerts on a Fabric capacity) uses Azure Monitor infrastructure, not Activator."
+  },
+  {
+    "text": "Which of the following condition types are available in Activator? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Threshold monitoring (fires when a value crosses a fixed boundary)",
+      "Change detection (fires on relative or absolute change from baseline)",
+      "Range monitoring (fires when a value exits a defined safe zone)",
+      "Frequency monitoring (named condition type for events-per-minute)"
+    ],
+    "correct": [0, 1, 2],
+    "module": 6,
+    "explanation": "A (Threshold), B (Change detection), and C (Range monitoring) are the documented Activator condition types, along with Missing data detection. D is wrong — 'Frequency monitoring' is not a separate named Activator condition type. You can measure event frequency by using Count summarization with a threshold condition, but it is not a distinct built-in type."
   }
 
   ];

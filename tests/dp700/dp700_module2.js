@@ -708,6 +708,97 @@
     ],
     "correct": 1,
     "explanation": "A Fabric Warehouse provides full read-write T-SQL capabilities (DDL, DML, MERGE), ACID transactions, and stores its own data independently. The SQL analytics endpoint is read-only and reads from Lakehouse Delta tables. Spark notebooks use Spark SQL, not T-SQL."
+  },
+
+  // ── True / False ──────────────────────────────────────────────────────────
+  {
+    "text": "True or False: The SQL analytics endpoint on a Fabric Lakehouse supports INSERT, UPDATE, and DELETE T-SQL statements.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 2,
+    "explanation": "False. The SQL analytics endpoint is read-only. It exposes Delta tables as SQL views for SELECT queries but does not support write operations (INSERT, UPDATE, DELETE, MERGE). Write access requires using Spark notebooks, Dataflows Gen2, or a Fabric Warehouse."
+  },
+  {
+    "text": "True or False: In a Medallion architecture, the Gold layer typically stores raw, unprocessed data exactly as it arrived from the source system.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 2,
+    "explanation": "False. The Bronze (raw) layer stores unprocessed data as-is from the source. The Gold layer contains curated, aggregated, business-ready data optimized for reporting and analytics. Silver is cleansed and deduplicated. Storing raw data in Gold defeats the purpose of the architecture."
+  },
+  {
+    "text": "True or False: Delta Lake's time-travel feature allows you to query a table's state at a previous version using AS OF TIMESTAMP or AS OF VERSION.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 2,
+    "explanation": "True. Delta Lake stores a transaction log with all write operations. You can query historical versions with syntax like: SELECT * FROM table TIMESTAMP AS OF '2024-01-01' or VERSION AS OF 10. Versions are retained until removed by VACUUM."
+  },
+  {
+    "text": "True or False: A Lakehouse shortcut in Microsoft Fabric physically copies the source data into OneLake when it is first accessed.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 2,
+    "explanation": "False. Shortcuts are virtual links — they reference data in the source location (ADLS Gen2, S3, another Lakehouse, etc.) without copying it. Reads go through the shortcut to the source. No data duplication occurs, which is a key design benefit."
+  },
+  {
+    "text": "True or False: ZORDER BY in Delta Lake reorganizes data within Parquet files so that rows with similar values in the Z-ordered columns are stored together, enabling data skipping.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 2,
+    "explanation": "True. ZORDER BY is a multi-dimensional clustering technique. It co-locates rows with matching values in the specified columns so that when a query filters on those columns, the Parquet file statistics (min/max per column chunk) allow the reader to skip entire files or row groups that cannot match the filter."
+  },
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  {
+    "text": "Which of the following are characteristics of Delta Lake that distinguish it from plain Parquet files? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "ACID transaction support with optimistic concurrency control",
+      "A transaction log (_delta_log) that records all changes",
+      "Support for schema enforcement and schema evolution",
+      "Built-in compression using gzip by default"
+    ],
+    "correct": [0, 1, 2],
+    "module": 2,
+    "explanation": "A, B, and C are Delta Lake-specific features. ACID transactions ensure consistency. The _delta_log transaction log makes time travel and auditing possible. Schema enforcement (rejects writes with incompatible schemas) and schema evolution (with mergeSchema) are Delta features. D is wrong — Delta Lake uses snappy compression by default (same as Parquet), not gzip, and this is not a Delta-specific feature."
+  },
+  {
+    "text": "Which of the following Fabric Lakehouse features allow access to data without physically moving or copying it into the Lakehouse's own storage? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "OneLake shortcuts to ADLS Gen2",
+      "OneLake shortcuts to Amazon S3",
+      "Managed Delta tables in the Lakehouse Tables section",
+      "OneLake shortcuts to another Fabric Lakehouse"
+    ],
+    "correct": [0, 1, 3],
+    "module": 2,
+    "explanation": "A, B, and D are all shortcut types that reference external data without copying it. Shortcuts to ADLS Gen2, Amazon S3, and other Fabric Lakehouses all work as virtual pointers. C (managed Delta tables) stores data physically inside the Lakehouse's OneLake storage — the opposite of a shortcut."
+  },
+  {
+    "text": "In the Medallion architecture on Microsoft Fabric, which transformations typically happen between the Bronze and Silver layers? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Deduplication of records",
+      "Data type casting and standardisation",
+      "Business aggregations for KPI reporting",
+      "Null handling and basic data quality checks"
+    ],
+    "correct": [0, 1, 3],
+    "module": 2,
+    "explanation": "A, B, and D are Silver-layer concerns: deduplication removes duplicate events, type casting standardises formats, and null/quality checks produce clean data. C (business aggregations for KPIs) is a Gold-layer activity — Silver should be lightly transformed and as close to source grain as possible without domain-level aggregation."
+  },
+  {
+    "text": "Which of the following statements about the VACUUM command on a Delta table are true? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "VACUUM removes Parquet files that are no longer referenced by the current table version",
+      "Running VACUUM with RETAIN 0 HOURS disables time travel permanently",
+      "The default retention threshold is 7 days",
+      "VACUUM improves read query performance by removing data skipping statistics"
+    ],
+    "correct": [0, 2],
+    "module": 2,
+    "explanation": "A and C are correct. VACUUM removes unreferenced files older than the retention threshold, and the default is 7 days. B is wrong — RETAIN 0 HOURS deletes all old files immediately but does not permanently disable time travel; future writes will still be logged. D is wrong — VACUUM removes files, not statistics; data skipping statistics are stored in the transaction log, not in deleted Parquet files."
   }
   ];
   

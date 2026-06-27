@@ -11,7 +11,7 @@
     ],
     "correct": 0,
     "module": 1,
-    "explanation": "The requirement is a timeâ€‘based trigger every 15 minutes. Scheduled pipeline run with recurrence is the standard way to achieve this. Dataflow refresh would run a dataflow, not the pipeline. Eventâ€‘driven trigger reacts to blob creation, not a fixed schedule. A stored procedure in a notebook is overkill and not a trigger mechanism."
+    "explanation": "The requirement is a time-based trigger every 15 minutes. Scheduled pipeline run with recurrence is the standard way to achieve this. Dataflow refresh would run a dataflow, not the pipeline. Event-driven trigger reacts to blob creation, not a fixed schedule. A stored procedure in a notebook is overkill and not a trigger mechanism."
   },
   {
     "text": "Which of the following statements about Dataflows Gen2 is TRUE?",
@@ -35,7 +35,7 @@
     ],
     "correct": 1,
     "module": 1,
-    "explanation": "Dataflows Gen2 do not support rowâ€‘level security (RLS); RLS is enforced in the destination (e.g., warehouse or semantic model). They can connect to cloud sources, can be scheduled (as dataflow refreshes or via pipelines), and can load to lakehouses."
+    "explanation": "Dataflows Gen2 do not support row-level security (RLS); RLS is enforced in the destination (e.g., warehouse or semantic model). They can connect to cloud sources, can be scheduled (as dataflow refreshes or via pipelines), and can load to lakehouses."
   },
   {
     "text": "You need to create a Spark notebook that reads a CSV file. You want the schema to be inferred automatically. Which option should you use?",
@@ -131,7 +131,7 @@
     ],
     "correct": 1,
     "module": 1,
-    "explanation": "Dataflows Gen2 provide a visual (Power Query) interface for complex transformations. Copy Data has no transformations. Notebooks are codeâ€‘based. COPY INTO is Tâ€‘SQL for loading, not visual transformations."
+    "explanation": "Dataflows Gen2 provide a visual (Power Query) interface for complex transformations. Copy Data has no transformations. Notebooks are code-based. COPY INTO is T-SQL for loading, not visual transformations."
   },
   {
     "text": "A data engineer wants to combine a Dataflows Gen2 activity with additional downstream activities such as executing a stored procedure. What is the recommended approach?",
@@ -203,7 +203,7 @@
     ],
     "correct": 1,
     "module": 1,
-    "explanation": "Temporary views are sessionâ€‘scoped; they are automatically removed when the Spark session ends (notebook detached or timed out). They are not cellâ€‘scoped and do not persist beyond the session unless manually dropped."
+    "explanation": "Temporary views are session-scoped; they are automatically removed when the Spark session ends (notebook detached or timed out). They are not cell-scoped and do not persist beyond the session unless manually dropped."
   },
   {
     "text": "You need to write a Spark SQL query in a notebook cell that queries the Spark catalog. Which magic command should you use at the beginning of the cell?",
@@ -239,7 +239,7 @@
     ],
     "correct": 1,
     "module": 1,
-    "explanation": "Eventhouse leverages the immutable, timeâ€‘based nature of events to automatically partition by ingestion time, enabling efficient timeâ€‘range queries. JSON format, compression, and star schema are not the key characteristic."
+    "explanation": "Eventhouse leverages the immutable, time-based nature of events to automatically partition by ingestion time, enabling efficient time-range queries. JSON format, compression, and star schema are not the key characteristic."
   },
   {
     "text": "You write a KQL query that filters by time, then by vendor, then by fare amount. According to KQL optimization best practices, what is the correct order for these filters?",
@@ -287,7 +287,7 @@
     ],
     "correct": 1,
     "module": 1,
-    "explanation": "KQL stored functions are called like a table, passing parameters in parentheses: `function_name(parameter_value)`. The WHERE clause is part of the function body. SELECT * FROM is Tâ€‘SQL style. .invoke is not used."
+    "explanation": "KQL stored functions are called like a table, passing parameters in parentheses: `function_name(parameter_value)`. The WHERE clause is part of the function body. SELECT * FROM is T-SQL style. .invoke is not used."
   },
   {
     "text": "You want to enable high concurrency mode for Spark in Microsoft Fabric. Where is this setting configured?",
@@ -303,7 +303,7 @@
   },
   {
     "module": 1,
-    "text": "You need to orchestrate a multiâ€‘step ETL pipeline that extracts data from Azure Blob Storage, transforms it with Spark, and loads it into a lakehouse. Which Fabric service should you use to define and schedule this workflow?",
+    "text": "You need to orchestrate a multi-step ETL pipeline that extracts data from Azure Blob Storage, transforms it with Spark, and loads it into a lakehouse. Which Fabric service should you use to define and schedule this workflow?",
     "options": [
       "Dataflow Gen2",
       "Pipeline",
@@ -329,7 +329,7 @@
     "module": 1,
     "text": "In a Dataflow Gen2, you notice that after adding a custom column the query folding is lost. What is the most likely reason?",
     "options": [
-      "Custom column uses a nonâ€‘foldable function",
+      "Custom column uses a non-foldable function",
       "Dataflow has reached its row limit",
       "Dataflow is set to Manual Refresh",
       "The source does not support folding"
@@ -341,17 +341,17 @@
     "module": 1,
     "text": "You need to process streaming data from Azure Event Hubs and write the results to a KQL database in real time. Which combination provides the lowest latency?",
     "options": [
-      "Eventstream â†’ Activator â†’ KQL",
-      "Eventstream â†’ Pipeline â†’ KQL",
-      "Dataflow Gen2 â†’ Lakehouse â†’ KQL",
-      "Notebook â†’ Eventstream â†’ KQL"
+      "Eventstream → Activator → KQL",
+      "Eventstream → Pipeline → KQL",
+      "Dataflow Gen2 → Lakehouse → KQL",
+      "Notebook → Eventstream → KQL"
     ],
     "correct": 0,
     "explanation": "Eventstream directly to Activator to KQL database is the most direct real-time path with minimal latency. Pipelines and Dataflows introduce batch-oriented delays. Notebooks add overhead."
   },
   {
     "module": 1,
-    "text": "A notebook uses Spark Structured Streaming with a foreachBatch sink to write to a lakehouse. Which setting ensures exactlyâ€‘once semantics?",
+    "text": "A notebook uses Spark Structured Streaming with a foreachBatch sink to write to a lakehouse. Which setting ensures exactly-once semantics?",
     "options": [
       "checkpointLocation",
       "outputMode = Append",
@@ -411,7 +411,7 @@
   },
   {
     "module": 1,
-    "text": "When configuring an Eventstream, which destination supports both KQL queries and Tâ€‘SQL access?",
+    "text": "When configuring an Eventstream, which destination supports both KQL queries and T-SQL access?",
     "options": [
       "Lakehouse (Delta)",
       "KQL database",
@@ -536,7 +536,7 @@
       "A container for notebook code and execution history",
       "A combination of a runtime, custom libraries, Spark properties, and resource files attached to a workspace or notebook",
       "A managed Spark pool with predefined node sizes",
-      "A builtâ€‘in MLFlow tracking server for experiments"
+      "A built-in MLFlow tracking server for experiments"
     ],
     "correct": 1,
     "explanation": "A Spark Environment defines the runtime version, custom libraries (PyPI, jar), Spark configuration properties, and resource files. It can be attached to a workspace or specific notebook, ensuring consistent execution across sessions."
@@ -996,6 +996,97 @@
     ],
     "correct": 1,
     "explanation": "Stored functions encapsulate KQL queries that accept parameters for reuse and consistency. They are created using the .create-or-alter function command with parameter definitions and a query body. Materialized views store precomputed results, not reusable logic with parameters."
+  },
+
+  // ── True / False ──────────────────────────────────────────────────────────
+  {
+    "text": "True or False: A Fabric data pipeline's Copy Data activity can apply transformation logic (filtering rows, renaming columns) to records during the copy operation.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 1,
+    "explanation": "False. Copy Data is a pure extract-and-load activity with no transformation capability. To transform data during ingestion you must use a Dataflow Gen2 activity, a Notebook activity, or a separate Spark notebook in the pipeline."
+  },
+  {
+    "text": "True or False: A Dataflow Gen2 in Microsoft Fabric can write its output to multiple destinations in a single run.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 1,
+    "explanation": "True. Dataflows Gen2 support multiple output destinations, allowing a single dataflow to load transformed data into, for example, a Lakehouse table AND an Azure SQL Database in one refresh cycle."
+  },
+  {
+    "text": "True or False: V-Order is a read-time optimization that Microsoft Fabric applies automatically when a Spark query reads a Delta table.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 1,
+    "explanation": "False. V-Order is a write-time optimization applied when Delta Parquet files are written (not read). It rearranges data within the file to improve downstream read performance for Power BI Direct Lake and Spark, but no extra work happens at read time."
+  },
+  {
+    "text": "True or False: The VACUUM command on a Delta table permanently removes data files that are still within the active transaction log retention window.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 1,
+    "explanation": "False. VACUUM only removes files that are no longer referenced by the current table version AND are older than the retention threshold (default 7 days). Files within the retention window are preserved so time-travel queries remain possible."
+  },
+  {
+    "text": "True or False: A Fabric notebook can be scheduled to run automatically using a pipeline Notebook activity on a recurrence trigger.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 1,
+    "explanation": "True. A pipeline with a Notebook activity can be given a scheduled trigger (recurrence), which causes the notebook to run at the defined interval. The pipeline orchestrates the notebook execution."
+  },
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  {
+    "text": "Which of the following statements about Dataflows Gen2 in Microsoft Fabric are correct? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Dataflows Gen2 use Power Query Online as their authoring interface",
+      "Dataflows Gen2 support staging to improve performance on large data volumes",
+      "A Dataflow Gen2 can write to only one output destination per run",
+      "Dataflows Gen2 can connect to on-premises sources via a Data Gateway"
+    ],
+    "correct": [0, 1, 3],
+    "module": 1,
+    "explanation": "A, B, and D are correct. Dataflows Gen2 use Power Query Online, support staging (an intermediate storage step that improves performance), and can connect to on-premises sources through a Data Gateway. C is wrong — multiple output destinations are supported in a single run."
+  },
+  {
+    "text": "Which of the following Delta Lake operations improve read query performance on a large Delta table? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "OPTIMIZE (compacts small files into larger ones)",
+      "VACUUM (removes files older than the retention threshold)",
+      "ZORDER BY (co-locates rows with similar filter-column values)",
+      "V-Order (Fabric write-time columnar sorting)"
+    ],
+    "correct": [0, 2, 3],
+    "module": 1,
+    "explanation": "A, C, and D improve read performance. OPTIMIZE reduces file-open overhead by compacting small files. ZORDER places related rows together, enabling data skipping for filtered queries. V-Order sorts data within Parquet files for faster reads in Power BI Direct Lake and Spark. VACUUM (B) is storage maintenance — it removes obsolete files but does not improve active query performance."
+  },
+  {
+    "text": "Which of the following Fabric pipeline control activities support conditional branching based on an expression or value? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "If Condition activity",
+      "Switch activity",
+      "ForEach activity",
+      "Until activity"
+    ],
+    "correct": [0, 1],
+    "module": 1,
+    "explanation": "A (If Condition) evaluates a boolean expression and routes to a true or false branch. B (Switch) evaluates an expression against multiple case values and routes accordingly. ForEach (C) iterates over a collection — it does not branch. Until (D) loops until a condition is met — it is iteration, not branching."
+  },
+  {
+    "text": "A data engineer needs to process data from REST APIs, apply complex business logic, and load results to a Lakehouse. Which Fabric components are suitable for this end-to-end flow? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "A pipeline with a Copy Data activity to call the REST API",
+      "A Dataflow Gen2 with a Web connector to call the REST API",
+      "A Spark notebook to call the REST API and apply transformations",
+      "A pipeline to orchestrate the notebook and load the Lakehouse"
+    ],
+    "correct": [1, 2, 3],
+    "module": 1,
+    "explanation": "B, C, and D are suitable. Dataflow Gen2 can call REST APIs via the Web connector and transform data. A Spark notebook provides full programmatic control over API calls and complex transformations. A pipeline can orchestrate notebook execution and load results. A (Copy Data) cannot call arbitrary REST APIs with transformation logic — it is designed for supported connector-to-connector bulk copies."
   }
   ];
   

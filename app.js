@@ -1294,10 +1294,16 @@ function updateExamTimer() {
 function renderActiveQuestion() {
   const exam = state.activeExam;
   const q = exam.questions[exam.currentIndex];
-  
+  const isMulti = q.type === 'multi';
+
   const stage = document.getElementById('view-test');
-  
-  // Format question layout
+
+  const typeBadge = isMulti
+    ? ' • <span class="q-type-badge q-type-multi">Select all that apply</span>'
+    : q.type === 'truefalse'
+      ? ' • <span class="q-type-badge q-type-tf">True / False</span>'
+      : '';
+
   stage.innerHTML = `
     <div class="exam-layout question-card">
       <div class="exam-header">
@@ -1309,30 +1315,31 @@ function renderActiveQuestion() {
           <span id="active-exam-timer">00:00</span>
         </div>
       </div>
-      
+
       <div class="glass-panel">
-        <div class="question-meta">${q.cert} • Module ${q.module}</div>
+        <div class="question-meta">${q.cert} • Module ${q.module}${typeBadge}</div>
         <div class="question-text">${q.text}</div>
-        
+
         <div class="options-list" id="active-options-list"></div>
-        
+
         <div class="explanation-box" id="active-explanation-box" style="display:none;"></div>
       </div>
-      
+
       <div class="exam-nav">
-        <button class="btn btn-secondary" onclick="skipQuestion()">Skip</button>
+        <button class="btn btn-secondary" id="btn-skip" onclick="skipQuestion()">Skip</button>
+        ${isMulti ? '<button class="btn btn-accent" id="btn-multi-submit" style="display:none;" onclick="submitMultiAnswer()">Submit Answer</button>' : ''}
         <button class="btn btn-primary" id="btn-exam-next" style="display:none;"></button>
       </div>
     </div>
   `;
 
-  // Dynamic timer initialize sync
   updateExamTimer();
 
-  // Populate options
   const optList = document.getElementById('active-options-list');
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  
+
+  if (isMulti) exam.pendingMultiSelect = [];
+
   q.options.forEach((opt, idx) => {
     const item = document.createElement('div');
     item.className = 'option-item';
@@ -1340,24 +1347,49 @@ function renderActiveQuestion() {
       <span class="option-badge">${letters[idx]}</span>
       <span>${opt}</span>
     `;
-    
     item.onclick = () => selectExamOption(idx);
     optList.appendChild(item);
   });
-  
+
   // Restore if already answered
   const savedAns = exam.answers[exam.currentIndex];
   if (savedAns !== null) {
+    if (isMulti) exam.pendingMultiSelect = Array.isArray(savedAns) ? [...savedAns] : [savedAns];
     revealQuestionAnswer(savedAns);
   }
 }
 
 function selectExamOption(optionIdx) {
   const exam = state.activeExam;
-  if (exam.answers[exam.currentIndex] !== null) return; // Answer locked
-  
-  exam.answers[exam.currentIndex] = optionIdx;
-  revealQuestionAnswer(optionIdx);
+  if (exam.answers[exam.currentIndex] !== null) return;
+
+  const q = exam.questions[exam.currentIndex];
+
+  if (q.type === 'multi') {
+    if (!exam.pendingMultiSelect) exam.pendingMultiSelect = [];
+    const pending = exam.pendingMultiSelect;
+    const i = pending.indexOf(optionIdx);
+    if (i === -1) pending.push(optionIdx); else pending.splice(i, 1);
+
+    document.querySelectorAll('.option-item').forEach((item, idx) => {
+      item.classList.toggle('selected', pending.includes(idx));
+    });
+
+    const submitBtn = document.getElementById('btn-multi-submit');
+    if (submitBtn) submitBtn.style.display = pending.length > 0 ? 'inline-flex' : 'none';
+  } else {
+    exam.answers[exam.currentIndex] = optionIdx;
+    revealQuestionAnswer(optionIdx);
+  }
+}
+
+function submitMultiAnswer() {
+  const exam = state.activeExam;
+  const pending = [...(exam.pendingMultiSelect || [])].sort((a, b) => a - b);
+  if (pending.length === 0) return;
+  exam.answers[exam.currentIndex] = pending;
+  exam.pendingMultiSelect = null;
+  revealQuestionAnswer(pending);
 }
 
 function revealQuestionAnswer(selectedIdx) {
@@ -1365,32 +1397,36 @@ function revealQuestionAnswer(selectedIdx) {
   const q = exam.questions[exam.currentIndex];
   const items = document.querySelectorAll('.option-item');
   const nextBtn = document.getElementById('btn-exam-next');
-  const skipBtn = document.querySelector('.exam-nav button:first-child');
-  
+  const skipBtn = document.getElementById('btn-skip');
+  const submitBtn = document.getElementById('btn-multi-submit');
+
+  const isMulti = q.type === 'multi';
+  const correctSet = isMulti ? new Set(q.correct) : null;
+  const selectedSet = isMulti ? new Set(Array.isArray(selectedIdx) ? selectedIdx : [selectedIdx]) : null;
+
   items.forEach((item, idx) => {
     item.classList.add('disabled');
-    if (idx === q.correct) {
-      item.classList.add('correct');
-    }
-    if (idx === selectedIdx && idx !== q.correct) {
-      item.classList.add('wrong');
-    }
-    if (idx === selectedIdx) {
-      item.classList.add('selected');
+    if (isMulti) {
+      if (correctSet.has(idx)) item.classList.add('correct');
+      if (selectedSet.has(idx) && !correctSet.has(idx)) item.classList.add('wrong');
+      if (selectedSet.has(idx)) item.classList.add('selected');
+    } else {
+      if (idx === q.correct) item.classList.add('correct');
+      if (idx === selectedIdx && idx !== q.correct) item.classList.add('wrong');
+      if (idx === selectedIdx) item.classList.add('selected');
     }
   });
 
-  // Display explanation
   if (q.explanation) {
     const expBox = document.getElementById('active-explanation-box');
     expBox.innerHTML = `<strong>Explanation:</strong><br>${q.explanation}`;
     expBox.style.display = 'block';
   }
 
-  // Display and trigger next actions
-  skipBtn.style.display = 'none';
+  if (skipBtn) skipBtn.style.display = 'none';
+  if (submitBtn) submitBtn.style.display = 'none';
   nextBtn.style.display = 'inline-flex';
-  
+
   const isLast = exam.currentIndex === exam.questions.length - 1;
   nextBtn.textContent = isLast ? 'Finish Exam' : 'Next Question →';
   nextBtn.onclick = isLast ? finishPracticeExam : nextExamQuestion;
@@ -1424,7 +1460,11 @@ function finishPracticeExam() {
   exam.questions.forEach((q, idx) => {
     const ans = exam.answers[idx];
     if (ans === null) skipped++;
-    else if (ans === q.correct) correct++;
+    else if (q.type === 'multi') {
+      const correctKey = [...q.correct].sort((a, b) => a - b).join(',');
+      const ansKey = [...ans].sort((a, b) => a - b).join(',');
+      if (correctKey === ansKey) correct++; else wrong++;
+    } else if (ans === q.correct) correct++;
     else wrong++;
   });
 
@@ -1519,9 +1559,18 @@ function reviewExamAnswers(sessionId) {
 
   session.questions.forEach((q, idx) => {
     const chosen = session.answers[idx];
-    const isCorrect = chosen === q.correct;
     const isSkipped = chosen === null;
-    
+    let isCorrect;
+    if (isSkipped) {
+      isCorrect = false;
+    } else if (q.type === 'multi') {
+      const correctKey = [...q.correct].sort((a, b) => a - b).join(',');
+      const chosenKey = [...chosen].sort((a, b) => a - b).join(',');
+      isCorrect = correctKey === chosenKey;
+    } else {
+      isCorrect = chosen === q.correct;
+    }
+
     let border = 'var(--color-success)';
     let statusText = '✓ Correct';
     if (isSkipped) {
@@ -1543,14 +1592,20 @@ function reviewExamAnswers(sessionId) {
         <div style="display: flex; flex-direction: column; gap: 10px;">
     `;
 
+    const correctSet = q.type === 'multi' ? new Set(q.correct) : null;
+    const chosenSet = (q.type === 'multi' && Array.isArray(chosen)) ? new Set(chosen) : null;
+
     q.options.forEach((opt, oIdx) => {
       let optStyle = 'background: rgba(15,23,42,0.2); border: 1px solid var(--surface-border);';
       let badgeBg = 'var(--surface-border)';
-      
-      if (oIdx === q.correct) {
+
+      const isOptCorrect = q.type === 'multi' ? correctSet.has(oIdx) : oIdx === q.correct;
+      const isOptChosen = q.type === 'multi' ? (chosenSet ? chosenSet.has(oIdx) : false) : oIdx === chosen;
+
+      if (isOptCorrect) {
         optStyle = 'background: rgba(16, 185, 129, 0.08); border: 1px solid var(--color-success); color: var(--color-success); font-weight: bold;';
         badgeBg = 'var(--color-success)';
-      } else if (oIdx === chosen && !isCorrect) {
+      } else if (isOptChosen && !isOptCorrect) {
         optStyle = 'background: rgba(239, 68, 68, 0.08); border: 1px solid var(--color-danger); color: var(--color-danger); text-decoration: line-through;';
         badgeBg = 'var(--color-danger)';
       }

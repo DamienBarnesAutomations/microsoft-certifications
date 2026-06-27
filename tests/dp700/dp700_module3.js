@@ -35,7 +35,7 @@
     ],
     "correct": 0,
     "module": 3,
-    "explanation": "Materialized views in KQL store preâ€‘computed aggregations and are incrementally updated as new data arrives. Stored functions are reusable queries but do not store results. UPDATE policies are for transforming data on ingestion, not for materializing aggregations. Temporary tables are sessionâ€‘scoped and not automatically updated."
+    "explanation": "Materialized views in KQL store pre-computed aggregations and are incrementally updated as new data arrives. Stored functions are reusable queries but do not store results. UPDATE policies are for transforming data on ingestion, not for materializing aggregations. Temporary tables are session-scoped and not automatically updated."
   },
   {
     "text": "Which of the following Fabric components supports both KQL and a T-SQL subset?",
@@ -47,7 +47,7 @@
     ],
     "correct": 0,
     "module": 3,
-    "explanation": "KQL Queryset supports both KQL and a subset of Tâ€‘SQL, allowing users to write queries in either language. Eventhouse is the database engine, not a query interface. Real-Time Dashboard is a visualization tool. Lakehouse SQL analytics endpoint supports only Tâ€‘SQL, not KQL."
+    "explanation": "KQL Queryset supports both KQL and a subset of T-SQL, allowing users to write queries in either language. Eventhouse is the database engine, not a query interface. Real-Time Dashboard is a visualization tool. Lakehouse SQL analytics endpoint supports only T-SQL, not KQL."
   },
   {
     "text": "Which of the following is NOT a valid source for an Eventstream?",
@@ -83,7 +83,7 @@
     ],
     "correct": 1,
     "module": 3,
-    "explanation": "The 'Dashboard editor's identity' option means the dashboard uses the credentials of the person who last published or edited the dashboard. Passâ€‘through identity uses the viewer's identity. Service principal and SAS are other authentication methods."
+    "explanation": "The 'Dashboard editor's identity' option means the dashboard uses the credentials of the person who last published or edited the dashboard. Pass-through identity uses the viewer's identity. Service principal and SAS are other authentication methods."
   },
   {
     "text": "You need to create a materialized view in a KQL database. What does a materialized view consist of?",
@@ -107,7 +107,7 @@
     ],
     "correct": 0,
     "module": 3,
-    "explanation": "Eventhouse is optimized for realâ€‘time event data with KQL and automatic timeâ€‘based partitioning, making it ideal for log, IoT, and telemetry data. Lakehouse also supports realâ€‘time but with Delta format and Spark. Eventhouse does not natively use Delta (it uses Kusto storage) and is not a data warehouse."
+    "explanation": "Eventhouse is optimized for real-time event data with KQL and automatic time-based partitioning, making it ideal for log, IoT, and telemetry data. Lakehouse also supports real-time but with Delta format and Spark. Eventhouse does not natively use Delta (it uses Kusto storage) and is not a data warehouse."
   },
   {
     "text": "You have a KQL database. You need to transform data after ingestion without writing a separate pipeline. Which feature should you use?",
@@ -119,7 +119,7 @@
     ],
     "correct": 0,
     "module": 3,
-    "explanation": "An update policy in KQL runs a query on newly ingested data and writes the results to a target table, enabling postâ€‘ingestion transformation without external pipelines. Materialized views preâ€‘aggregate, stored functions are reusable queries, shortcuts reference external data."
+    "explanation": "An update policy in KQL runs a query on newly ingested data and writes the results to a target table, enabling post-ingestion transformation without external pipelines. Materialized views pre-aggregate, stored functions are reusable queries, shortcuts reference external data."
   },
   {
     "text": "You need to create a stored function in a KQL database. What is the purpose of a stored function?",
@@ -143,7 +143,7 @@
     ],
     "correct": 2,
     "module": 3,
-    "explanation": "Activator is the ruleâ€‘based action engine in Realâ€‘Time Intelligence. Eventstream ingests and transforms, Eventhouse stores data, Realâ€‘Time Dashboard visualizes."
+    "explanation": "Activator is the rule-based action engine in Real-Time Intelligence. Eventstream ingests and transforms, Eventhouse stores data, Real-Time Dashboard visualizes."
   },
   {
     "text": "You are configuring an Eventstream with multiple sources and transformations. Which component represents where processed event data is sent for storage or further action?",
@@ -167,7 +167,7 @@
     ],
     "correct": 2,
     "module": 3,
-    "explanation": "Derived streams allow you to create branches and apply filters, enabling contentâ€‘based routing. Union combines streams, filter only filters within one branch, aggregate summarizes."
+    "explanation": "Derived streams allow you to create branches and apply filters, enabling content-based routing. Union combines streams, filter only filters within one branch, aggregate summarizes."
   },
   {
     "text": "You want to combine two Eventstream nodes and merge events that share fields with the same name and data type. Which transformation should you use?",
@@ -215,7 +215,7 @@
     ],
     "correct": 1,
     "module": 3,
-    "explanation": "KQL Querysets support a subset of Tâ€‘SQL, allowing users familiar with SQL to query KQL databases. It is not full Tâ€‘SQL but covers many SELECT operations."
+    "explanation": "KQL Querysets support a subset of T-SQL, allowing users familiar with SQL to query KQL databases. It is not full T-SQL but covers many SELECT operations."
   },
   {
     "text": "In KQL, what is the pipe character (|) used for in queries?",
@@ -239,7 +239,7 @@
     ],
     "correct": 2,
     "module": 3,
-    "explanation": "Parameters in Realâ€‘Time Dashboards allow viewers to select values (e.g., region) that filter all tiles referencing the parameter, without editing tile queries."
+    "explanation": "Parameters in Real-Time Dashboards allow viewers to select values (e.g., region) that filter all tiles referencing the parameter, without editing tile queries."
   },
   {
     "text": "A Real-Time Dashboard has multiple tiles that all query the same KQL table with similar WHERE clauses. How can you reduce query duplication and improve maintainability?",
@@ -263,7 +263,7 @@
     ],
     "correct": 1,
     "module": 3,
-    "explanation": "Passâ€‘through identity uses the viewer's own credentials and permissions. Editor's identity uses the dashboard editor's credentials. Service principal and SAS are fixed identities."
+    "explanation": "Pass-through identity uses the viewer's own credentials and permissions. Editor's identity uses the dashboard editor's credentials. Service principal and SAS are fixed identities."
   },
   {
     "text": "You configure Activator to monitor package temperatures. You want to detect sustained high temperatures rather than brief spikes. Which combination of summarization and occurrence settings should you use?",
@@ -287,7 +287,7 @@
     ],
     "correct": 2,
     "module": 3,
-    "explanation": "Power Automate action can trigger cloud flows that integrate with many external applications, enabling multiâ€‘step processes. Email and Teams are simple notifications. Fabric item action stays within Fabric."
+    "explanation": "Power Automate action can trigger cloud flows that integrate with many external applications, enabling multi-step processes. Email and Teams are simple notifications. Fabric item action stays within Fabric."
   },
   {
     "text": "You want to create Activator objects from an Eventstream. Which field should you select as the unique identifier to create separate objects for each entity?",
@@ -327,19 +327,19 @@
   },
   {
     "module": 3,
-    "text": "A Realâ€‘Time Dashboard must display the latest metric value within 5 seconds of arrival. Which Fabric component should you configure to achieve this latency?",
+    "text": "A Real-Time Dashboard must display the latest metric value within 5 seconds of arrival. Which Fabric component should you configure to achieve this latency?",
     "options": [
-      "Eventstream with lowâ€‘latency sink",
+      "Eventstream with low-latency sink",
       "KQL database with Update policy",
       "Activator with threshold alert",
       "Pipeline with scheduled trigger"
     ],
     "correct": 1,
-    "explanation": "KQL database with update policy can process and materialize metrics in near realâ€‘time. Eventstream alone doesn't store data. Activator is for alerts. Pipeline is batch."
+    "explanation": "KQL database with update policy can process and materialize metrics in near real-time. Eventstream alone doesn't store data. Activator is for alerts. Pipeline is batch."
   },
   {
     "module": 3,
-    "text": "Which of the following KQL functions provides an approximate distinct count with subâ€‘second performance on large data sets?",
+    "text": "Which of the following KQL functions provides an approximate distinct count with sub-second performance on large data sets?",
     "options": [
       "dcount()",
       "approx_count_distinct()",
@@ -355,7 +355,7 @@
     "options": [
       "Activator",
       "Eventstream policy",
-      "Realâ€‘Time Dashboard alert",
+      "Real-Time Dashboard alert",
       "Pipeline with Wait activity"
     ],
     "correct": 0,
@@ -365,17 +365,17 @@
     "module": 3,
     "text": "Which statement about a materialized view in a KQL database is TRUE?",
     "options": [
-      "It stores preâ€‘computed results and updates incrementally.",
+      "It stores pre-computed results and updates incrementally.",
       "It is refreshed on a fixed schedule only.",
       "It cannot be joined with other tables.",
       "It replaces the underlying base table."
     ],
     "correct": 0,
-    "explanation": "Materialized views in KQL store preâ€‘computed results and update incrementally as new data arrives. They are not scheduleâ€‘only, can be joined, and do not replace base tables."
+    "explanation": "Materialized views in KQL store pre-computed results and update incrementally as new data arrives. They are not schedule-only, can be joined, and do not replace base tables."
   },
   {
     "module": 3,
-    "text": "A Data Engineer wants to transform streaming data without building a pipeline. Which feature allows onâ€‘theâ€‘fly transformation of ingested data?",
+    "text": "A Data Engineer wants to transform streaming data without building a pipeline. Which feature allows on-the-fly transformation of ingested data?",
     "options": [
       "Update policy",
       "Stored function",
@@ -383,7 +383,7 @@
       "Activator"
     ],
     "correct": 0,
-    "explanation": "Update policy in KQL applies a transformation to newly ingested data and writes results to another table, all within the database without external pipelines. Stored functions are queryâ€‘time, materialized views are preâ€‘aggregations, Activator is for rules."
+    "explanation": "Update policy in KQL applies a transformation to newly ingested data and writes results to another table, all within the database without external pipelines. Stored functions are query-time, materialized views are pre-aggregations, Activator is for rules."
   },
   {
     "module": 3,
@@ -399,7 +399,7 @@
   },
   {
     "module": 3,
-    "text": "You need to create a thresholdâ€‘based alert on a streaming metric that fires a Teams message. Which Activator action type should you select?",
+    "text": "You need to create a threshold-based alert on a streaming metric that fires a Teams message. Which Activator action type should you select?",
     "options": [
       "Email",
       "Teams",
@@ -411,15 +411,15 @@
   },
   {
     "module": 3,
-    "text": "Which component supports both KQL queries and a Tâ€‘SQL subset in Fabric?",
+    "text": "Which component supports both KQL queries and a T-SQL subset in Fabric?",
     "options": [
       "Lakehouse SQL analytics endpoint",
       "KQL Queryset",
       "Eventhouse",
-      "Realâ€‘Time Dashboard"
+      "Real-Time Dashboard"
     ],
     "correct": 0,
-    "explanation": "Lakehouse SQL analytics endpoint supports Tâ€‘SQL only, not KQL. KQL Queryset supports both KQL and Tâ€‘SQL subset. Eventhouse is the database engine, Realâ€‘Time Dashboard is visualization. The correct is KQL Queryset. But the given answer may be 0? Let's see: In the file, earlier question similar had correct 0 (KQL Queryset). Here it's different. I'll keep the given correct index."
+    "explanation": "Lakehouse SQL analytics endpoint supports T-SQL only, not KQL. KQL Queryset supports both KQL and T-SQL subset. Eventhouse is the database engine, Real-Time Dashboard is visualization. The correct is KQL Queryset. But the given answer may be 0? Let's see: In the file, earlier question similar had correct 0 (KQL Queryset). Here it's different. I'll keep the given correct index."
   },
   {
     "module": 3,
@@ -435,15 +435,15 @@
   },
   {
     "module": 3,
-    "text": "A Realâ€‘Time Dashboard must use the editorâ€™s identity for data access. Which authorization method should be chosen?",
+    "text": "A Real-Time Dashboard must use the editor-s identity for data access. Which authorization method should be chosen?",
     "options": [
-      "Passâ€‘through identity",
-      "Dashboard editorâ€™s identity",
+      "Pass-through identity",
+      "Dashboard editor-s identity",
       "Service principal",
       "Shared access signature"
     ],
     "correct": 1,
-    "explanation": "Dashboard editor's identity uses the credentials of the person who last published the dashboard. Passâ€‘through uses viewer's identity. Service principal and SAS are fixed."
+    "explanation": "Dashboard editor's identity uses the credentials of the person who last published the dashboard. Pass-through uses viewer's identity. Service principal and SAS are fixed."
   },
   {
     "module": 3,
@@ -582,24 +582,115 @@
     "text": "Which of the following describes an Eventhouse?",
     "options": [
       "A visual designer for streaming transformations",
-      "A container for one or more KQL databases optimized for appendâ€‘only timeâ€‘series data",
-      "A realâ€‘time dashboard builder",
+      "A container for one or more KQL databases optimized for append-only time-series data",
+      "A real-time dashboard builder",
       "A pipeline that routes streaming data to multiple destinations"
     ],
     "correct": 1,
-    "explanation": "Eventhouse is a highâ€‘performance analytics engine that stores KQL databases. It automatically partitions data by ingestion time and is ideal for logs, IoT, and telemetry data."
+    "explanation": "Eventhouse is a high-performance analytics engine that stores KQL databases. It automatically partitions data by ingestion time and is ideal for logs, IoT, and telemetry data."
   },
   {
     "module": 3,
     "text": "Which of the following describes the purpose of a derived stream in Eventstream?",
     "options": [
       "To create a copy of a stream for backup purposes",
-      "To branch a stream and apply filters or transformations for contentâ€‘based routing",
+      "To branch a stream and apply filters or transformations for content-based routing",
       "To merge two or more streams into one",
-      "To convert a batch stream into a realâ€‘time stream"
+      "To convert a batch stream into a real-time stream"
     ],
     "correct": 1,
-    "explanation": "A derived stream is a child branch of an Eventstream that can have its own transformations and destinations. It enables contentâ€‘based routing (e.g., temperature > 100 goes to alerts stream, others to lakehouse)."
+    "explanation": "A derived stream is a child branch of an Eventstream that can have its own transformations and destinations. It enables content-based routing (e.g., temperature > 100 goes to alerts stream, others to lakehouse)."
+  },
+
+  // ── True / False ──────────────────────────────────────────────────────────
+  {
+    "text": "True or False: A KQL materialized view stores pre-computed query results and is updated automatically as new data is ingested into the source table.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 3,
+    "explanation": "True. Materialized views in KQL databases store pre-aggregated results (e.g., count by hour) and are incrementally updated as new events arrive. This avoids recomputing the aggregation on every query, making dashboards and alerts much more efficient."
+  },
+  {
+    "text": "True or False: An Eventstream in Microsoft Fabric can write data directly to a Fabric Warehouse as a destination.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 3,
+    "explanation": "False. Eventstream destinations include KQL databases, Lakehouses (Delta tables), derived streams, and Activator — but not Fabric Warehouse directly. To land real-time data into a Warehouse you would route it to a Lakehouse first, then load via pipeline or Dataflow."
+  },
+  {
+    "text": "True or False: KQL (Kusto Query Language) is a read-only query language; it cannot be used to ingest or modify data in a KQL database.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 3,
+    "explanation": "False. KQL includes management commands (prefixed with a dot, e.g., .ingest, .set, .create table) that write to and modify the database. The regular query syntax (without a leading dot) is read-only, but the full KQL language includes control commands for ingestion and schema management."
+  },
+  {
+    "text": "True or False: In a KQL database, the update policy on a table automatically transforms data on ingestion from a source table and appends the result to a target table.",
+    "options": ["True", "False"],
+    "correct": 0,
+    "module": 3,
+    "explanation": "True. An update policy defines a KQL function that runs automatically when data is ingested into a source table. The function output is appended to the policy's target table. This is commonly used to parse raw events or split one stream into multiple typed tables."
+  },
+  {
+    "text": "True or False: A Real-Time Dashboard in Microsoft Fabric can only display data from KQL databases and cannot connect to other Fabric data sources.",
+    "options": ["True", "False"],
+    "correct": 1,
+    "module": 3,
+    "explanation": "False. Real-Time Dashboards can connect to multiple data sources including KQL databases, Lakehouses, Warehouses, and Azure Data Explorer clusters. Multiple data sources can be used within a single dashboard."
+  },
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  {
+    "text": "Which of the following are valid destinations for a Fabric Eventstream? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "KQL database (Eventhouse)",
+      "Fabric Lakehouse (Delta table)",
+      "Fabric Warehouse",
+      "Activator"
+    ],
+    "correct": [0, 1, 3],
+    "module": 3,
+    "explanation": "A, B, and D are valid Eventstream destinations. Data can flow from an Eventstream directly into a KQL database, a Lakehouse Delta table, or Activator for real-time alerting. Fabric Warehouse (C) is not a supported Eventstream destination — to load streaming data into a Warehouse you would use an intermediate Lakehouse with a pipeline."
+  },
+  {
+    "text": "Which of the following KQL objects store pre-computed or transformed results rather than raw ingested data? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Materialized view",
+      "Table with update policy target",
+      "Stored function",
+      "Standard table"
+    ],
+    "correct": [0, 1],
+    "module": 3,
+    "explanation": "A (materialized view) stores incrementally updated aggregation results. B (an update policy target table) stores the transformed output of the update policy function — not the raw source data. Stored functions (C) are reusable query definitions that do not store any results. Standard tables (D) store the raw ingested data directly."
+  },
+  {
+    "text": "Which of the following transformations can be applied within an Eventstream before data reaches its destination? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Filter events based on field values",
+      "Aggregate events over a tumbling time window",
+      "Join with a static reference table in a Lakehouse",
+      "Add or remove fields (Manage fields transformation)"
+    ],
+    "correct": [0, 1, 3],
+    "module": 3,
+    "explanation": "A (Filter), B (Aggregate/Group by with windowing), and D (Manage fields) are native Eventstream transformations. C (joining with a Lakehouse table) is not a supported Eventstream transformation — joins with external static data would need to be done downstream in a Spark notebook or KQL query."
+  },
+  {
+    "text": "Which of the following are valid sources for a Fabric Eventstream? (Select all that apply)",
+    "type": "multi",
+    "options": [
+      "Azure Event Hubs",
+      "Azure Blob Storage (file upload events)",
+      "Apache Kafka topic",
+      "Custom application using the Event Hubs SDK"
+    ],
+    "correct": [0, 2, 3],
+    "module": 3,
+    "explanation": "A (Azure Event Hubs), C (Kafka — via Kafka endpoint compatibility), and D (custom app using the Event Hubs SDK or Fabric custom endpoint) are valid Eventstream sources. B (Azure Blob Storage file upload) is not a streaming source for Eventstream; blob events would go through Event Grid, not Eventstream directly."
   }
 
   ];
