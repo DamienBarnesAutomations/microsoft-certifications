@@ -600,6 +600,164 @@
       "correct": 1,
       "module": 1,
       "explanation": "Azure DMS supports up to 10 concurrent database migrations per self-hosted integration runtime (IR) node. For more concurrency, you can scale out by adding more IR nodes. This is important for large migration projects with many databases."
+    },
+    {
+      "text": "A DBA needs to deploy an identical Azure SQL Database configuration across 20 subscriptions in a fully repeatable, idempotent way that integrates into a CI/CD pipeline. Which deployment method is BEST suited?",
+      "options": [
+        "The Azure portal, repeated manually for each subscription",
+        "An ARM (or Bicep) template that declares the desired end state",
+        "Interactively creating the database through SSMS Object Explorer",
+        "A one-time PowerShell script run by hand for the first subscription only"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "ARM templates (or Bicep, which compiles to ARM) are declarative — they define the desired end state and let Resource Manager figure out how to get there — making them the recommended approach for large-scale, repeatable deployments that fit into CI/CD pipelines. The Azure portal is easy to start with but is not repeatable, and one-off manual scripts don't scale to 20 subscriptions reliably."
+    },
+    {
+      "text": "Which of the following statements about ARM templates as a deployment method for Azure SQL resources are correct? (Select all that apply)",
+      "options": [
+        "They are declarative, describing the desired end state rather than the steps to get there",
+        "They are imperative, requiring each step to be scripted explicitly in order",
+        "They are well suited to large-scale, repeatable deployments",
+        "The Azure portal is an easier way to achieve the same repeatability as an ARM template"
+      ],
+      "type": "multi",
+      "correct": [0, 2],
+      "module": 1,
+      "explanation": "ARM templates are declarative (not imperative — that describes PowerShell/CLI scripting) and are recommended for large-scale, repeatable deployments. The Azure portal, while the easiest way to get started, is not an easily repeatable process and is a poor substitute for template-based automation."
+    },
+    {
+      "text": "A company wants to run both transactional (OLTP) workloads and advanced analytics against the same data, without duplicating it into a separate warehouse, using a single collaborative platform shared by data engineers, analysts, and data scientists. Which Azure SQL offering is designed for this scenario?",
+      "options": [
+        "SQL Server on Azure VM",
+        "Azure SQL Database in Microsoft Fabric",
+        "Azure SQL Managed Instance with elastic query",
+        "Azure SQL Database Hyperscale"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "SQL Database in Microsoft Fabric integrates operational SQL databases directly into the Fabric ecosystem, supporting both transactional workloads and analytics from the same data without moving it between separate systems. This suits organizations consolidating data infrastructure and streamlining collaboration across teams. The other options don't provide this unified operational-plus-analytics Fabric integration."
+    },
+    {
+      "text": "True or False: Azure SQL Database in Microsoft Fabric requires you to first copy your operational data into a separate Fabric-specific data warehouse before analytics workloads can query it.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 1,
+      "explanation": "False. SQL Database in Microsoft Fabric is designed so the same data can be created and queried directly by different teams (operational and analytical) without maintaining separate OLTP and analytics stores or manually copying data between them."
+    },
+    {
+      "text": "Which sequence of T-SQL steps correctly implements table partitioning in SQL Server?",
+      "options": [
+        "Create the table, then create a partition function, then create a partition scheme, then create filegroups",
+        "Create the filegroups, then create a partition function, then create a partition scheme mapping the function to the filegroups, then create the table on that scheme",
+        "Create a partition scheme, then create the filegroups, then create the table, then create a partition function",
+        "Create a partition function, then create the table, then create the filegroups, then create a partition scheme"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "Implementing partitioning is a four-step process in order: create the filegroups that will hold the partitions, create a partition function defining how rows map to partitions based on a column's boundary values, create a partition scheme that maps each partition produced by the function to a specific filegroup, and finally create (or alter) the table on that partition scheme, keyed on the partitioning column."
+    },
+    {
+      "text": "A DBA runs `CREATE TABLE Orders (...) ON MonthlyScheme(OrderDate);` and receives an error that the partition scheme 'MonthlyScheme' does not exist. The DBA confirms the filegroups and the partition function were both created successfully beforehand. What is the most likely cause?",
+      "options": [
+        "The filegroups referenced don't have enough free disk space",
+        "CREATE PARTITION SCHEME mapping the partition function to the filegroups was never executed",
+        "The partitioning column OrderDate must first be added to the primary key",
+        "Table partitioning is only available in SQL Server Enterprise edition and the current edition doesn't support it"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "A partition scheme is a distinct object created with CREATE PARTITION SCHEME that maps the partitions produced by a partition function onto specific filegroups; a table's ON clause references the scheme, not the function directly. If the scheme step was skipped, the CREATE TABLE statement will fail with exactly this 'does not exist' error even though the filegroups and function are both in place."
+    },
+    {
+      "text": "Which factors correctly describe how the Managed Instance Link differs from Log Replay Service (LRS) when evaluating an online migration strategy to SQL Managed Instance? (Select all that apply)",
+      "options": [
+        "The Link allows reading data on the target during migration; with LRS the target database stays in a restoring state and cannot be read",
+        "LRS supports an unlimited migration duration, while the Link is capped at 30 days",
+        "The Link provides a cutover measured in seconds, while LRS cutover takes comparatively longer, especially on Business Critical",
+        "LRS requires SQL Server 2016 or later as the source, while the Link supports SQL Server 2012 and later"
+      ],
+      "type": "multi",
+      "correct": [0, 2],
+      "module": 1,
+      "explanation": "The Link (built on Distributed Availability Groups) allows reads mid-migration and cuts over in seconds; LRS leaves the database in restoring state (unreadable) and has a slower cutover. The duration and version facts are reversed in the other two options: LRS, not the Link, is capped at 30 days, and the Link needs SQL Server 2016+ while LRS supports 2012+."
+    },
+    {
+      "text": "An organization must migrate a 10 TB on-premises SQL Server database to Azure SQL Database. The business requires the application to remain available with near-zero downtime throughout the multi-day migration. Which approach should they choose?",
+      "options": [
+        "Azure Database Migration Service in offline mode",
+        "Transactional replication, the only online migration option for Azure SQL Database",
+        "BACPAC export and import via SqlPackage",
+        "bcp (Bulk Copy Program) table-by-table export and import"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "For migrating into Azure SQL Database, transactional replication is the only online (minimal-downtime) option — it streams ongoing changes to the target after an initial snapshot, allowing cutover once fully synchronized. ADMS, BACPAC/SqlPackage, and bcp are all offline methods that require application downtime during the data copy."
+    },
+    {
+      "text": "When configuring transactional replication to perform an online migration into Azure SQL Database, which statement is correct?",
+      "options": [
+        "Replication can be fully configured and monitored from the Azure portal",
+        "Configuration must be done through SSMS or T-SQL against the publisher, and monitoring (agent and sync status) is done from SQL Server, not the Azure portal",
+        "Azure SQL Database can act as the Distributor in the replication topology",
+        "Replication into Azure SQL Database authenticates using Windows Authentication logins"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "Transactional replication for Azure SQL Database must be configured through SSMS/T-SQL against the publisher — there is no portal-based configuration or monitoring, so agent status and synchronization must be checked from SQL Server/SSMS. Azure SQL Database can only act as a Subscriber (not a Distributor), and it authenticates replication connections using SQL Server logins only, not Windows Authentication."
+    },
+    {
+      "text": "True or False: One-way replication with the Managed Instance Link (available from SQL Server 2016/2019 sources) supports failing back the migrated database to the original on-premises SQL Server if needed.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 1,
+      "explanation": "False. One-way replication (SQL Server 2016/2019) only replicates from SQL Server to Managed Instance and does not support failback. Two-way replication, available starting with SQL Server 2022, adds manual failover and offline failback (with online failback in preview)."
+    },
+    {
+      "text": "A company needs to relocate an Azure SQL Database to a different Azure region for cost optimization, without performing a full logical export/import migration. Which built-in mechanism accomplishes this?",
+      "options": [
+        "Geo-restore of a geo-redundant backup into the target region",
+        "Azure Data Factory copy activity",
+        "bcp bulk copy of each table",
+        "Transactional replication to a new subscriber in the target region"
+      ],
+      "correct": 0,
+      "module": 1,
+      "explanation": "Geo-restore restores a geo-redundant backup into a different Azure region and is available whenever the database's backup storage redundancy is geo-redundant, letting you relocate a database to another region without a full logical migration. Data Factory, bcp, and transactional replication all involve a logical copy of schema/data rather than restoring an existing backup in place."
+    },
+    {
+      "text": "A company needs to move an existing Azure SQL Database workload to Azure SQL Managed Instance because the application now requires SQL Agent jobs and cross-database queries. Which statement about performing this migration is correct?",
+      "options": [
+        "This move is not possible because both services are PaaS offerings",
+        "The same schema/data-movement tools used for on-premises-to-Azure migrations (BACPAC/SqlPackage, bcp) can generally be reused for this Azure-to-Azure move, though Azure SQL Database can't act as a transactional replication Publisher the way an on-premises source can",
+        "Only the Managed Instance Link can be used for Azure SQL Database to Managed Instance migrations",
+        "This migration requires Azure Arc to be enabled on the source first"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "Migrating between two Azure SQL targets generally reuses the same schema/data-movement tools as on-premises-to-Azure migrations (BACPAC/SqlPackage export-import, bcp), since those work against any SQL endpoint. The one exception is transactional replication, which requires SQL Server or Managed Instance as the Publisher — Azure SQL Database can't fill that role, so it isn't available as a like-for-like option here. The Managed Instance Link is specific to on-premises/IaaS SQL Server sources and isn't the only path for this migration; Azure Arc is unrelated to a source that's already an Azure SQL Database."
+    },
+    {
+      "text": "During an Azure Database Migration Service (ADMS) migration involving hundreds of tables, several large tables containing blob columns are failing outright with timeouts, and overall progress is far slower than expected even for small tables. What is the MOST likely explanation and best remedy?",
+      "options": [
+        "ADMS is fundamentally incompatible with Azure SQL Database; switch to Log Replay Service instead",
+        "Because ADMS is built on Azure Data Factory, each table incurs per-activity startup overhead, and large blob columns commonly time out; migrate those large-blob tables separately (e.g., via bcp or a dedicated pipeline)",
+        "The target database's compute tier is too high and is throttling ingestion; scale it down",
+        "This indicates a firewall misconfiguration and requires opening port 3342 on the NSG"
+      ],
+      "correct": 1,
+      "module": 1,
+      "explanation": "ADMS is built on Azure Data Factory, which incurs noticeable per-activity startup time even for small tables when there are many of them, and tables with large blob columns are a known cause of migration timeouts. The recommended remedy is to migrate those problematic large-blob tables separately (via bcp or a dedicated ADF pipeline) rather than folding them into the bulk ADMS job. LRS is a Managed Instance tool, not applicable here; scaling down and NSG port 3342 (a Managed Instance public endpoint setting) are unrelated to this symptom."
+    },
+    {
+      "text": "True or False: When troubleshooting a failed transactional replication migration into Azure SQL Database, a DBA should check the Snapshot Agent, Log Reader Agent, and Synchronization Status directly within the Azure portal's replication monitoring blade.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 1,
+      "explanation": "False. Azure SQL Database does not expose replication administration or monitoring in the portal. All troubleshooting — checking Snapshot Agent and Log Reader Agent status, synchronization status, and agent job history — must be done from SQL Server/SSMS on the publisher side."
     }
   ];
 

@@ -205,7 +205,17 @@ if (!fs.existsSync(testsDp300Dir)) {
             }
           });
         }
-        if (typeof q.correct !== 'number' || q.correct < 0 || (q.options && q.correct >= q.options.length)) {
+        if (q.type === 'multi') {
+          if (!Array.isArray(q.correct) || q.correct.length < 1) {
+            errors.push(`${qLabel} correct must be a non-empty array of indices for a "multi" question`);
+          } else {
+            q.correct.forEach(c => {
+              if (typeof c !== 'number' || c < 0 || (q.options && c >= q.options.length)) {
+                errors.push(`${qLabel} correct index (${c}) is out of bounds (options length is ${q.options ? q.options.length : 0})`);
+              }
+            });
+          }
+        } else if (typeof q.correct !== 'number' || q.correct < 0 || (q.options && q.correct >= q.options.length)) {
           errors.push(`${qLabel} correct index (${q.correct}) is out of bounds (options length is ${q.options ? q.options.length : 0})`);
         }
         if (q.module !== m) {

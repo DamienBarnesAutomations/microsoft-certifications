@@ -456,6 +456,126 @@
       "correct": 1,
       "module": 4,
       "explanation": "The built-in SQL Server connector for Standard workflows in single-tenant Logic Apps has no triggers and only supports the Execute Query action. The managed connector supports triggers and multiple actions including Get row, Insert, and Run stored procedure."
+    },
+    {
+      "text": "A Bicep deployment to a resource group fails partway through. Where in the Azure portal should you look first to identify which specific resource operation failed and why?",
+      "options": [
+        "The subscription-level Activity log",
+        "The resource group's Deployments blade, which lists per-operation status and error details",
+        "The Cost Management + Billing blade",
+        "Azure Monitor Metrics for the resource group"
+      ],
+      "correct": 1,
+      "module": 4,
+      "explanation": "The resource group's Deployments blade shows the history of deployments and, for a failed deployment, lets you drill into the individual operations to see which resource failed and the associated error code/message. The Activity log and Metrics blades are useful for other purposes but don't break down a deployment operation-by-operation the way the Deployments blade does."
+    },
+    {
+      "text": "True or False: The Azure CLI command 'az deployment operation group list' can be used to retrieve the status and error details of each individual resource operation within a specific resource group deployment.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correct": 0,
+      "type": "truefalse",
+      "module": 4,
+      "explanation": "True. 'az deployment operation group list' (given a resource group and deployment name) returns the operations that make up a deployment, including each operation's provisioning state and error information, which is the primary way to diagnose exactly which resource in a template failed and why."
+    },
+    {
+      "text": "You suspect that a resource originally deployed through an ARM template has since drifted from its source template because someone modified it manually in the Azure portal. Which approach lets you detect that drift?",
+      "options": [
+        "Enable Azure Policy compliance scanning only",
+        "Use the resource group's 'Export template' feature to export the resource's current configuration and diff it against the source template in source control",
+        "Run 'az deployment group validate' against the original template",
+        "Check the resource's tags for a 'last modified' value"
+      ],
+      "correct": 1,
+      "module": 4,
+      "explanation": "Exporting the current template for a resource group (via the Automation section's 'Export template') captures the resource's actual live configuration, which can then be compared against the source template held in version control to identify configuration drift. Validation only checks whether a template is well-formed and deployable, not whether a live resource has since diverged from it."
+    },
+    {
+      "text": "A SQL Server Agent job step that copies a backup file to a network share fails with a permissions error, even though earlier steps in the same job complete successfully. What is the most likely cause and fix?",
+      "options": [
+        "The job's schedule is misconfigured; recreate the schedule",
+        "The SQL Server Agent service account cannot access the share; assign a proxy account with credentials that have access to that step",
+        "DBCC CHECKDB has detected corruption; run a repair",
+        "The database is in the SIMPLE recovery model; switch to FULL"
+      ],
+      "correct": 1,
+      "module": 4,
+      "explanation": "A step-level permissions failure like this is the classic symptom of the SQL Server Agent service account lacking rights to a resource (such as a backup share) that a specific step needs. The fix is to configure a proxy account with credentials that have the required access and assign it to that job step, rather than changing the recovery model or schedule, which are unrelated to the failure."
+    },
+    {
+      "text": "In a multiserver SQL Server Agent environment, a job that runs successfully on the primary server is not executing on one particular target server at its scheduled time. What should you check first?",
+      "options": [
+        "Whether the target server has recently reconnected to the primary server to pick up job and schedule updates",
+        "Whether Database Mail is enabled on the primary server",
+        "Whether DBCC CHECKDB has been run on the target server",
+        "Whether an operator has been assigned to the job"
+      ],
+      "correct": 0,
+      "module": 4,
+      "explanation": "In a multiserver topology, target servers periodically reconnect to the primary server to receive the master copy of jobs and schedule updates. A target server that has fallen out of contact with the primary is the most likely reason it isn't executing a job that runs fine elsewhere. Database Mail, DBCC CHECKDB, and operators are unrelated to a target server failing to pick up scheduled jobs."
+    },
+    {
+      "text": "An elastic job appears to have stalled partway through its most recent execution, and you need to see the status of each individual target database it ran against. Which PowerShell cmdlet provides that per-target detail?",
+      "options": [
+        "Get-AzSqlElasticJobExecution",
+        "Get-AzSqlElasticJobStepExecution",
+        "Get-AzSqlElasticJobTargetExecution",
+        "Get-AzSqlElasticJob"
+      ],
+      "correct": 2,
+      "module": 4,
+      "explanation": "Get-AzSqlElasticJobTargetExecution returns per-target execution detail (which specific databases succeeded, failed, or are still running) for a given job execution. Get-AzSqlElasticJobExecution returns overall job execution status, and Get-AzSqlElasticJobStepExecution returns step-level (not target-level) detail."
+    },
+    {
+      "text": "Select all of the valid scopes at which an ARM or Bicep template can be deployed.",
+      "options": [
+        "Resource group",
+        "Subscription",
+        "Availability zone",
+        "Management group",
+        "Tenant"
+      ],
+      "correct": [0, 1, 3, 4],
+      "type": "multi",
+      "module": 4,
+      "explanation": "ARM and Bicep templates can be deployed at four scopes: resource group, subscription, management group, and tenant, each with its own deployment cmdlet (New-AzResourceGroupDeployment, New-AzSubscriptionDeployment, New-AzManagementGroupDeployment, New-AzTenantDeployment). 'Availability zone' is not a deployment scope — it's a physical datacenter grouping used for resource resiliency."
+    },
+    {
+      "text": "True or False: Azure SQL Elastic Jobs can execute both T-SQL scripts and PowerShell scripts as job steps, making them a full replacement for SQL Server Agent's scripting capabilities.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correct": 1,
+      "type": "truefalse",
+      "module": 4,
+      "explanation": "False. Elastic Jobs execute T-SQL scripts only. They are the SQL Agent equivalent for Azure SQL Database, but unlike SQL Server Agent (which can run PowerShell, CmdExec, SSIS, and other step types), Elastic Jobs are limited strictly to T-SQL."
+    },
+    {
+      "text": "A SQL Server Agent job script that runs correctly on-premises is deployed unmodified to run against an Azure SQL Managed Instance. Which statement about this scenario is most accurate?",
+      "options": [
+        "It will always fail because Managed Instance does not support SQL Server Agent",
+        "It may fail or behave differently because of minor T-SQL differences between SQL Server and Managed Instance",
+        "It will run identically because Managed Instance is fully T-SQL compatible with no exceptions",
+        "It will fail only if the job uses a proxy account"
+      ],
+      "correct": 1,
+      "module": 4,
+      "explanation": "Azure SQL Managed Instance supports most SQL Server Agent capabilities, but there are minor T-SQL surface-area differences between on-premises SQL Server and Managed Instance. A script written and tested on one platform can require adjustment when ported to the other — this is a common root cause when a previously working job script starts failing after a Managed Instance migration."
+    },
+    {
+      "text": "When configuring a metric alert rule on an Azure Automation account's runbook jobs, what happens if you do not specify a dimension to scope the alert?",
+      "options": [
+        "The alert rule fails to save",
+        "The alert defaults to monitoring only the most recently created runbook",
+        "No filter is applied, so the alert evaluates the signal across all runbooks and statuses",
+        "The alert automatically scopes to the runbook with the highest failure rate"
+      ],
+      "correct": 2,
+      "module": 4,
+      "explanation": "A metric alert on an Automation account can optionally be scoped with a dimension (for example, to a specific runbook name or job status). If no dimension is specified, no filter is applied, meaning the alert evaluates the chosen signal across all runbooks and statuses rather than a narrowed subset."
     }
   ];
 

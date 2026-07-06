@@ -50,6 +50,13 @@ console.log(`Total duplicate questions found: ${duplicateCount}`);
 console.log('\n--- Checking Options and Correct Answers ---');
 allQuestions.forEach((q, idx) => {
   if (q.options && q.correct !== undefined) {
+    if (q.type === 'multi') {
+      const bad = Array.isArray(q.correct) && q.correct.every(c => q.options[c] !== undefined);
+      if (!bad) {
+        console.log(`Error: Question index ${idx} has invalid correct index ${q.correct}`);
+      }
+      return;
+    }
     const correctOption = q.options[q.correct];
     if (!correctOption) {
       console.log(`Error: Question index ${idx} has invalid correct index ${q.correct}`);

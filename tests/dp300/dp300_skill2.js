@@ -528,6 +528,223 @@
       "correct": 1,
       "module": 2,
       "explanation": "If connectivity errors persist for longer than 60 seconds or occur more than once in a given day, you should file an Azure support request through the Azure portal. Transient faults typically resolve within 60 seconds."
+    },
+    {
+      "text": "A reporting application only needs to run three specific stored procedures against the Sales tables and never issues ad hoc queries. Following the principle of least privilege, what should the application's database login be granted?",
+      "options": [
+        "EXECUTE permission on only the three stored procedures the application needs, with no direct table access",
+        "Membership in the db_datareader role",
+        "Membership in the db_owner role",
+        "SELECT permission on every table in the Sales schema"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "Least privilege means granting only what is required to complete the task. Since the application only needs to run three procedures, EXECUTE on those procedures alone is sufficient — if the procedure owner matches the table owner, ownership chaining lets the procedure read the tables without the application needing any direct table permissions. db_datareader, db_owner, and schema-wide SELECT are all broader than necessary."
+    },
+    {
+      "text": "A security review finds that an application login was added to db_owner solely so it could execute five stored procedures that are owned by the same schema owner as the tables they access. Which changes would enforce least privilege while preserving functionality? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "Remove the login from db_owner and grant EXECUTE only on the five stored procedures",
+        "Rely on ownership chaining so the login inherits table access through the procedures without any direct table grants",
+        "Grant db_datareader and db_datawriter instead of db_owner",
+        "Grant SELECT, INSERT, UPDATE, DELETE directly on every underlying table in addition to EXECUTE"
+      ],
+      "correct": [0, 1],
+      "module": 2,
+      "explanation": "Because the procedures and tables share the same owner, ownership chaining lets a user with only EXECUTE permission run the procedures and have them access the tables, without any standing table-level rights. Removing db_owner and granting only EXECUTE achieves least privilege. Granting db_datareader/db_datawriter or direct table permissions is unnecessary and broader than required, since the ownership chain already provides the needed access."
+    },
+    {
+      "text": "True or False: Ownership chaining allows a stored procedure to access underlying tables through the caller's inherited permissions even when the procedure uses dynamic SQL (sp_executesql) to build and execute the query.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 2,
+      "explanation": "False. Dynamic SQL executes outside the calling procedure's context, which breaks the ownership chain. When dynamic SQL is used, the executing user's own permissions are checked against the underlying tables, so the user must be granted direct access rather than relying on the chain."
+    },
+    {
+      "text": "A specific SQL login can no longer connect to a Managed Instance, and the client receives 'Login failed for user <name>'. Querying sys.sql_logins shows is_disabled = 1 for that login. What should the DBA do first to restore access?",
+      "options": [
+        "Run ALTER LOGIN <name> ENABLE;",
+        "Drop and recreate the login with a new password",
+        "Restart the SQL Server or Managed Instance service",
+        "Grant the login membership in sysadmin"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "The standard troubleshooting sequence for 'Login failed for user' starts by checking sys.sql_logins to see whether the login is disabled. If it is, ALTER LOGIN <name> ENABLE; re-enables it. Dropping and recreating the login, restarting the service, or granting sysadmin are unnecessary and don't address the actual cause."
+    },
+    {
+      "text": "After restoring an on-premises database backup to a different SQL Server instance, users can connect to the server but receive permission errors inside the restored database, even though their user accounts still appear in sys.database_principals. What is the most likely cause?",
+      "options": [
+        "The database users are orphaned because their SIDs no longer match any server login SIDs on the new instance",
+        "The Transparent Data Encryption certificate is missing on the new instance",
+        "The database is still in single-user restore mode",
+        "A server-level firewall rule is blocking the connection"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "Restoring a database to a different instance commonly leaves database users 'orphaned': the user's SID stored in the database no longer matches the SID of any login on the new server, so authentication to the server succeeds but authorization inside the database fails. This is fixed by remapping the user to a login (e.g., ALTER USER ... WITH LOGIN = or sp_change_users_login), not by TDE, restore mode, or firewall changes."
+    },
+    {
+      "text": "True or False: A contained database user created with CREATE USER [name] FROM EXTERNAL PROVIDER for a Microsoft Entra identity requires a matching server-level login to exist in the master database before it can authenticate.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 2,
+      "explanation": "False. This is exactly the contained-user pattern: the Microsoft Entra identity itself is the authentication source, so no separate server-level login is required in master. This differs from the traditional SQL login pattern, where a login must be created in master first and then mapped to a database user."
+    },
+    {
+      "text": "Which stored procedure enables Change Data Capture (CDC) at the database level in SQL Server?",
+      "options": [
+        "EXEC sys.sp_cdc_enable_db",
+        "EXEC sys.sp_cdc_enable_table",
+        "ALTER DATABASE <db> SET CHANGE_TRACKING = ON",
+        "EXEC sp_configure 'cdc', 1"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "sys.sp_cdc_enable_db enables Change Data Capture for a database. Once enabled at the database level, individual tables are enabled with sys.sp_cdc_enable_table. ALTER DATABASE ... SET CHANGE_TRACKING = ON instead enables the separate Change Tracking feature."
+    },
+    {
+      "text": "What is a key difference between Change Data Capture (CDC) and Change Tracking in SQL Server?",
+      "options": [
+        "CDC captures the actual historical column values of each change using an asynchronous process that reads the transaction log, while Change Tracking only records synchronously that a row changed and its current state",
+        "Change Tracking requires SQL Server Agent while CDC does not",
+        "CDC is available in every edition of SQL Server while Change Tracking requires Enterprise edition",
+        "CDC and Change Tracking are two names for the same feature"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "CDC asynchronously reads the transaction log via capture jobs and stores the actual before/after data values of changes in change tables. Change Tracking is lightweight and synchronous, recording only that a row changed (and its current version), not the historical values — it does not use SQL Server Agent the way CDC does."
+    },
+    {
+      "text": "Which of the following are true about Change Data Capture (CDC) in SQL Server? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "CDC relies on SQL Server Agent jobs to asynchronously capture changes from the transaction log and periodically clean up change tables",
+        "CDC records the actual before/after column values for each DML change in dedicated change tables",
+        "A table must be individually enabled for CDC with sys.sp_cdc_enable_table after the database itself has been enabled with sys.sp_cdc_enable_db",
+        "CDC is enabled on a table using ALTER TABLE ... ENABLE CHANGE_TRACKING"
+      ],
+      "correct": [0, 1, 2],
+      "module": 2,
+      "explanation": "CDC uses SQL Server Agent capture and cleanup jobs, stores actual column values of each change in change tables, and must be enabled first at the database level (sys.sp_cdc_enable_db) and then per table (sys.sp_cdc_enable_table). ALTER TABLE ... ENABLE CHANGE_TRACKING is the syntax for the separate Change Tracking feature, not CDC."
+    },
+    {
+      "text": "A DBA runs EXECUTE AS USER = 'AppUser' to test that user's permissions in a session. Which command returns the session to its original execution context?",
+      "options": [
+        "REVERT",
+        "EXECUTE AS CALLER",
+        "ALTER LOGIN ... WITH PASSWORD",
+        "sp_change_users_login"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "REVERT switches the session's execution context back to what it was before the most recent EXECUTE AS statement. EXECUTE AS CALLER is not valid T-SQL syntax for this purpose, ALTER LOGIN changes login properties, and sp_change_users_login remaps orphaned users."
+    },
+    {
+      "text": "Which of the following, by themselves, give a principal the ability to connect to and query data in an Azure SQL Database? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "The SQL DB Contributor RBAC role",
+        "Membership in the db_datareader database role",
+        "The SQL Security Manager RBAC role",
+        "Being configured as the Microsoft Entra admin for the logical server"
+      ],
+      "correct": [1, 3],
+      "module": 2,
+      "explanation": "db_datareader grants read access to data within the database, and the Microsoft Entra admin effectively receives sysadmin-equivalent access across the server and every database it hosts. SQL DB Contributor and SQL Security Manager are Azure RBAC (control-plane) roles that let a principal manage databases or security policy settings but grant no ability to connect to or read data."
+    },
+    {
+      "text": "True or False: If a database user has no default schema explicitly assigned, unqualified object references for that user resolve against the dbo schema.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 0,
+      "module": 2,
+      "explanation": "True. An unqualified reference is resolved first against the user's default schema; if a user has no default schema assigned, it defaults to dbo, and the reference is then resolved against dbo."
+    },
+    {
+      "text": "What database-level setting must be enabled to allow contained database users, and what is its default state in Azure SQL Database?",
+      "options": [
+        "Partial containment, which is enabled by default in Azure SQL Database",
+        "Full containment, which must be manually enabled in Azure SQL Database",
+        "Partial containment, which is disabled by default in Azure SQL Database and must be turned on",
+        "No special database setting is required"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "Contained users require the database to be configured for partial containment. This is enabled by default in Azure SQL Database, while it is optional (and must be manually enabled) in on-premises SQL Server."
+    },
+    {
+      "text": "A Microsoft Purview scan with lineage extraction enabled for an Azure SQL Database source is not returning any lineage derived from stored procedure runs. The Purview managed identity has already been created as a database user with CREATE USER ... FROM EXTERNAL PROVIDER. What additional step is required?",
+      "options": [
+        "Add the Purview managed identity to the db_owner role and create a master key in the target database",
+        "Enable Transparent Data Encryption on the database",
+        "Enable Change Tracking on the tables being scanned",
+        "Switch the scan authentication method to SQL authentication"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "Lineage extraction specifically requires the Purview managed identity to be added to db_owner (via sp_addrolemember) and a master key to be created in the target database (CREATE MASTER KEY), in addition to the external-provider user. TDE, Change Tracking, and the scan authentication method are unrelated to enabling lineage extraction."
+    },
+    {
+      "text": "Which statement correctly distinguishes a Virtual Network (VNet) service endpoint from Private Link for Azure SQL Database?",
+      "options": [
+        "A VNet service endpoint adds a server-level firewall rule and is scoped to a single Azure region, while Private Link provides a private endpoint that routes traffic over the Azure backbone and supports cross-region connectivity",
+        "A VNet service endpoint and Private Link are functionally identical, differing only in name",
+        "Private Link operates at the database level while VNet service endpoints operate at the schema level",
+        "VNet service endpoints remove the public IP path entirely, while Private Link still relies on the public IP"
+      ],
+          "correct": 0,
+      "module": 2,
+      "explanation": "VNet service endpoints add a server-level (not database-level) firewall rule and are bound to a single Azure region matching the endpoint. Private Link instead provisions a private endpoint so traffic travels entirely over the Azure backbone network rather than the public internet, and it supports cross-region private connectivity as well as ExpressRoute."
+    },
+    {
+      "text": "True or False: Server-level firewall rules for Azure SQL Database can be configured through the Azure portal, while database-level firewall rules can only be configured using T-SQL (sp_set_database_firewall_rule).",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 0,
+      "module": 2,
+      "explanation": "True. Server-level firewall rules can be set via the Azure portal or sp_set_firewall_rule in master, but database-level firewall rules can only be configured with T-SQL, using sp_set_database_firewall_rule executed from within the target user database."
+    },
+    {
+      "text": "Which of the following are valid enforcement points for a Row-Level Security block predicate? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "AFTER INSERT",
+        "AFTER UPDATE",
+        "BEFORE UPDATE",
+        "BEFORE DELETE",
+        "AFTER DELETE"
+      ],
+      "correct": [0, 1, 2, 3],
+      "module": 2,
+      "explanation": "Block predicates are evaluated at four points: AFTER INSERT (blocks inserting rows that violate the predicate), AFTER UPDATE (blocks updating rows to violate it), BEFORE UPDATE (blocks updating rows that already violate it), and BEFORE DELETE (blocks deleting rows that violate it). There is no AFTER DELETE block predicate type."
+    },
+    {
+      "text": "A DBA is deciding who to add to the db_securityadmin database role. Why should membership in this role be restricted to trusted users?",
+      "options": [
+        "Members can grant permissions to other users, including themselves, effectively allowing self-escalation of privileges",
+        "Members can restore database backups without any additional permissions",
+        "Members automatically gain the sysadmin fixed server role",
+        "Membership has no meaningful security implications since it only manages roles"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "db_securityadmin can grant access to other users, including granting permissions to themselves, which is effectively a path to privilege escalation. This is why, along with db_owner, membership should be restricted to trusted users. It does not grant backup rights or automatic sysadmin."
+    },
+    {
+      "text": "What must be provided as part of enabling the Ledger feature when creating a new Azure SQL Database?",
+      "options": [
+        "A storage location for the ledger's cryptographic database digests",
+        "A customer-managed TDE key in Azure Key Vault",
+        "A Key Vault access policy granting db_owner UNMASK rights",
+        "A SQL Server Agent job schedule for digest generation"
+      ],
+      "correct": 0,
+      "module": 2,
+      "explanation": "Enabling Ledger requires specifying a storage location for the database digests — the cryptographic proofs used to verify that data hasn't been tampered with. A customer-managed TDE key, Key Vault UNMASK policy, and Agent job schedule are unrelated requirements."
     }
   ];
 

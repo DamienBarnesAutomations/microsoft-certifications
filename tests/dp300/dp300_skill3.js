@@ -780,6 +780,67 @@
       "correct": 1,
       "module": 3,
       "explanation": "Non-SARGable predicates with a leading wildcard (LIKE '%term') prevent the optimizer from considering an Index Seek. The optimizer will likely perform an Index Scan or Table Scan instead, reading more data than necessary. The absence of a SARG means the optimizer won't evaluate a seek."
+    },
+    {
+      "text": "A DBA is building an operational performance baseline for a SQL Server instance running on an Azure VM. Select all data sources that should reasonably feed into that baseline.",
+      "options": [
+        "Perfmon counter Processor(_Total)% Processor Time, sampled over a representative period",
+        "Wait statistics from sys.dm_os_wait_stats, correlated with the perfmon data",
+        "SQLServer:Buffer Manager\\Page life expectancy trend over time",
+        "A single ad-hoc SELECT against sys.dm_exec_requests captured once during a quiet period"
+      ],
+      "correct": [0, 1, 2],
+      "module": 3,
+      "type": "multi",
+      "explanation": "A useful baseline correlates OS-level and SQL Server-specific data gathered consistently over a representative period: perfmon counters like CPU utilization and Page life expectancy, plus wait statistics from sys.dm_os_wait_stats showing what threads are waiting on. A single ad-hoc query captured once during a quiet period doesn't establish what 'normal' looks like over time and isn't a substitute for ongoing baseline data collection."
+    },
+    {
+      "text": "Which statement about identifying the correct source for a specific performance metric is TRUE?",
+      "options": [
+        "Data and log file read/write latency for a database is exposed through sys.dm_io_virtual_file_stats, which OS-level disk counters can't break out per database file",
+        "Azure Monitor metrics collected for a SQL Server Azure VM through the Marketplace agent are SQL Server-specific metrics, not host/OS-level metrics",
+        "Query Performance Insight and Query Store use unrelated, non-correlated query identifiers",
+        "Perfmon can only report counters exposed by the Windows OS, never counters registered by installed applications like SQL Server"
+      ],
+      "correct": 0,
+      "module": 3,
+      "explanation": "sys.dm_io_virtual_file_stats exposes per-file read/write latency (io_stall_read_ms/io_stall_write_ms) for every database data and log file, a level of detail OS-level tools like Perfmon can't provide since they only see disk-level counters, not per-file SQL Server stalls. The Marketplace VM agent feeds host-level (VM) metrics to Azure Monitor, not SQL Server internals, so SQL Server-specific detail still has to come from inside the VM (perfmon, DMVs). Query Performance Insight's query IDs correlate directly with Query Store's IDs. Perfmon collects counters from both the OS and installed applications, including SQL Server's own registered counter group."
+    },
+    {
+      "text": "A DBA notices intermittent CPU spikes on an Azure SQL Managed Instance during business hours but cannot reproduce the issue on demand. Which approach lets the DBA observe currently executing requests and their wait types in real time to catch the issue as it happens?",
+      "options": [
+        "Query sys.dm_exec_requests to see a live snapshot of currently executing requests, filtering for wait types such as SOS_SCHEDULER_YIELD",
+        "Wait for the next scheduled DBCC CHECKDB run and review its output log",
+        "Review the Overall Resource Consumption report in Query Store, which only aggregates historical data over a chosen time window",
+        "Check sys.dm_db_stats_properties for the last statistics update time"
+      ],
+      "correct": 0,
+      "module": 3,
+      "explanation": "sys.dm_exec_requests gives a live snapshot of currently executing requests, including their wait type and wait state, so filtering for RUNNABLE requests waiting on SOS_SCHEDULER_YIELD helps confirm CPU pressure in the moment. DBCC CHECKDB checks integrity, not activity. Query Store's Overall Resource Consumption view is historical/aggregated rather than a live activity view. sys.dm_db_stats_properties is about statistics freshness, unrelated to observing live CPU activity."
+    },
+    {
+      "text": "How does Intelligent Insights differ from Query Store for an Azure SQL Database?",
+      "options": [
+        "Intelligent Insights uses AI/machine learning models to automatically detect performance-degrading database issues (e.g., regressed queries, resource bottlenecks) and writes diagnostic logs describing the issue and root cause, whereas Query Store is a passive data-collection store of query plans and runtime statistics that requires the DBA to interpret the data",
+        "Intelligent Insights and Query Store are two names for the same underlying feature",
+        "Intelligent Insights only stores historical execution plans, while Query Store performs automated anomaly detection",
+        "Intelligent Insights is a manual diagnostic tool that must be run on demand, while Query Store continuously monitors in the background with no configuration required"
+      ],
+      "correct": 0,
+      "module": 3,
+      "explanation": "Intelligent Insights analyzes Azure SQL Database telemetry with built-in AI/machine learning to proactively detect issues like excessive resource consumption, regressed or missing plans, and increased wait times, then emits diagnostic log entries that describe the detected issue, its root cause, and (where applicable) a recommendation. Query Store is the underlying data collection mechanism (plan, runtime stats, and wait stats stores) that a DBA queries and interprets manually; Intelligent Insights builds automated detection on top of telemetry, including but not limited to Query Store data."
+    },
+    {
+      "text": "A DBA is setting up a maintenance schedule for a large production SQL Server database and wants to detect data corruption before it causes application errors. Which command should be scheduled, and what does it primarily check?",
+      "options": [
+        "DBCC CHECKDB, which checks the logical and physical integrity of all objects in the database, including allocation consistency and structural integrity of tables and indexes",
+        "DBCC SHRINKDATABASE, which reduces the size of the data and log files and reports any corruption found during the shrink",
+        "UPDATE STATISTICS, which refreshes cardinality estimates and repairs corrupted index pages as a side effect",
+        "sys.dm_db_index_physical_stats, which actively repairs fragmented or corrupted index pages when queried"
+      ],
+      "correct": 0,
+      "module": 3,
+      "explanation": "DBCC CHECKDB checks the logical and physical integrity of all objects in a database, including allocation structures, table and index consistency, and catalog consistency, and can report or (with a repair option) attempt to fix corruption. It should be scheduled regularly (e.g., via SQL Server Agent) as a proactive integrity check. DBCC SHRINKDATABASE only resizes files, UPDATE STATISTICS only refreshes cardinality data, and sys.dm_db_index_physical_stats only reports fragmentation - none of them detect or repair corruption the way CHECKDB does."
     }
   ];
 

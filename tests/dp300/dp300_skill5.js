@@ -372,6 +372,282 @@
       "correct": 1,
       "module": 5,
       "explanation": "ADR uses a Persisted Version Store (PVS) along with aggressive transaction log truncation to enable instant transaction rollback. Instead of scanning the log to undo changes, old versions are maintained in the PVS, allowing rollbacks to complete almost instantaneously regardless of transaction size."
+    },
+    {
+      "text": "A company runs SQL Server on-premises and wants to extend disaster recovery to Azure. Which built-in SQL Server feature can replicate from an on-premises instance to an Azure SQL Managed Instance subscriber, but only in that direction (not the reverse)?",
+      "options": [
+        "Transactional replication",
+        "Always On Availability Groups",
+        "Log shipping",
+        "Auto-failover groups"
+      ],
+      "correct": 0,
+      "module": 5,
+      "explanation": "SQL Server transactional replication can publish from an on-premises (or other-cloud) instance to an Azure SQL Managed Instance subscriber, but not in the reverse direction. This is the one notable exception that makes a PaaS target reachable from a hybrid topology; otherwise hybrid HADR is effectively always IaaS-based."
+    },
+    {
+      "text": "True or False: In a hybrid HA/DR design that extends an on-premises Always On Availability Group with an Azure-based secondary replica, Active Directory Domain Services and DNS must also be deployed in Azure, not just on-premises.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 0,
+      "module": 5,
+      "explanation": "Because the AG requires a Windows Server Failover Cluster spanning both locations, the supporting infrastructure — AD DS and DNS — must exist in Azure as well as on-premises, not only in the on-premises datacenter."
+    },
+    {
+      "text": "Which SQL Server HADR feature is best suited to a hybrid on-premises/Azure topology because each side maintains its own Windows Server Failover Cluster and quorum, rather than requiring one cluster stretched across both locations?",
+      "options": [
+        "A traditional Availability Group spanning a single WSFC",
+        "A Distributed Availability Group",
+        "A Failover Cluster Instance using Storage Spaces Direct",
+        "A Basic Availability Group"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "A distributed availability group is well suited to hybrid scenarios because, unlike a traditional AG, it doesn't require a single WSFC spanning both locations — each side maintains its own cluster and quorum/witness, which is easier when on-premises and Azure networks aren't tightly coupled."
+    },
+    {
+      "text": "Which built-in mechanism should be run against every node of a Windows Server Failover Cluster — and against shared storage for an FCI — before placing an AG or FCI into production, and again whenever the environment changes?",
+      "options": [
+        "DBCC CHECKDB",
+        "Cluster validation (Failover Cluster Manager or Test-Cluster)",
+        "sys.dm_database_replica_states query",
+        "Azure Advisor recommendations"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "Cluster validation is a mandatory, built-in battery of tests run via Failover Cluster Manager or Test-Cluster. Results come back as error, warning, pass, or not applicable — warnings can be acceptable if expected, but all errors must be resolved before the cluster is considered supported."
+    },
+    {
+      "text": "True or False: Azure Site Recovery allows a full disaster recovery failover test to be performed without taking production VMs offline, making it practical to rehearse a DR plan on a regular schedule.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 0,
+      "module": 5,
+      "explanation": "ASR's standout testing advantage is that a full DR failover test can be run without disrupting production, which makes it practical to schedule regular DR drills instead of only discovering problems during an actual disaster."
+    },
+    {
+      "text": "A DBA is preparing to cut a new Always On Availability Group listener over to production in Azure, and the Internal Load Balancer has already been confirmed working. What should the DBA do before go-live, and why?",
+      "options": [
+        "Configure the probe port after go-live, since it can be added without any impact",
+        "Test AG failover and listener connectivity before go-live, because adding a probe port later requires briefly taking the listener IP — and therefore the AG — offline",
+        "Skip failover testing entirely, since a working ILB already proves the listener works end to end",
+        "Wait until a real outage occurs to validate failover, to avoid unnecessary risk to the cluster"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "AG failover and listener connectivity should be tested before go-live once the load balancer is confirmed working, because adding the probe port afterward requires taking the listener's IP (and thus the AG) offline temporarily — something best avoided once the system is live."
+    },
+    {
+      "text": "Which Azure portal feature specifically reveals why a given Azure SQL Managed Instance or database is currently unavailable, aiding root-cause diagnosis of an unplanned failover?",
+      "options": [
+        "Azure Advisor",
+        "Resource Health",
+        "Cost Management",
+        "Azure Policy"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "Resource Health (in the portal or via REST API) is the documented mechanism for identifying why a specific Managed Instance or database is currently unavailable, distinguishing it from broader dashboards like Azure Status or Service Health."
+    },
+    {
+      "text": "A DBA wants a global, subscription-independent dashboard of ongoing Azure service incidents, with an RSS feed for update notifications, rather than a view scoped to their own subscription's resources. Which tool should they use?",
+      "options": [
+        "Azure Service Health",
+        "Azure Status",
+        "Resource Health",
+        "Azure Monitor Alerts"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "Azure Status is a global dashboard of ongoing service problems with an RSS feed for change notifications. Azure Service Health, by contrast, is scoped to the subscription and reports issues, planned maintenance, and health advisories relevant to that subscription's resources."
+    },
+    {
+      "text": "Which of the following are valid ways to monitor the health and history of an Azure SQL Database or Managed Instance HA/DR configuration? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "Azure Service Health for planned maintenance and incident history",
+        "sys.dm_database_replica_states for Business Critical tier replica status",
+        "Extended Events on Managed Instance to track backup history",
+        "Restarting the SQL Server service to force a health status refresh"
+      ],
+      "correct": [0, 1, 2],
+      "module": 5,
+      "explanation": "Service Health, the sys.dm_database_replica_states DMV, and Extended Events (on Managed Instance, since no standard backup history view exists on these PaaS platforms) are all legitimate monitoring mechanisms. Restarting the SQL Server service is not a monitoring technique and isn't available or meaningful for these managed platforms."
+    },
+    {
+      "text": "After a network partition, an Always On Availability Group hosted on a Windows Server Failover Cluster becomes completely unavailable, including the primary replica. What is the most likely root cause to check first?",
+      "options": [
+        "The Internal Load Balancer probe port is misconfigured",
+        "The cluster lost quorum because the witness resource is unreachable",
+        "The transaction log on the primary is full",
+        "GracePeriodWithDataLossHours expired"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "Quorum loss (loss of the witness resource) takes down the whole cluster along with any AG or FCI riding on it, so witness health is the first thing to check when a cluster-based solution goes dark entirely, including the primary."
+    },
+    {
+      "text": "Users report they cannot connect through an Always On Availability Group listener from a client machine other than the VM hosting the primary replica, even though the AG itself reports Healthy. What is the most likely cause, and how should it be isolated?",
+      "options": [
+        "A corrupt transaction log on the secondary; restore the secondary from a fresh full backup",
+        "A load balancer or probe port misconfiguration; isolate it by running Test-NetConnection against the listener IP/port from a machine other than the primary VM",
+        "The WSFC lost quorum; check the witness resource",
+        "Automatic seeding failed; reseed the secondary database"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "AG listener connectivity failures are commonly a load-balancer or probe-port misconfiguration. Test-NetConnection run from outside the primary VM is the prescribed way to isolate whether the ILB, the probe port, or the SQL Server endpoint itself is at fault — an AG reporting Healthy internally doesn't rule this out."
+    },
+    {
+      "text": "Immediately after Azure Site Recovery completes a regional failover for a set of SQL Server VMs, the DBA realizes a subsequent failure could leave the environment with no DR coverage at all. What commonly missed step causes this, and what should be done?",
+      "options": [
+        "The replica VMs are unprotected after failover and must be reprotected",
+        "ASR automatically re-enables protection back to the original region, so no action is needed",
+        "The AG listener must be manually recreated on the new VMs",
+        "The transaction log backup chain must be manually restarted using WITH COPY_ONLY"
+      ],
+      "correct": 0,
+      "module": 5,
+      "explanation": "After an Azure Site Recovery failover, the replica VMs brought online in the target region are not automatically protected — they must be reprotected. This is a commonly missed step that leaves the environment without DR coverage for a second event."
+    },
+    {
+      "text": "On SQL Server Standard Edition, what are the licensing limits for an Always On Failover Cluster Instance?",
+      "options": [
+        "Unlimited nodes, one database per instance",
+        "A maximum of two nodes",
+        "A maximum of four nodes",
+        "FCI is not supported on Standard Edition"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "FCIs on SQL Server Standard Edition are capped at two nodes, while Enterprise Edition supports larger multi-node clusters."
+    },
+    {
+      "text": "Which of the following are true of an Always On Availability Group configured on SQL Server Standard Edition, compared to Enterprise Edition? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "Standard Edition is limited to one database per AG",
+        "Standard Edition supports a maximum of one primary and one secondary replica",
+        "Standard Edition allows up to eight secondary replicas, the same as Enterprise",
+        "Standard Edition secondaries can never be made readable under any circumstance"
+      ],
+      "correct": [0, 1, 3],
+      "module": 5,
+      "explanation": "Standard Edition AGs (Basic Availability Groups) are limited to one database per AG and up to two replicas total (one primary, one secondary), and unlike Enterprise Edition, a Basic AG secondary can never be made readable under any circumstance — no read-only routing, no read-intent connections, and no backups from the secondary. Enterprise Edition supports multiple databases per AG and up to nine replicas (one primary, eight secondary), with secondaries readable for offloading read and backup work."
+    },
+    {
+      "text": "True or False: Log shipping provides automatic client redirection to the secondary server after a role switch, similar to an Availability Group listener.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 5,
+      "explanation": "False. Unlike an AG, log shipping offers no native name abstraction — switching to the secondary means tolerating a name change unless mitigated with something like a DNS alias."
+    },
+    {
+      "text": "Compared with active geo-replication, which of the following are true of Azure SQL Database auto-failover groups? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "They support automatic failover",
+        "They can fail over multiple databases simultaneously",
+        "They are supported on Azure SQL Managed Instance, unlike geo-replication",
+        "They allow the secondary to reside in the same region as the primary"
+      ],
+      "correct": [0, 1, 2],
+      "module": 5,
+      "explanation": "Failover groups add automatic failover, can fail over multiple databases together, and work on Managed Instance — none of which geo-replication supports. Geo-replication (not failover groups) is the one that allows a secondary in the same region and supports multiple replicas."
+    },
+    {
+      "text": "A DBA reviewing an Always On Availability Group notices that the redo queue on a secondary replica is growing continuously and the replica is falling further behind the primary. Which type of issue does this indicate?",
+      "options": [
+        "A quorum problem on the underlying WSFC",
+        "The secondary replica cannot apply transaction log records fast enough to keep pace with the primary, indicating a synchronization/performance lag issue",
+        "The AG listener's probe port is misconfigured",
+        "The primary's backup chain has been broken"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "A continuously growing redo queue means the secondary is receiving log records faster than it can apply them — a synchronization lag/performance issue on the secondary, not a quorum, listener, or backup-chain problem."
+    },
+    {
+      "text": "True or False: Accelerated Database Recovery (ADR) can be disabled in Azure SQL Database if an application requires the traditional log-scan-based rollback behavior.",
+      "type": "truefalse",
+      "options": ["True", "False"],
+      "correct": 1,
+      "module": 5,
+      "explanation": "False. ADR is enabled by default in Azure SQL Database and Azure SQL Managed Instance and cannot be turned off."
+    },
+    {
+      "text": "A team configures the SQL Server IaaS Agent Extension to run automated backups, including transaction log backups, against a storage account for a VM-hosted database. A DBA also schedules a nightly SQL Server Agent job to take manual transaction log backups inside the guest. What problem will this most likely cause?",
+      "options": [
+        "No problem — both backup sets simply provide redundancy",
+        "The log chain will be broken, because each independent log backup clears the transaction log, fragmenting the chain needed for point-in-time restore",
+        "The automated backup service will automatically disable itself",
+        "RPO will improve because log backups occur twice as often"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "Uncoordinated log backups from two separate sources break the log chain, since each log backup independently clears the log. Only one backup method should be used per database, or point-in-time restore becomes an error-prone reassembly of two backup histories."
+    },
+    {
+      "text": "Azure Backup for a SQL Server VM is intermittently failing, and logs show the failures coincide with the VSS snapshot's I/O freeze taking too long. Which fix addresses this?",
+      "options": [
+        "Switch the database to the SIMPLE recovery model",
+        "Set USEVSSCOPYBACKUP to TRUE under HKEY_LOCAL_MACHINE\\SOFTWARE\\MICROSOFT\\BCDRAGENT",
+        "Move the database files to temporary storage for faster I/O",
+        "Disable Accelerated Database Recovery"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "If snapshot delays are causing backup failures, the documented fix is setting \"USEVSSCOPYBACKUP\"=\"TRUE\" under the registry key HKEY_LOCAL_MACHINE\\SOFTWARE\\MICROSOFT\\BCDRAGENT, which changes how the VSS-based snapshot interacts with SQL Server during the freeze/thaw."
+    },
+    {
+      "text": "After failing over an Always On Availability Group, an application that relies on the Microsoft Distributed Transaction Coordinator (MSDTC) starts failing on the new primary. What is the most likely cause?",
+      "options": [
+        "The AG listener's DNS entry did not update",
+        "MSDTC was not clustered, which requires a shared disk even though the AG itself does not use shared storage",
+        "The secondary replica was not seeded correctly",
+        "The WSFC quorum witness is offline"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "Clustered MSDTC requires shared disk even when the AG itself doesn't use shared storage. If applications relying on MSDTC fail after a failover, the likely cause is that DTC wasn't clustered with the required shared disk."
+    },
+    {
+      "text": "When configuring a Distributed Availability Group across two Azure regions, what additional load balancer configuration is required compared to an on-premises deployment?",
+      "options": [
+        "The AG endpoint port (default 5022) must be added to each region's load balancer configuration",
+        "A single global load balancer must be shared across both regions",
+        "No load balancer is required, because Distributed AGs bypass the WSFC entirely",
+        "Only the forwarder replica's region needs load balancer rules"
+      ],
+      "correct": 0,
+      "module": 5,
+      "explanation": "Distributed availability groups are configured the same in Azure as on-premises, except that the endpoint port for each AG (default 5022) must be added to each region's load balancer configuration."
+    },
+    {
+      "text": "Which of the following are valid witness types for maintaining quorum in a Windows Server Failover Cluster? (Select all that apply)",
+      "type": "multi",
+      "options": [
+        "Disk witness",
+        "File share witness",
+        "Cloud witness",
+        "Listener witness"
+      ],
+      "correct": [0, 1, 2],
+      "module": 5,
+      "explanation": "Valid witness resources are a disk witness, an SMB 2.0+ file share witness, or a cloud witness (Azure Blob Storage-based, recommended for Azure and hybrid/multi-region topologies). \"Listener witness\" is not a real WSFC witness type."
+    },
+    {
+      "text": "An Azure SQL Database auto-failover group experiences a primary region outage. The secondary has not fully caught up, and GracePeriodWithDataLossHours is still set to its default of one hour. If the DBA forces failover immediately instead of waiting, what is the trade-off?",
+      "options": [
+        "No trade-off — forcing failover immediately always preserves all data",
+        "Failing over immediately reduces downtime but risks losing any transactions not yet replicated to the secondary",
+        "Forcing failover immediately guarantees zero data loss but increases downtime",
+        "GracePeriodWithDataLossHours only affects manual failovers, not forced ones"
+      ],
+      "correct": 1,
+      "module": 5,
+      "explanation": "An unplanned/forced failover can lose data if the secondary hasn't fully caught up. GracePeriodWithDataLossHours controls how long Azure waits before forcing failover — waiting longer improves the chance of zero data loss, while forcing immediately reduces downtime at the risk of losing unreplicated transactions."
     }
   ];
 
