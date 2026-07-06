@@ -3,26 +3,11 @@
 // Global configuration of module files and titles
 const MODULE_CONFIG = {
   'dp300': [
-    { file: 'M1.1.md', title: 'Plan and implement a data platform resources strategy' },
-    { file: 'M1.2.md', title: 'Deploy IaaS solutions with Azure SQL' },
-    { file: 'M1.3.md', title: 'Deploy PaaS solutions with Azure SQL' },
-    { file: 'M1.4.md', title: 'Migrate SQL Server workloads to Azure SQL Database' },
-    { file: 'M1.5.md', title: 'Migrate SQL Server workloads to Azure SQL Managed Instance' },
-    { file: 'M2.1.md', title: 'Configure database authentication and authorization' },
-    { file: 'M2.2.md', title: 'Protect data in-transit and at rest' },
-    { file: 'M2.3.md', title: 'Implement compliance controls for sensitive data' },
-    { file: 'M3.1.md', title: 'Describe performance monitoring' },
-    { file: 'M3.2.md', title: 'Configure SQL Server resources for optimal performance' },
-    { file: 'M3.3.md', title: 'Configure databases for optimal performance' },
-    { file: 'M4.1.md', title: 'Explore query performance optimization' },
-    { file: 'M4.2.md', title: 'Explore performance-based database design' },
-    { file: 'M4.3.md', title: 'Evaluate performance improvements' },
-    { file: 'M5.1.md', title: 'Automate database deployment' },
-    { file: 'M5.2.md', title: 'Create and manage SQL Agent jobs' },
-    { file: 'M5.3.md', title: 'Manage Azure PaaS tasks using automation' },
-    { file: 'M6.1.md', title: 'Describe high availability and disaster recovery strategies' },
-    { file: 'M6.2.md', title: 'Explore IaaS and PaaS solutions for HA/DR' },
-    { file: 'M6.3.md', title: 'Back up and restore databases' }
+    { file: 'S1.md', title: 'Plan and implement data platform resources' },
+    { file: 'S2.md', title: 'Implement a secure environment' },
+    { file: 'S3.md', title: 'Monitor, configure, and optimize database resources' },
+    { file: 'S4.md', title: 'Configure and manage automation of tasks' },
+    { file: 'S5.md', title: 'Plan and configure a high availability and disaster recovery (HA/DR) environment' }
   ],
   'dp600': [
     { file: 'M1.1.md', title: 'Introduction to end-to-end analytics using Microsoft Fabric' },
@@ -692,10 +677,12 @@ function showConceptCardDetails(title, data, module) {
   
   // Format topic data points
   for (let section in data) {
+    const content = data[section];
+    const parsedContent = window.marked ? window.marked.parse(content) : content;
     html += `
       <div class="modal-section">
         <div class="modal-section-title">${section}</div>
-        <div class="modal-section-content">${data[section]}</div>
+        <div class="modal-section-content">${parsedContent}</div>
       </div>
     `;
   }
