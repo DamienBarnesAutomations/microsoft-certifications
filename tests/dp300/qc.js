@@ -9,16 +9,16 @@ console.log('--- STARTING DP-300 QUALITY CHECK ---');
 let errors = [];
 let warnings = [];
 
-// 1. Check MODULE_CONFIG mapping in app.js vs actual files
+// 1. Check MODULE_CONFIG mapping in js/data.js vs actual files
 console.log('\nChecking MODULE_CONFIG and file existence...');
-const appJsPath = path.join(workspaceDir, 'app.js');
+const appJsPath = path.join(workspaceDir, 'js', 'data.js');
 let dp300Config = [];
 try {
   const appJsContent = fs.readFileSync(appJsPath, 'utf8');
-  // Simple regex parser for MODULE_CONFIG['dp300']
-  const configMatch = appJsContent.match(/'dp300':\s*\[([\s\S]*?)\]/);
+  // Simple regex parser for MODULE_CONFIG.dp300 (bare or quoted key)
+  const configMatch = appJsContent.match(/dp300:\s*\[([\s\S]*?)\n {2}\],/);
   if (!configMatch) {
-    errors.push('Could not find MODULE_CONFIG[\'dp300\'] in app.js');
+    errors.push('Could not find MODULE_CONFIG[\'dp300\'] in js/data.js');
   } else {
     // Parse the individual config entries
     const entryRegex = /{\s*file:\s*'([^']*)',\s*title:\s*'([^']*)'\s*}/g;
@@ -28,10 +28,10 @@ try {
     }
   }
 } catch (e) {
-  errors.push(`Failed to read/parse app.js: ${e.message}`);
+  errors.push(`Failed to read/parse js/data.js: ${e.message}`);
 }
 
-console.log(`Found ${dp300Config.length} configured modules in app.js`);
+console.log(`Found ${dp300Config.length} configured modules in js/data.js`);
 
 // Verify that the files exist in dp300/notes (this is what the site actually renders;
 // dp300/modules holds raw, unformatted source content and is only a fetch fallback)
@@ -61,7 +61,7 @@ if (fs.existsSync(notesDir)) {
     if (file.endsWith('.md')) {
       const isConfigured = dp300Config.some(cfg => cfg.file === file);
       if (!isConfigured) {
-        warnings.push(`File ${file} exists in dp300/notes but is not configured in app.js`);
+        warnings.push(`File ${file} exists in dp300/notes but is not configured in js/data.js`);
       }
     }
   });
@@ -193,6 +193,9 @@ if (!fs.existsSync(testsDp300Dir)) {
       const addedQuestions = sandbox.window.__dp300.questions.slice(prevQCount);
       addedQuestions.forEach((q, idx) => {
         const qLabel = `${fileName} Question #${idx + 1}`;
+        if (!q.id || typeof q.id !== 'string') {
+          errors.push(`${qLabel} is missing a stable "id" field (required for spaced-review tracking)`);
+        }
         if (!q.text || typeof q.text !== 'string') {
           errors.push(`${qLabel} is missing text or text is not a string`);
         }
@@ -240,7 +243,16 @@ if (!fs.existsSync(testsDp300Dir)) {
       errors.push(`Failed to compile or execute ${fileName}: ${e.message}`);
     }
   }
-  
+
+  // Check id uniqueness across the whole dp300 question pool
+  const idCounts = {};
+  sandbox.window.__dp300.questions.forEach(q => {
+    if (q.id) idCounts[q.id] = (idCounts[q.id] || 0) + 1;
+  });
+  Object.entries(idCounts).forEach(([id, count]) => {
+    if (count > 1) errors.push(`Duplicate question id "${id}" appears ${count} times across dp300 files`);
+  });
+
   // Check tests/dp300/dp300.js aggregator
   const aggregatorPath = path.join(testsDp300Dir, 'dp300.js');
   if (!fs.existsSync(aggregatorPath)) {

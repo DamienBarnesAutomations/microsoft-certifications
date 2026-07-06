@@ -1223,6 +1223,24 @@ function updateExamPoolCount() {
   document.getElementById('exam-pool-counter').textContent = `${pool.length} practice questions currently available in this selection.`;
 }
 
+function shuffleQuestionOptions(q) {
+  const order = q.options.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  // order[newIdx] = oldIdx, so build the remap from old index -> new index
+  const oldToNew = new Array(order.length);
+  order.forEach((oldIdx, newIdx) => { oldToNew[oldIdx] = newIdx; });
+
+  const newOptions = order.map(oldIdx => q.options[oldIdx]);
+  const newCorrect = q.type === 'multi'
+    ? q.correct.map(oldIdx => oldToNew[oldIdx])
+    : oldToNew[q.correct];
+
+  return { ...q, options: newOptions, correct: newCorrect };
+}
+
 function startPracticeExam() {
   const cert = document.getElementById('exam-cert-select').value;
   const moduleVal = document.getElementById('exam-module-select').value;
@@ -1247,7 +1265,7 @@ function startPracticeExam() {
   }
 
   const count = countSelect === 'all' ? pool.length : Math.min(parseInt(countSelect), pool.length);
-  const questions = pool.slice(0, count);
+  const questions = pool.slice(0, count).map(shuffleQuestionOptions);
 
   state.activeExam = {
     questions: questions,

@@ -2,20 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Microsoft Certification Study Portal - DP-300, DP-600, DP-700 & DP-750 Study Materials, Flashcards & Practice Exams.">
   <title>Microsoft Certification Prep Portal</title>
-
-  <link rel="stylesheet" href="css/style.css">
-
+  
+  <!-- Global Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
   <!-- Markdown Parser CDN -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+  
   <!-- Certification Conceptual Card Data -->
   <script src="cards_dp600.js" defer></script>
   <script src="cards_dp700.js" defer></script>
   <script src="cards_dp300.js" defer></script>
-
+  
   <!-- Flashcard Databases (DP-700) -->
   <script src="flashcards/dp700-m1.js" defer></script>
   <script src="flashcards/dp700-m2.js" defer></script>
@@ -24,15 +25,15 @@
   <script src="flashcards/dp700-m5.js" defer></script>
   <script src="flashcards/dp700-m6.js" defer></script>
   <script src="flashcards/dp700.js" defer></script>
-
-  <!-- Practice Exam Question Banks (DP-300, DP-600, DP-700) -->
+  
+  <!-- Practice Exams Databases (DP-300, DP-600, DP-700) -->
   <script src="tests/dp600/dp600_module1.js" defer></script>
   <script src="tests/dp600/dp600_module2.js" defer></script>
   <script src="tests/dp600/dp600_module3.js" defer></script>
   <script src="tests/dp600/dp600_module4.js" defer></script>
   <script src="tests/dp600/dp600_module5.js" defer></script>
   <script src="tests/dp600/dp600.js" defer></script>
-
+  
   <script src="tests/dp700/dp700_module1.js" defer></script>
   <script src="tests/dp700/dp700_module2.js" defer></script>
   <script src="tests/dp700/dp700_module3.js" defer></script>
@@ -40,41 +41,30 @@
   <script src="tests/dp700/dp700_module5.js" defer></script>
   <script src="tests/dp700/dp700_module6.js" defer></script>
   <script src="tests/dp700/dp700.js" defer></script>
-
+  
   <script src="tests/dp300/dp300_skill1.js" defer></script>
   <script src="tests/dp300/dp300_skill2.js" defer></script>
   <script src="tests/dp300/dp300_skill3.js" defer></script>
   <script src="tests/dp300/dp300_skill4.js" defer></script>
   <script src="tests/dp300/dp300_skill5.js" defer></script>
   <script src="tests/dp300/dp300.js" defer></script>
-
-  <!-- App modules: data/logic layer, then Alpine (registers stores on alpine:init before it
-       hydrates the DOM), then views, then the bootstrap/router last. -->
-  <script src="js/srs.js" defer></script>
-  <script src="js/data.js" defer></script>
-  <script src="js/stores.js" defer></script>
-  <script src="js/views/dashboard.js" defer></script>
-  <script src="js/views/study.js" defer></script>
-  <script src="js/views/cards.js" defer></script>
-  <script src="js/views/flashcards.js" defer></script>
-  <script src="js/views/exam.js" defer></script>
-  <script src="js/views/review.js" defer></script>
-  <script src="js/views/projects.js" defer></script>
-  <script src="js/app.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  
+  <!-- Core App Controller Logic -->
+  <script src="app.js" defer></script>
 </head>
 <body>
 
   <!-- Loading Splash Overlay -->
   <div id="loading-overlay">
     <div class="spinner"></div>
-    <h2 style="font-weight:700; font-size:1.4rem; background: linear-gradient(135deg, #6366f1, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Fabric Study Portal</h2>
+    <h2 style="font-weight:700; font-size:1.5rem; background: linear-gradient(135deg, #6366f1, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Fabric Study Portal</h2>
     <p style="color:#64748b; font-size:0.9rem; margin-top:8px;">Initializing study data engines...</p>
   </div>
 
-  <div class="app-container" x-data>
-
-    <!-- Sidebar navigation menu (Desktop, 768px+) -->
+  <!-- App Structure Container -->
+  <div class="app-container">
+    
+    <!-- Sidebar navigation menu (Desktop) -->
     <aside class="sidebar">
       <div class="brand">
         <div>
@@ -83,44 +73,92 @@
         </div>
       </div>
       <ul class="nav-menu">
-        <li class="nav-item" :class="$store.ui.route === 'dashboard' && 'active'"><a href="#/dashboard"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'study' && 'active'"><a href="#/study"><span class="nav-icon">📖</span><span>Study Guides</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'cards' && 'active'"><a href="#/cards"><span class="nav-icon">🗂️</span><span>Concept Cards</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'flashcards' && 'active'"><a href="#/flashcards"><span class="nav-icon">⚡</span><span>Flashcards</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'test' && 'active'"><a href="#/test"><span class="nav-icon">📝</span><span>Practice Exams</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'review' && 'active'"><a href="#/review"><span class="nav-icon">🔁</span><span>Spaced Review</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'projects' && 'active'"><a href="#/projects"><span class="nav-icon">🛠️</span><span>Hands-on Labs</span></a></li>
+        <li class="nav-item active" id="nav-dashboard">
+          <a href="#/dashboard">
+            <span class="nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-study">
+          <a href="#/study">
+            <span class="nav-icon">📖</span>
+            <span>Study Guides</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-cards">
+          <a href="#/cards">
+            <span class="nav-icon">🗂️</span>
+            <span>Concept Cards</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-flashcards">
+          <a href="#/flashcards">
+            <span class="nav-icon">⚡</span>
+            <span>Flashcards</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-test">
+          <a href="#/test">
+            <span class="nav-icon">📝</span>
+            <span>Practice Exams</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-projects">
+          <a href="#/projects">
+            <span class="nav-icon">🛠️</span>
+            <span>Hands-on Labs</span>
+          </a>
+        </li>
       </ul>
-      <div class="sidebar-footer"><p>Current version 3.0</p></div>
+      <div class="sidebar-footer">
+        <p>Current version 2.1</p>
+      </div>
     </aside>
 
-    <!-- Bottom Navigation Bar (Mobile, default) -->
+    <!-- Bottom Navigation Bar (Mobile Viewports) -->
     <nav class="bottom-nav">
-      <a href="#/dashboard" class="bottom-nav-item" :class="$store.ui.route === 'dashboard' && 'active'"><span class="bottom-nav-icon">🏠</span><span>Home</span></a>
-      <a href="#/study" class="bottom-nav-item" :class="$store.ui.route === 'study' && 'active'"><span class="bottom-nav-icon">📖</span><span>Guides</span></a>
-      <a href="#/flashcards" class="bottom-nav-item" :class="$store.ui.route === 'flashcards' && 'active'"><span class="bottom-nav-icon">⚡</span><span>Flash</span></a>
-      <a href="#/test" class="bottom-nav-item" :class="$store.ui.route === 'test' && 'active'"><span class="bottom-nav-icon">📝</span><span>Exams</span></a>
-      <a href="#/review" class="bottom-nav-item" :class="$store.ui.route === 'review' && 'active'">
-        <span class="bottom-nav-icon">🔁</span><span>Review</span>
+      <a href="#/dashboard" class="bottom-nav-item active">
+        <span class="bottom-nav-icon">🏠</span>
+        <span>Home</span>
       </a>
-      <a href="#/cards" class="bottom-nav-item" :class="$store.ui.route === 'cards' && 'active'"><span class="bottom-nav-icon">🗂️</span><span>Cards</span></a>
-      <a href="#/projects" class="bottom-nav-item" :class="$store.ui.route === 'projects' && 'active'"><span class="bottom-nav-icon">🛠️</span><span>Labs</span></a>
+      <a href="#/study" class="bottom-nav-item">
+        <span class="bottom-nav-icon">📖</span>
+        <span>Guides</span>
+      </a>
+      <a href="#/cards" class="bottom-nav-item">
+        <span class="bottom-nav-icon">🗂️</span>
+        <span>Cards</span>
+      </a>
+      <a href="#/flashcards" class="bottom-nav-item">
+        <span class="bottom-nav-icon">⚡</span>
+        <span>Flash</span>
+      </a>
+      <a href="#/test" class="bottom-nav-item">
+        <span class="bottom-nav-icon">📝</span>
+        <span>Exams</span>
+      </a>
+      <a href="#/projects" class="bottom-nav-item">
+        <span class="bottom-nav-icon">🛠️</span>
+        <span>Labs</span>
+      </a>
     </nav>
 
+    <!-- Main Content Frame -->
     <main class="main-content">
-
-      <!-- 🏠 DASHBOARD -->
+      
+      <!-- 🏠 DASHBOARD VIEW CONTAINER -->
       <section id="view-dashboard" class="view-section active">
         <h1>Welcome Back, Candidate</h1>
         <p class="subtitle">Here is a summary of your Microsoft Certification progress.</p>
-
+        
         <div class="dashboard-grid">
+          <!-- Left Panel: Streak & Quick Stats -->
           <div class="glass-panel welcome-panel" style="display:flex; flex-direction:column; justify-content:space-between;">
             <div>
               <h2 style="margin-bottom:8px;">Ready to Level Up?</h2>
-              <p style="color:var(--text-secondary); line-height:1.6;">Maintain your momentum. Answer spaced-review questions daily to lock in retention.</p>
+              <p style="color:var(--text-secondary); line-height:1.6;">Maintain your momentum. Read module docs daily and run flashcard drills to secure your knowledge.</p>
             </div>
-
+            
             <div class="dashboard-stats">
               <div class="stat-card" style="border-color: rgba(245, 158, 11, 0.2);">
                 <div class="stat-val" id="dash-streak-count" style="color: var(--color-warning);">0</div>
@@ -141,25 +179,32 @@
             </div>
           </div>
 
-          <div class="glass-panel stat-card clickable" id="dash-due-card" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
-            <div style="font-size: 2.5rem; margin-bottom: 8px;">🔁</div>
-            <div class="stat-val" id="dash-due-review" style="color: var(--color-warning);">0</div>
-            <h3 style="margin: 4px 0;">Due for Review</h3>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height:1.5;">Tap to start today's spaced-review queue.</p>
+          <!-- Right Panel: Streak motivational card -->
+          <div class="glass-panel" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
+            <div style="font-size: 3rem; margin-bottom: 8px;">🎯</div>
+            <h3>Study Goal</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height:1.5;">Master Fabric Architecture, Delta lakes, and real-time event analytics.</p>
           </div>
         </div>
-
-        <h2 style="margin-top:32px; margin-bottom:8px;">Certifications Overview</h2>
-        <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">Select an exam package to view its modules and study guides.</p>
+        
+        <h2 style="margin-top:40px; margin-bottom:8px;">Certifications Overview</h2>
+        <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Select an exam package to view its modules and study guides.</p>
         <div class="certs-grid" id="dash-certs-grid"></div>
       </section>
 
+      <!-- 📖 STUDY VIEW CONTAINER -->
       <section id="view-study" class="view-section"></section>
-      <section id="view-cards" class="view-section"></section>
-      <section id="view-flashcards" class="view-section"></section>
-      <section id="view-test" class="view-section"></section>
-      <section id="view-review" class="view-section"></section>
 
+      <!-- 🗂️ CONCEPT CARDS VIEW CONTAINER -->
+      <section id="view-cards" class="view-section"></section>
+
+      <!-- ⚡ FLASHCARDS VIEW CONTAINER -->
+      <section id="view-flashcards" class="view-section"></section>
+
+      <!-- 📝 MOCK TEST VIEW CONTAINER -->
+      <section id="view-test" class="view-section"></section>
+
+      <!-- 🛠️ HANDS-ON PROJECTS VIEW CONTAINER -->
       <section id="view-projects" class="view-section">
         <h1>Hands-on Implementation Labs</h1>
         <p class="subtitle">Complete end-to-end scenarios on Microsoft Fabric to cement conceptual patterns.</p>
