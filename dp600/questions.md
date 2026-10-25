@@ -1,14 +1,14 @@
 ```json
 [
   {
-    "text": "You have a Direct Lake semantic model connected to a lakehouse. A user runs a complex DAX query that scans millions of rows. The query takes longer than expected. You discover that the query fell back to DirectQuery mode. What is the PRIMARY reason this fallback occurred?",
+    "text": "You have a Direct Lake semantic model that connects to a warehouse through its SQL analytics endpoint. Reports query a table that is based on a SQL view, and those queries are processed in DirectQuery mode. You need the table to be read in Direct Lake mode. What should you do?",
     "options": [
-      "The semantic model does not have an aggregation table defined",
-      "The query exceeded the memory threshold for Direct Lake processing",
-      "The lakehouse table is not in Delta format",
-      "The user does not have ReadData permission on the lakehouse"
+      "Materialize the SQL view as a Delta table",
+      "Set Direct Lake behavior to Direct Lake only",
+      "Enable query scaleout on the semantic model",
+      "Increase the capacity SKU"
     ],
-    "correct": 1
+    "correct": 0
   },
   {
     "text": "You need to implement Row-Level Security on a warehouse so that regional managers only see sales data for their region. Which DAX expression should you use in the security filter for the DimRegion table?",
@@ -271,14 +271,14 @@
     "correct": 0
   },
   {
-    "text": "You have a semantic model with Direct Lake mode. You need to ensure that complex DAX queries that scan large datasets fall back to DirectQuery gracefully rather than timing out. What should you configure?",
+    "text": "You have a Direct Lake on OneLake semantic model over a lakehouse. A Delta table grows beyond the Direct Lake guardrail for Parquet files per table. What happens to queries that reference that table?",
     "options": [
-      "Increase the memory threshold for Direct Lake processing",
-      "Enable query scaleout to distribute the query load",
-      "Configure the fallback behavior to DirectQuery in the semantic model settings",
-      "Add an aggregation table to reduce the data scanned"
+      "They fall back to DirectQuery against the SQL analytics endpoint",
+      "They fail until the Delta table is optimized to fall within the guardrail",
+      "The table is converted to Import storage mode automatically",
+      "They are routed to a query scaleout replica"
     ],
-    "correct": 2
+    "correct": 1
   },
   {
     "text": "You have a Fabric lakehouse with a Delta table. You run a MERGE operation using T-SQL through the SQL analytics endpoint. What is the result?",
