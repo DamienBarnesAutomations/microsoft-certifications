@@ -367,6 +367,8 @@ function skipQuestion() {
   if (exam.currentIndex < exam.questions.length - 1) {
     exam.currentIndex++;
     renderActiveQuestion();
+  } else {
+    finishPracticeExam();
   }
 }
 
