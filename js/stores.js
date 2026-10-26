@@ -9,6 +9,7 @@ document.addEventListener('alpine:init', () => {
     tool: 'home',
     params: [],
     tools: [],
+    nav: [],
   });
 
   Alpine.store('progress', {

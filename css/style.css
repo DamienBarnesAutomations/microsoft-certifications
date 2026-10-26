@@ -590,4 +590,5 @@ a.brand { text-decoration: none; color: inherit; }
 }
 
 /* A lone tool (e.g. DP-750) doesn't need a bottom bar */
-.bottom-nav:has(.bottom-nav-item:only-of-type) { display: none; }
+.bottom-nav:has(.bottom-nav-item:only-of-type),
+.bottom-nav:not(:has(.bottom-nav-item)) { display: none; }

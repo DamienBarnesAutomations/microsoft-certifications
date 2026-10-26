@@ -1,8 +1,8 @@
 // Bootstrap + hash router. The app is organised by certification:
 //   #/                      home: pick a certification
 //   #/<cert>                that certification's hub (progress + its tools)
-//   #/<cert>/<tool>[/...]   a tool scoped to that certification (study, cards, flashcards,
-//                           test, review, projects); study takes an optional /<file>
+//   #/<cert>/<tool>[/...]   a tool scoped to that certification (flashcards, test; see
+//                           CERT_DETAILS.tools in js/data.js for what each cert offers)
 // Alpine drives the nav (Alpine.store('ui')); this file owns which view section is shown and
 // calls that view's imperative renderer, which reads the open certification from the ui store.
 document.addEventListener('DOMContentLoaded', () => {
@@ -51,6 +51,11 @@ function handleRouting() {
   ui.tool = tool;
   ui.params = parts.slice(2);
   ui.tools = cert ? DATA.getCertTools(cert.id) : [];
+  // Sidebar rows: home alone, or the open cert's overview plus its tools.
+  ui.nav = cert
+    ? [{ id: 'hub', label: 'Overview', icon: '🏠', href: `#/${cert.id}` },
+       ...ui.tools.map((t) => ({ id: t.id, label: t.label, icon: t.icon, href: `#/${cert.id}/${t.id}` }))]
+    : [{ id: 'home', label: 'Certifications', icon: '🏠', href: '#/' }];
 
   if (tool !== 'test' && examState.activeExamInterval) {
     clearInterval(examState.activeExamInterval);

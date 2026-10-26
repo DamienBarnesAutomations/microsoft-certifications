@@ -91,10 +91,8 @@
         </div>
       </template>
       <ul class="nav-menu">
-        <li class="nav-item" :class="$store.ui.tool === 'home' && 'active'" x-show="!$store.ui.cert"><a href="#/"><span class="nav-icon">🏠</span><span>Certifications</span></a></li>
-        <li class="nav-item" :class="$store.ui.tool === 'hub' && 'active'" x-show="$store.ui.cert"><a :href="'#/' + $store.ui.cert"><span class="nav-icon">🏠</span><span>Overview</span></a></li>
-        <template x-for="t in $store.ui.tools" :key="t.id">
-          <li class="nav-item" :class="$store.ui.tool === t.id && 'active'"><a :href="'#/' + $store.ui.cert + '/' + t.id"><span class="nav-icon" x-text="t.icon"></span><span x-text="t.label"></span></a></li>
+        <template x-for="item in $store.ui.nav" :key="item.id">
+          <li class="nav-item" :class="$store.ui.tool === item.id && 'active'"><a :href="item.href"><span class="nav-icon" x-text="item.icon"></span><span x-text="item.label"></span></a></li>
         </template>
       </ul>
     </aside>
@@ -117,7 +115,7 @@
       <!-- Home: pick a certification -->
       <section id="view-home" class="view-section active">
         <h1>Choose a Certification</h1>
-        <p class="subtitle">Pick an exam to open its study guides, cards, practice exams and review. <span class="streak-pill">🔥 <span id="home-streak">0</span> day streak</span></p>
+        <p class="subtitle">Pick an exam to study with flashcards or take a practice test. <span class="streak-pill">🔥 <span id="home-streak">0</span> day streak</span></p>
         <div class="certs-grid" id="home-certs-grid"></div>
       </section>
 

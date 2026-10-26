@@ -81,17 +81,19 @@ const TOOLS = [
   { id: 'study', label: 'Study Guides', short: 'Guides', icon: '📖' },
   { id: 'cards', label: 'Concept Cards', short: 'Cards', icon: '🗂️' },
   { id: 'flashcards', label: 'Flashcards', short: 'Flash', icon: '⚡' },
-  { id: 'test', label: 'Practice Exams', short: 'Exams', icon: '📝' },
+  { id: 'test', label: 'Test Mode', short: 'Test', icon: '📝' },
   { id: 'review', label: 'Spaced Review', short: 'Review', icon: '🔁' },
   { id: 'projects', label: 'Hands-on Labs', short: 'Labs', icon: '🛠️' },
 ];
 
-// `tools` lists which TOOLS each certification actually has content for.
+// `tools` lists which TOOLS the UI offers for each certification. The app is deliberately limited
+// to flashcards (study) and test mode; the study/cards/review/projects views still exist and are
+// reachable again by adding their ids here. Flashcards only exist for DP-700 so far.
 const CERT_DETAILS = [
-  { code: 'DP-700', id: 'dp700', title: 'Fabric Data Engineer', tools: ['study', 'cards', 'flashcards', 'test', 'review', 'projects'] },
-  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['study', 'cards', 'test', 'review'] },
-  { code: 'DP-300', id: 'dp300', title: 'Azure Database Administrator', tools: ['study', 'cards', 'test', 'review'] },
-  { code: 'DP-750', id: 'dp750', title: 'Azure Databricks Data Engineer (Preview)', tools: ['study'] },
+  { code: 'DP-700', id: 'dp700', title: 'Fabric Data Engineer', tools: ['flashcards', 'test'] },
+  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['test'] },
+  { code: 'DP-300', id: 'dp300', title: 'Azure Database Administrator', tools: ['test'] },
+  { code: 'DP-750', id: 'dp750', title: 'Azure Databricks Data Engineer (Preview)', tools: [] },
 ];
 
 function getCert(id) {
