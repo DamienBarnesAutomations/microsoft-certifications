@@ -14,20 +14,11 @@ function initReviewQueue() {
   const catalog = DATA.buildQuestionCatalog();
 
   container.innerHTML = `
-    <h1>Spaced Review Queue</h1>
+    <h1>${Alpine.store('ui').certInfo.code} Spaced Review</h1>
     <p class="subtitle">Questions you've gotten wrong (or are due for reinforcement) resurface here on a schedule instead of all at once.</p>
 
     <div class="glass-panel" style="margin-bottom: 24px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
-          <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Certification</label>
-          <select id="review-cert-filter">
-            <option value="all">All Certs (Interleaved)</option>
-            <option value="dp300">DP-300 Azure DB Admin</option>
-            <option value="dp600">DP-600 Fabric Analytics</option>
-            <option value="dp700">DP-700 Fabric Engineer</option>
-          </select>
-        </div>
         <button class="btn btn-primary" onclick="startReviewSession()" style="height: 42px; min-width: 150px;">Start Review</button>
       </div>
       <div id="review-due-summary" style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;"></div>
@@ -36,12 +27,7 @@ function initReviewQueue() {
     <div id="review-stage"></div>
   `;
 
-  const certSelect = document.getElementById('review-cert-filter');
-  certSelect.onchange = () => {
-    reviewState.certFilter = certSelect.value;
-    updateReviewSummary(catalog);
-  };
-
+  reviewState.certFilter = currentCertId();
   updateReviewSummary(catalog);
 }
 
@@ -219,5 +205,4 @@ function finishReviewSession() {
     </div>
   `;
 
-  renderDashboard();
 }

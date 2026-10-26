@@ -2,17 +2,12 @@
 function renderConceptCards() {
   const container = document.getElementById('view-cards');
   container.innerHTML = `
-    <h1>Concept Study Cards</h1>
-    <p class="subtitle">Quick reference notes for exam topics. Filter by exam and search by text.</p>
+    <h1>${Alpine.store('ui').certInfo.code} Concept Cards</h1>
+    <p class="subtitle">Quick reference notes for exam topics. Filter by module and search by text.</p>
 
     <div class="glass-panel" style="margin-bottom: 24px;">
       <div class="search-bar-wrap">
         <input type="text" id="card-search-box" placeholder="Search concepts, keywords, definitions...">
-        <select id="card-cert-filter">
-          <option value="DP-700">DP-700 Fabric Engineer</option>
-          <option value="DP-600">DP-600 Fabric Analytics</option>
-          <option value="DP-300">DP-300 Azure DB Admin</option>
-        </select>
         <select id="card-module-filter">
           <option value="all">All Modules</option>
         </select>
@@ -22,14 +17,8 @@ function renderConceptCards() {
     <div class="concepts-grid" id="concepts-grid-container"></div>
   `;
 
-  const certFilter = document.getElementById('card-cert-filter');
   const modFilter = document.getElementById('card-module-filter');
   const searchBox = document.getElementById('card-search-box');
-
-  certFilter.onchange = () => {
-    populateModuleFilter();
-    updateConceptCardsGrid();
-  };
 
   modFilter.onchange = updateConceptCardsGrid;
   searchBox.oninput = updateConceptCardsGrid;
@@ -39,7 +28,7 @@ function renderConceptCards() {
 }
 
 function populateModuleFilter() {
-  const cert = document.getElementById('card-cert-filter').value;
+  const cert = Alpine.store('ui').certInfo.code;
   const modFilter = document.getElementById('card-module-filter');
   modFilter.innerHTML = '<option value="all">All Modules</option>';
 
@@ -55,7 +44,7 @@ function populateModuleFilter() {
 }
 
 function updateConceptCardsGrid() {
-  const cert = document.getElementById('card-cert-filter').value;
+  const cert = Alpine.store('ui').certInfo.code;
   const targetMod = document.getElementById('card-module-filter').value;
   const query = document.getElementById('card-search-box').value.toLowerCase();
   const grid = document.getElementById('concepts-grid-container');

@@ -1,8 +1,10 @@
-// Bootstrap: hash router + view lifecycle. Alpine drives the nav's reactive active-state and
-// the due-review badge (via Alpine.store('ui').route and x-bind in index.html); this file still
-// owns the actual view-content rendering, same imperative render-to-container pattern as the
-// legacy app, since the reader/flashcards/exam views are complex enough that hand-rolled DOM
-// building remains clearer than forcing them into declarative templates.
+// Bootstrap + hash router. The app is organised by certification:
+//   #/                      home: pick a certification
+//   #/<cert>                that certification's hub (progress + its tools)
+//   #/<cert>/<tool>[/...]   a tool scoped to that certification (study, cards, flashcards,
+//                           test, review, projects); study takes an optional /<file>
+// Alpine drives the nav (Alpine.store('ui')); this file owns which view section is shown and
+// calls that view's imperative renderer, which reads the open certification from the ui store.
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
 });
@@ -23,33 +25,54 @@ function initApp() {
   }, 300);
 }
 
+function currentCertId() {
+  return Alpine.store('ui').cert;
+}
+
 function handleRouting() {
-  const hash = window.location.hash || '#/dashboard';
-  const parts = hash.split('/');
-  const route = parts[1] || 'dashboard';
+  const parts = window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const ui = Alpine.store('ui');
+  const cert = parts.length ? DATA.getCert(parts[0]) : null;
 
-  Alpine.store('ui').route = route;
-  Alpine.store('ui').routeParams = parts.slice(2);
+  // Unknown first segment (including old #/study, #/dashboard links) goes back to home.
+  if (parts.length && !cert) {
+    window.location.hash = '#/';
+    return;
+  }
 
-  if (route !== 'test' && examState.activeExamInterval) {
+  let tool = cert ? parts[1] || 'hub' : 'home';
+  if (cert && tool !== 'hub' && !cert.tools.includes(tool)) {
+    window.location.hash = `#/${cert.id}`;
+    return;
+  }
+
+  ui.cert = cert ? cert.id : null;
+  ui.certInfo = cert;
+  ui.tool = tool;
+  ui.params = parts.slice(2);
+  ui.tools = cert ? DATA.getCertTools(cert.id) : [];
+
+  if (tool !== 'test' && examState.activeExamInterval) {
     clearInterval(examState.activeExamInterval);
     examState.activeExamInterval = null;
     examState.activeExam = null;
   }
 
   document.querySelectorAll('.view-section').forEach((section) => section.classList.remove('active'));
-  const activeSection = document.getElementById(`view-${route}`);
+  const activeSection = document.getElementById(`view-${tool}`);
   if (activeSection) activeSection.classList.add('active');
 
-  switch (route) {
-    case 'dashboard':
-      renderDashboard();
+  switch (tool) {
+    case 'home':
+      renderHome();
+      break;
+    case 'hub':
+      renderHub(cert);
       break;
     case 'study': {
-      const cert = parts[2];
-      const file = parts[3];
-      if (cert && file) loadStudyModule(cert, file);
-      else renderStudySelector(cert || 'dp700');
+      const file = ui.params[0];
+      if (file) loadStudyModule(cert.id, file);
+      else renderStudySelector(cert.id);
       break;
     }
     case 'cards':

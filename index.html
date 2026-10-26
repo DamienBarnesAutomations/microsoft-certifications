@@ -53,7 +53,7 @@
   <script src="js/srs.js" defer></script>
   <script src="js/data.js" defer></script>
   <script src="js/stores.js" defer></script>
-  <script src="js/views/dashboard.js" defer></script>
+  <script src="js/views/home.js" defer></script>
   <script src="js/views/study.js" defer></script>
   <script src="js/views/cards.js" defer></script>
   <script src="js/views/flashcards.js" defer></script>
@@ -74,85 +74,51 @@
 
   <div class="app-container" x-data>
 
-    <!-- Sidebar navigation menu (Desktop, 768px+) -->
+    <!-- Sidebar (desktop). Home shows only the brand; inside a certification it shows that
+         certification's tools. -->
     <aside class="sidebar">
-      <div class="brand">
+      <a class="brand" href="#/">
         <div>
           <span class="brand-logo">FabricPrep</span>
           <div class="brand-sub">Certification Hub</div>
         </div>
-      </div>
+      </a>
+      <template x-if="$store.ui.certInfo">
+        <div class="sidebar-cert">
+          <a href="#/" class="sidebar-back">← All certifications</a>
+          <div class="sidebar-cert-code" x-text="$store.ui.certInfo.code"></div>
+          <div class="sidebar-cert-title" x-text="$store.ui.certInfo.title"></div>
+        </div>
+      </template>
       <ul class="nav-menu">
-        <li class="nav-item" :class="$store.ui.route === 'dashboard' && 'active'"><a href="#/dashboard"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'study' && 'active'"><a href="#/study"><span class="nav-icon">📖</span><span>Study Guides</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'cards' && 'active'"><a href="#/cards"><span class="nav-icon">🗂️</span><span>Concept Cards</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'flashcards' && 'active'"><a href="#/flashcards"><span class="nav-icon">⚡</span><span>Flashcards</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'test' && 'active'"><a href="#/test"><span class="nav-icon">📝</span><span>Practice Exams</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'review' && 'active'"><a href="#/review"><span class="nav-icon">🔁</span><span>Spaced Review</span></a></li>
-        <li class="nav-item" :class="$store.ui.route === 'projects' && 'active'"><a href="#/projects"><span class="nav-icon">🛠️</span><span>Hands-on Labs</span></a></li>
+        <li class="nav-item" :class="$store.ui.tool === 'home' && 'active'" x-show="!$store.ui.cert"><a href="#/"><span class="nav-icon">🏠</span><span>Certifications</span></a></li>
+        <li class="nav-item" :class="$store.ui.tool === 'hub' && 'active'" x-show="$store.ui.cert"><a :href="'#/' + $store.ui.cert"><span class="nav-icon">🏠</span><span>Overview</span></a></li>
+        <template x-for="t in $store.ui.tools" :key="t.id">
+          <li class="nav-item" :class="$store.ui.tool === t.id && 'active'"><a :href="'#/' + $store.ui.cert + '/' + t.id"><span class="nav-icon" x-text="t.icon"></span><span x-text="t.label"></span></a></li>
+        </template>
       </ul>
-      <div class="sidebar-footer"><p>Current version 3.0</p></div>
     </aside>
 
-    <!-- Bottom Navigation Bar (Mobile, default) -->
+    <!-- Bottom navigation (mobile): same items as the sidebar -->
     <nav class="bottom-nav">
-      <a href="#/dashboard" class="bottom-nav-item" :class="$store.ui.route === 'dashboard' && 'active'"><span class="bottom-nav-icon">🏠</span><span>Home</span></a>
-      <a href="#/study" class="bottom-nav-item" :class="$store.ui.route === 'study' && 'active'"><span class="bottom-nav-icon">📖</span><span>Guides</span></a>
-      <a href="#/flashcards" class="bottom-nav-item" :class="$store.ui.route === 'flashcards' && 'active'"><span class="bottom-nav-icon">⚡</span><span>Flash</span></a>
-      <a href="#/test" class="bottom-nav-item" :class="$store.ui.route === 'test' && 'active'"><span class="bottom-nav-icon">📝</span><span>Exams</span></a>
-      <a href="#/review" class="bottom-nav-item" :class="$store.ui.route === 'review' && 'active'">
-        <span class="bottom-nav-icon">🔁</span><span>Review</span>
-      </a>
-      <a href="#/cards" class="bottom-nav-item" :class="$store.ui.route === 'cards' && 'active'"><span class="bottom-nav-icon">🗂️</span><span>Cards</span></a>
-      <a href="#/projects" class="bottom-nav-item" :class="$store.ui.route === 'projects' && 'active'"><span class="bottom-nav-icon">🛠️</span><span>Labs</span></a>
+      <a href="#/" class="bottom-nav-item" :class="$store.ui.tool === 'home' && 'active'"><span class="bottom-nav-icon">🏠</span><span x-text="$store.ui.cert ? 'All' : 'Home'"></span></a>
+      <a :href="'#/' + $store.ui.cert" class="bottom-nav-item" x-show="$store.ui.cert" :class="$store.ui.tool === 'hub' && 'active'"><span class="bottom-nav-icon">📍</span><span x-text="$store.ui.certInfo && $store.ui.certInfo.code"></span></a>
+      <template x-for="t in $store.ui.tools" :key="t.id">
+        <a :href="'#/' + $store.ui.cert + '/' + t.id" class="bottom-nav-item" :class="$store.ui.tool === t.id && 'active'"><span class="bottom-nav-icon" x-text="t.icon"></span><span x-text="t.short"></span></a>
+      </template>
     </nav>
 
     <main class="main-content">
 
-      <!-- 🏠 DASHBOARD -->
-      <section id="view-dashboard" class="view-section active">
-        <h1>Welcome Back, Candidate</h1>
-        <p class="subtitle">Here is a summary of your Microsoft Certification progress.</p>
-
-        <div class="dashboard-grid">
-          <div class="glass-panel welcome-panel" style="display:flex; flex-direction:column; justify-content:space-between;">
-            <div>
-              <h2 style="margin-bottom:8px;">Ready to Level Up?</h2>
-              <p style="color:var(--text-secondary); line-height:1.6;">Maintain your momentum. Answer spaced-review questions daily to lock in retention.</p>
-            </div>
-
-            <div class="dashboard-stats">
-              <div class="stat-card" style="border-color: rgba(245, 158, 11, 0.2);">
-                <div class="stat-val" id="dash-streak-count" style="color: var(--color-warning);">0</div>
-                <div class="stat-lbl">🔥 Day Streak</div>
-              </div>
-              <div class="stat-card" style="border-color: rgba(16, 185, 129, 0.2);">
-                <div class="stat-val" id="dash-completed-guides" style="color: var(--color-success);">0</div>
-                <div class="stat-lbl">📖 Units Read</div>
-              </div>
-              <div class="stat-card" style="border-color: rgba(99, 102, 241, 0.2);">
-                <div class="stat-val" id="dash-mastered-cards" style="color: var(--accent-indigo);">0</div>
-                <div class="stat-lbl">⚡ Mastered</div>
-              </div>
-              <div class="stat-card" style="border-color: rgba(20, 184, 166, 0.2);">
-                <div class="stat-val" id="dash-practice-score" style="color: var(--accent-teal);">0%</div>
-                <div class="stat-lbl">📝 Avg Exam</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass-panel stat-card clickable" id="dash-due-card" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
-            <div style="font-size: 2.5rem; margin-bottom: 8px;">🔁</div>
-            <div class="stat-val" id="dash-due-review" style="color: var(--color-warning);">0</div>
-            <h3 style="margin: 4px 0;">Due for Review</h3>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height:1.5;">Tap to start today's spaced-review queue.</p>
-          </div>
-        </div>
-
-        <h2 style="margin-top:32px; margin-bottom:8px;">Certifications Overview</h2>
-        <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">Select an exam package to view its modules and study guides.</p>
-        <div class="certs-grid" id="dash-certs-grid"></div>
+      <!-- Home: pick a certification -->
+      <section id="view-home" class="view-section active">
+        <h1>Choose a Certification</h1>
+        <p class="subtitle">Pick an exam to open its study guides, cards, practice exams and review. <span class="streak-pill">🔥 <span id="home-streak">0</span> day streak</span></p>
+        <div class="certs-grid" id="home-certs-grid"></div>
       </section>
+
+      <!-- Certification hub, filled in by renderHub() -->
+      <section id="view-hub" class="view-section"></section>
 
       <section id="view-study" class="view-section"></section>
       <section id="view-cards" class="view-section"></section>
@@ -161,7 +127,7 @@
       <section id="view-review" class="view-section"></section>
 
       <section id="view-projects" class="view-section">
-        <h1>Hands-on Implementation Labs</h1>
+        <h1>DP-700 Hands-on Labs</h1>
         <p class="subtitle">Complete end-to-end scenarios on Microsoft Fabric to cement conceptual patterns.</p>
         <div id="concepts-projects-container" style="display: flex; flex-direction: column; gap: 20px;"></div>
       </section>

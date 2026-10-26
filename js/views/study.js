@@ -6,24 +6,8 @@ function renderStudySelector(certId) {
   const container = document.getElementById('view-study');
   container.innerHTML = '';
 
-  let tabsHtml = `<div class="glass-panel" style="margin-bottom: 24px; padding: 12px 20px;">
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">`;
-
-  const certList = [
-    { id: 'dp700', label: 'DP-700 Fabric Engineer' },
-    { id: 'dp600', label: 'DP-600 Fabric Analytics' },
-    { id: 'dp300', label: 'DP-300 Azure DB Admin' },
-    { id: 'dp750', label: 'DP-750 Databricks' },
-  ];
-
-  certList.forEach((item) => {
-    const activeClass = item.id === certId ? 'btn-primary' : 'btn-secondary';
-    tabsHtml += `<button class="btn ${activeClass}" onclick="window.location.hash='#/study/${item.id}'">${item.label}</button>`;
-  });
-  tabsHtml += `</div></div>`;
-
   let listHtml = `
-    <h1>${certId.toUpperCase()} Study Modules</h1>
+    <h1>${DATA.getCert(certId).code} Study Guides</h1>
     <p class="subtitle">Select a sub-module study guide to read the official reference material.</p>
     <div style="display: flex; flex-direction: column; gap: 12px;">
   `;
@@ -40,7 +24,7 @@ function renderStudySelector(certId) {
 
       listHtml += `
         <div class="glass-panel study-list-item" style="border-left: 4px solid ${isCompleted ? 'var(--color-success)' : 'var(--accent-indigo)'};"
-             onclick="window.location.hash='#/study/${certId}/${m.file}'">
+             onclick="window.location.hash='#/${certId}/study/${m.file}'">
           <div style="display: flex; align-items: center; gap: 16px; min-width: 0;">
             <span style="font-size: 1.25rem;">${checkIcon}</span>
             <div style="min-width: 0;">
@@ -55,7 +39,7 @@ function renderStudySelector(certId) {
   }
   listHtml += `</div>`;
 
-  container.innerHTML = tabsHtml + listHtml;
+  container.innerHTML = listHtml;
 }
 
 function loadStudyModule(certId, filename) {
@@ -64,7 +48,7 @@ function loadStudyModule(certId, filename) {
   container.innerHTML = `
     <div class="reader-layout">
       <div class="glass-panel reader-sidebar">
-        <button class="btn btn-secondary" onclick="window.location.hash='#/study/${certId}'" style="width:100%; margin-bottom: 20px;">← Back to Modules</button>
+        <button class="btn btn-secondary" onclick="window.location.hash='#/${certId}/study'" style="width:100%; margin-bottom: 20px;">← Back to Guides</button>
         <h3 style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px;">Table of Contents</h3>
         <ul class="toc-list" id="toc-container"></ul>
       </div>
@@ -97,7 +81,6 @@ function loadStudyModule(certId, filename) {
     const wasCompleted = Alpine.store('progress').isRead(certId, filename);
     Alpine.store('progress').toggle(certId, filename);
     updateReadToggleButton(toggleBtn, !wasCompleted);
-    renderDashboard();
   };
 
   const modules = DATA.MODULE_CONFIG[certId] || [];
@@ -108,14 +91,14 @@ function loadStudyModule(certId, filename) {
 
   if (currentIdx > 0) {
     prevBtn.disabled = false;
-    prevBtn.onclick = () => { window.location.hash = `#/study/${certId}/${modules[currentIdx - 1].file}`; };
+    prevBtn.onclick = () => { window.location.hash = `#/${certId}/study/${modules[currentIdx - 1].file}`; };
   } else {
     prevBtn.disabled = true;
   }
 
   if (currentIdx < modules.length - 1 && currentIdx !== -1) {
     nextBtn.disabled = false;
-    nextBtn.onclick = () => { window.location.hash = `#/study/${certId}/${modules[currentIdx + 1].file}`; };
+    nextBtn.onclick = () => { window.location.hash = `#/${certId}/study/${modules[currentIdx + 1].file}`; };
   } else {
     nextBtn.disabled = true;
   }
@@ -133,7 +116,7 @@ function loadStudyModule(certId, filename) {
           <p style="font-size: 2rem; margin-bottom: 12px;">⚠️</p>
           <h3>Failed to load study guide</h3>
           <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">The requested file (${filename}) could not be retrieved.</p>
-          <button class="btn btn-secondary" onclick="window.location.hash='#/study/${certId}'">Return to list</button>
+          <button class="btn btn-secondary" onclick="window.location.hash='#/${certId}/study'">Return to list</button>
         </div>
       `;
     });

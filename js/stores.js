@@ -2,9 +2,13 @@
 // which fires before Alpine hydrates the DOM, so this works regardless of <script> load order
 // relative to the Alpine CDN tag (as long as this file is also present before DOMContentLoaded).
 document.addEventListener('alpine:init', () => {
+  // cert: the certification currently open (null on the home screen); tool: 'hub' or a TOOLS id.
   Alpine.store('ui', {
-    route: 'dashboard',
-    routeParams: [],
+    cert: null,
+    certInfo: null,
+    tool: 'home',
+    params: [],
+    tools: [],
   });
 
   Alpine.store('progress', {
@@ -65,17 +69,24 @@ document.addEventListener('alpine:init', () => {
       if (this.sessions.length > 50) this.sessions = this.sessions.slice(0, 50);
       localStorage.setItem('fabric_exam_history', JSON.stringify(this.sessions));
     },
-    clear() {
-      this.sessions = [];
-      localStorage.removeItem('fabric_exam_history');
+    // Clears only the given certification's sessions.
+    clear(certId) {
+      this.sessions = this.sessions.filter((s) => !this.forCert(certId).includes(s));
+      localStorage.setItem('fabric_exam_history', JSON.stringify(this.sessions));
     },
-    averageScore() {
-      if (this.sessions.length === 0) return 0;
-      return Math.round(this.sessions.reduce((sum, s) => sum + s.pct, 0) / this.sessions.length);
+    // Sessions store the cert as 'DP-600' (uppercase code); callers pass the id ('dp600').
+    forCert(certId) {
+      return this.sessions.filter((s) => String(s.cert).toLowerCase().replace('-', '') === certId);
     },
-    passRate() {
-      if (this.sessions.length === 0) return 0;
-      return Math.round((this.sessions.filter((s) => s.pass).length / this.sessions.length) * 100);
+    averageScore(certId) {
+      const list = this.forCert(certId);
+      if (list.length === 0) return 0;
+      return Math.round(list.reduce((sum, s) => sum + s.pct, 0) / list.length);
+    },
+    passRate(certId) {
+      const list = this.forCert(certId);
+      if (list.length === 0) return 0;
+      return Math.round((list.filter((s) => s.pass).length / list.length) * 100);
     },
   });
 

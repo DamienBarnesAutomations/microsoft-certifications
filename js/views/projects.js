@@ -1,4 +1,4 @@
-// Hands-on Labs / projects view (DP-700 only, as in the legacy app — hard-coded project list).
+// Hands-on Labs / projects view (DP-700 only — see CERT_DETAILS.tools in js/data.js; hard-coded project list).
 function renderProjects() {
   const container = document.getElementById('concepts-projects-container');
   if (!container) return;

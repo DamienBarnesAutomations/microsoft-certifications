@@ -13,7 +13,7 @@ function initExamHub() {
 
   container.innerHTML = `
     <div class="exam-layout" id="exam-hub-stage">
-      <h1>Mock Practice Exams</h1>
+      <h1>${Alpine.store('ui').certInfo.code} Practice Exams</h1>
       <p class="subtitle">Simulate real-world exam conditions with explanations and timer tracking.</p>
 
       <div class="exam-config-grid" id="exam-dashboard-columns">
@@ -21,15 +21,6 @@ function initExamHub() {
           <h2>Configure Practice Exam</h2>
           <div style="display: flex; flex-direction: column; gap: 16px;">
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 6px;">
-                <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Exam Module</label>
-                <select id="exam-cert-select">
-                  <option value="dp700">DP-700 Fabric Data Engineer</option>
-                  <option value="dp600">DP-600 Fabric Analytics Engineer</option>
-                  <option value="dp300">DP-300 Azure DB Administrator</option>
-                  <option value="both">Mixed Fabric (600 + 700)</option>
-                </select>
-              </div>
               <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 6px;">
                 <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Sub-Module</label>
                 <select id="exam-module-select">
@@ -81,13 +72,7 @@ function initExamHub() {
     </div>
   `;
 
-  const certSelector = document.getElementById('exam-cert-select');
   const modSelector = document.getElementById('exam-module-select');
-
-  certSelector.onchange = () => {
-    updateExamModulesDropdown();
-    updateExamPoolCount();
-  };
   modSelector.onchange = updateExamPoolCount;
 
   updateExamModulesDropdown();
@@ -96,7 +81,7 @@ function initExamHub() {
 }
 
 function updateExamModulesDropdown() {
-  const cert = document.getElementById('exam-cert-select').value;
+  const cert = currentCertId();
   const selector = document.getElementById('exam-module-select');
   selector.innerHTML = '<option value="all">All Modules</option>';
 
@@ -114,16 +99,11 @@ function getExamQuestionsPool(cert) {
   if (cert === 'dp700' && window.DP700_QUESTIONS) return window.DP700_QUESTIONS.map((q) => ({ ...q, cert: 'DP-700' }));
   if (cert === 'dp600' && window.DP600_QUESTIONS) return window.DP600_QUESTIONS.map((q) => ({ ...q, cert: 'DP-600' }));
   if (cert === 'dp300' && window.DP300_QUESTIONS) return window.DP300_QUESTIONS.map((q) => ({ ...q, cert: 'DP-300' }));
-  if (cert === 'both') {
-    const pool600 = (window.DP600_QUESTIONS || []).map((q) => ({ ...q, cert: 'DP-600' }));
-    const pool700 = (window.DP700_QUESTIONS || []).map((q) => ({ ...q, cert: 'DP-700' }));
-    return [...pool600, ...pool700];
-  }
   return [];
 }
 
 function updateExamPoolCount() {
-  const cert = document.getElementById('exam-cert-select').value;
+  const cert = currentCertId();
   const moduleVal = document.getElementById('exam-module-select').value;
 
   let pool = getExamQuestionsPool(cert);
@@ -164,7 +144,7 @@ function isAnswerCorrect(q, ans) {
 }
 
 function startPracticeExam() {
-  const cert = document.getElementById('exam-cert-select').value;
+  const cert = currentCertId();
   const moduleVal = document.getElementById('exam-module-select').value;
   const countSelect = document.getElementById('exam-count-select').value;
 
@@ -416,7 +396,6 @@ function finishPracticeExam() {
   Alpine.store('examHistory').add(session);
 
   renderExamResults(session);
-  renderDashboard();
 }
 
 function renderExamResults(session) {
@@ -553,10 +532,10 @@ function reviewExamAnswers(sessionId) {
 
 function renderExamHistory() {
   const container = document.getElementById('exam-history-container');
-  const h = Alpine.store('examHistory').sessions;
+  const h = Alpine.store('examHistory').forCert(currentCertId());
 
   document.getElementById('exam-stat-total').textContent = h.length;
-  document.getElementById('exam-stat-pass-rate').textContent = `${Alpine.store('examHistory').passRate()}%`;
+  document.getElementById('exam-stat-pass-rate').textContent = `${Alpine.store('examHistory').passRate(currentCertId())}%`;
 
   if (h.length === 0) {
     container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 30px 0;">No exam logs found. Ready for your first test?</div>`;
@@ -603,9 +582,8 @@ function renderExamHistory() {
 }
 
 function clearExamHistory() {
-  if (confirm('Clear all historical practice exam scores? This will reset statistics.')) {
-    Alpine.store('examHistory').clear();
+  if (confirm('Clear all practice exam scores for this certification?')) {
+    Alpine.store('examHistory').clear(currentCertId());
     renderExamHistory();
-    renderDashboard();
   }
 }

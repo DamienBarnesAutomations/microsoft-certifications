@@ -75,12 +75,33 @@ const MODULE_CONFIG = {
   ],
 };
 
-const CERT_DETAILS = [
-  { code: 'DP-700', id: 'dp700', title: 'Fabric Data Engineer' },
-  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer' },
-  { code: 'DP-300', id: 'dp300', title: 'Azure Database Administrator' },
-  { code: 'DP-750', id: 'dp750', title: 'Azure Databricks Data Engineer (Preview)' },
+// Every study tool the app has. `id` doubles as the route segment (#/<cert>/<id>) and the
+// suffix of its view section (#view-<id>).
+const TOOLS = [
+  { id: 'study', label: 'Study Guides', short: 'Guides', icon: '📖' },
+  { id: 'cards', label: 'Concept Cards', short: 'Cards', icon: '🗂️' },
+  { id: 'flashcards', label: 'Flashcards', short: 'Flash', icon: '⚡' },
+  { id: 'test', label: 'Practice Exams', short: 'Exams', icon: '📝' },
+  { id: 'review', label: 'Spaced Review', short: 'Review', icon: '🔁' },
+  { id: 'projects', label: 'Hands-on Labs', short: 'Labs', icon: '🛠️' },
 ];
+
+// `tools` lists which TOOLS each certification actually has content for.
+const CERT_DETAILS = [
+  { code: 'DP-700', id: 'dp700', title: 'Fabric Data Engineer', tools: ['study', 'cards', 'flashcards', 'test', 'review', 'projects'] },
+  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['study', 'cards', 'test', 'review'] },
+  { code: 'DP-300', id: 'dp300', title: 'Azure Database Administrator', tools: ['study', 'cards', 'test', 'review'] },
+  { code: 'DP-750', id: 'dp750', title: 'Azure Databricks Data Engineer (Preview)', tools: ['study'] },
+];
+
+function getCert(id) {
+  return CERT_DETAILS.find((c) => c.id === id) || null;
+}
+
+function getCertTools(id) {
+  const cert = getCert(id);
+  return cert ? TOOLS.filter((t) => cert.tools.includes(t.id)) : [];
+}
 
 // Full question pool across every cert that has one, each question tagged with its cert id.
 // This is the single catalog the SRS review queue and practice-exam pools both read from.
@@ -121,6 +142,9 @@ function getFlashcardModules() {
 const DATA = {
   MODULE_CONFIG,
   CERT_DETAILS,
+  TOOLS,
+  getCert,
+  getCertTools,
   buildQuestionCatalog,
   getQuestionModules,
   getConceptCardData,

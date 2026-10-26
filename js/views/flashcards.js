@@ -10,7 +10,7 @@ function initFlashcards() {
   const container = document.getElementById('view-flashcards');
 
   container.innerHTML = `
-    <h1>Interactive Study Flashcards</h1>
+    <h1>${Alpine.store('ui').certInfo.code} Flashcards</h1>
     <p class="subtitle">Flip and master 240+ certification concepts. Swipe or press Space to flip.</p>
 
     <div class="glass-panel" style="width: 100%; margin-bottom: 24px;">
@@ -118,7 +118,6 @@ function initFlashcards() {
       Alpine.store('flashcardProgress').reset();
       updateFlashcardProgressUI();
       renderFlashcard();
-      renderDashboard();
     }
   };
 
@@ -233,7 +232,6 @@ function rateActiveFlashcard(rating) {
     if (activeBtn) activeBtn.classList.add('active');
   }
 
-  renderDashboard();
 
   if (flashState.flipped && flashState.currentIdx < flashState.deck.length - 1) {
     setTimeout(() => navFlashcard(1), 300);
