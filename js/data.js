@@ -81,7 +81,7 @@ const TOOLS = [
   { id: 'study', label: 'Study Guides', short: 'Guides', icon: '📖' },
   { id: 'cards', label: 'Concept Cards', short: 'Cards', icon: '🗂️' },
   { id: 'flashcards', label: 'Flashcards', short: 'Flash', icon: '⚡' },
-  { id: 'test', label: 'Test Mode', short: 'Test', icon: '📝' },
+  { id: 'test', label: 'Test', short: 'Test', icon: '📝' },
   { id: 'review', label: 'Spaced Review', short: 'Review', icon: '🔁' },
   { id: 'projects', label: 'Hands-on Labs', short: 'Labs', icon: '🛠️' },
 ];

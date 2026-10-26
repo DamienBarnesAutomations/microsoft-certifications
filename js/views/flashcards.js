@@ -12,7 +12,6 @@ function initFlashcards() {
 
   container.innerHTML = `
     <h1>${Alpine.store('ui').certInfo.code} Flashcards</h1>
-    <p class="subtitle">Flip and master the concepts. Swipe or press Space to flip.</p>
 
     <div class="glass-panel" style="width: 100%; margin-bottom: 24px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
@@ -27,8 +26,8 @@ function initFlashcards() {
             <option value="edge">Edge Cases</option>
           </select>
         </div>
-        <button id="btn-flash-shuffle" class="btn btn-secondary">🔀 Shuffle: ON</button>
-        <button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger); height: 42px;">Reset Progress</button>
+        <button id="btn-flash-shuffle" class="btn btn-secondary">🔀 On</button>
+        <button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger); height: 42px;">Reset</button>
       </div>
     </div>
 
@@ -97,7 +96,7 @@ function initFlashcards() {
   const shuffleBtn = document.getElementById('btn-flash-shuffle');
   shuffleBtn.onclick = () => {
     flashState.filters.shuffle = !flashState.filters.shuffle;
-    shuffleBtn.textContent = flashState.filters.shuffle ? '🔀 Shuffle: ON' : '🔀 Shuffle: OFF';
+    shuffleBtn.textContent = flashState.filters.shuffle ? '🔀 On' : '🔀 Off';
     buildFlashcardDeck();
   };
 

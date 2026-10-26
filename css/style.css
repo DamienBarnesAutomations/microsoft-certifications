@@ -200,7 +200,8 @@ body {
 
 .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
 .view-section.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* opacity only: a transform here would make position:fixed children (the test's Next bar) relative to the view */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Glassmorphism components */
 .glass-panel {
@@ -646,3 +647,115 @@ a.brand { text-decoration: none; color: inherit; }
 .flash-filter > summary::after { content: '▾'; transition: transform 0.2s; }
 .flash-filter[open] > summary::after { transform: rotate(180deg); }
 .flash-filter[open] > summary { margin-bottom: 12px; }
+
+/* ==================================================================== */
+/* Flat, mobile-first layer: no boxed panels, little chrome, short pages. */
+/* Later rules intentionally override the earlier card-style ones.        */
+/* ==================================================================== */
+.glass-panel, .glass-panel:hover { background: none; border: none; border-radius: 0; box-shadow: none; backdrop-filter: none; padding: 0; margin-bottom: 16px; }
+.is-hidden { display: none; }
+
+h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; background: none; -webkit-text-fill-color: currentColor; color: var(--text-primary); }
+h2 { font-size: 1rem; margin-bottom: 8px; }
+.subtitle { display: none; }
+.main-content { padding: 12px 16px 24px; }
+
+.btn { border-radius: 6px; box-shadow: none; }
+.btn-primary { background: var(--accent-indigo); }
+.btn-primary:hover, .btn-accent:hover { transform: none; box-shadow: none; }
+.btn-accent { background: var(--accent-teal); box-shadow: none; }
+select, input[type="text"], input[type="number"] { border-radius: 6px; }
+
+/* Top bar: back, certification, mode tabs */
+.topbar { height: 48px; gap: 8px; padding: 0 16px; background: var(--bg-primary); backdrop-filter: none; }
+.topbar-back { font-size: 1.6rem; min-width: 28px; justify-content: center; }
+.topbar-title { flex: 0 0 auto; font-size: 1rem; }
+.topbar-tabs { display: flex; margin-left: auto; height: 100%; }
+.topbar-tab { display: flex; align-items: center; padding: 0 12px; color: var(--text-secondary); text-decoration: none; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid transparent; }
+.topbar-tab.active { color: var(--text-primary); border-bottom-color: var(--accent-indigo); }
+.bottom-nav { display: none !important; }
+.main-content { padding-bottom: 24px; }
+
+/* Home: plain list */
+.certs-grid { gap: 0; margin-top: 4px; }
+.cert-card, .cert-card:hover { display: block; padding: 14px 0; margin: 0; border-bottom: 1px solid var(--surface-border); transform: none; box-shadow: none; }
+.cert-code { font-size: 1.05rem; margin-bottom: 2px; }
+.cert-title { margin-bottom: 4px; }
+.streak-pill { display: block; margin: 0 0 8px; }
+
+/* Test config: short */
+.exam-layout { max-width: 720px; }
+.collapse-filter > summary { list-style: none; cursor: pointer; min-height: var(--tap-target-min); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border: 1px solid var(--surface-border); border-radius: 6px; font-weight: 600; }
+.collapse-filter > summary::-webkit-details-marker { display: none; }
+.collapse-filter > summary::after { content: '▾'; }
+.collapse-filter[open] > summary::after { content: '▴'; }
+.collapse-filter[open] > summary { margin-bottom: 8px; }
+.exam-actions, .has-bottom-nav .exam-actions { position: static; margin: 12px 0 0; padding: 0; background: none; border: none; backdrop-filter: none; }
+.exam-actions-row { max-width: none; }
+.exam-history { margin-top: 20px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.section-head h2 { margin: 0; }
+.section-meta { font-weight: 500; font-size: 0.8rem; color: var(--text-muted); margin-left: 6px; }
+
+/* Topic picker: flat */
+.topic-picker { gap: 8px; }
+.topic-domain { border: none; border-radius: 0; }
+.topic-domain-head, .topic-domain-head:hover { background: none; border: none; border-radius: 0; padding: 4px 0; font-weight: 700; }
+.topic-chips { padding: 0 0 8px 32px; gap: 6px; }
+.topic-chip { border-radius: 6px; min-height: 40px; padding: 0 12px; }
+.flash-filter > summary, .flash-filter[open] > summary { border-radius: 6px; background: none; border-color: var(--surface-border); }
+
+/* Test: focus mode, one screen per question */
+body.exam-active .topbar, body.exam-active .sidebar { display: none; }
+body.exam-active .main-content { margin-left: 0; padding: 0 16px 88px; }
+.exam-header { margin: 0; padding: 10px 0; border: none; flex-wrap: nowrap; }
+.exam-exit { width: 36px; height: 36px; background: none; border: none; color: var(--text-secondary); font-size: 1.1rem; cursor: pointer; }
+.exam-count { flex: 1; text-align: center; font-weight: 700; color: var(--text-secondary); }
+.timer-box { font-size: 0.95rem; min-width: 52px; justify-content: flex-end; }
+.exam-progress { height: 3px; background: var(--surface-border); margin-bottom: 16px; }
+.exam-progress-fill { height: 100%; background: var(--accent-indigo); }
+.question-card { margin-top: 0; }
+.question-body { margin-bottom: 8px; }
+.question-meta { font-size: 0.75rem; margin-bottom: 8px; }
+.question-text { font-size: 1.05rem; margin-bottom: 12px; }
+.options-list { gap: 0; }
+.option-item, .option-item:hover { background: none; border: none; border-bottom: 1px solid var(--surface-border); border-radius: 0; padding: 14px 4px; }
+.option-item.selected { border-left: 3px solid var(--accent-indigo); background: rgba(99, 102, 241, 0.08); }
+.option-item.correct { border-left: 3px solid var(--color-success); background: rgba(16, 185, 129, 0.1); }
+.option-item.wrong { border-left: 3px solid var(--color-danger); background: rgba(239, 68, 68, 0.1); }
+.option-badge { border-radius: 4px; }
+.explanation-box { border-radius: 0; margin-top: 12px; padding: 12px; }
+.exam-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; margin: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--bg-primary); border-top: 1px solid var(--surface-border); flex-wrap: nowrap; }
+.exam-nav .btn { flex: 1; min-width: 0; }
+
+/* Results and tables */
+.stat-card { background: none; border: none; border-radius: 0; padding: 8px; }
+.score-circle { border-width: 8px; }
+.history-table { min-width: 0; font-size: 0.82rem; }
+.history-table th, .history-table td { padding: 8px 6px; }
+
+/* Flashcards */
+.flashcard { border-radius: 8px; }
+.card-face { border-radius: 8px; box-shadow: none; }
+
+@media (min-width: 768px) {
+  .main-content { padding: 32px 40px; }
+  .topbar { display: none; }
+  .exam-nav { left: var(--sidebar-width); }
+  body.exam-active .exam-nav { left: 0; }
+}
+
+@media (max-width: 767px) {
+  #view-flashcards > h1, #view-test .exam-layout > h1 { display: none; }
+  #view-flashcards .glass-panel { margin-bottom: 8px; }
+  #view-flashcards .glass-panel > div { gap: 8px !important; }
+  #view-flashcards .glass-panel .field-label, #view-flashcards label[style] { display: none; }
+  #view-flashcards .glass-panel > div > div { min-width: 0 !important; flex: 1 1 120px !important; }
+  #view-flashcards .glass-panel .btn { padding: 0 12px; height: 44px !important; }
+}
+@media (max-width: 767px) {
+  #view-flashcards #flash-filter-block { flex: 1 1 100% !important; }
+  #view-flashcards .glass-panel > div > div:nth-child(2) { flex: 3 1 0 !important; }
+  #view-flashcards .glass-panel > div > .btn { flex: 1 1 0; }
+  #view-flashcards kbd, #view-flashcards .flashcards-layout > div:last-child { display: none; }
+}

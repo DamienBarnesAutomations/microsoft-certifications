@@ -13,50 +13,28 @@ function initExamHub() {
 
   container.innerHTML = `
     <div class="exam-layout" id="exam-hub-stage">
-      <h1>${Alpine.store('ui').certInfo.code} Practice Exams</h1>
-      <p class="subtitle">Simulate real-world exam conditions with explanations and timer tracking.</p>
+      <h1>${Alpine.store('ui').certInfo.code} Test</h1>
 
-      <div class="exam-config-grid" id="exam-dashboard-columns">
-        <div class="glass-panel">
-          <h2>Configure Practice Exam</h2>
-          <div style="display: flex; flex-direction: column; gap: 16px;">
-            <div id="exam-filter-block" class="filter-stack"></div>
+      <div id="exam-filter-block"></div>
 
-            <div class="exam-actions">
-              <div id="exam-pool-counter" class="exam-pool-counter">Loading pools...</div>
-              <div class="exam-actions-row">
-                <select id="exam-count-select" aria-label="Question count">
-                  <option value="10">10 questions</option>
-                  <option value="20" selected>20 questions</option>
-                  <option value="30">30 questions</option>
-                  <option value="50">50 questions</option>
-                  <option value="all">All available</option>
-                </select>
-                <button class="btn btn-primary" onclick="startPracticeExam()">Start Test</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass-panel">
-          <h2>Stats Overview</h2>
-          <div style="display:flex; flex-direction:column; gap:16px;">
-            <div class="stat-card">
-              <div class="stat-val" id="exam-stat-total">0</div>
-              <div class="stat-lbl">Attempts</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-val" id="exam-stat-pass-rate">0%</div>
-              <div class="stat-lbl">Pass Rate</div>
-            </div>
-          </div>
+      <div class="exam-actions">
+        <div id="exam-pool-counter" class="exam-pool-counter">Loading pools...</div>
+        <div class="exam-actions-row">
+          <select id="exam-count-select" aria-label="Question count">
+            <option value="10">10 questions</option>
+            <option value="20" selected>20 questions</option>
+            <option value="30">30 questions</option>
+            <option value="50">50 questions</option>
+            <option value="all">All available</option>
+          </select>
+          <button class="btn btn-primary" onclick="startPracticeExam()">Start</button>
         </div>
       </div>
 
-      <div class="glass-panel" style="margin-top: 24px;" id="exam-history-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-          <h2 style="margin:0;">Test History</h2>
-          <button class="btn btn-danger btn-sm" onclick="clearExamHistory()">Clear Logs</button>
+      <div id="exam-history-card" class="exam-history">
+        <div class="section-head">
+          <h2>History <span class="section-meta" id="exam-stat-line"></span></h2>
+          <button class="btn btn-danger btn-sm" onclick="clearExamHistory()">Clear</button>
         </div>
         <div id="exam-history-container" class="history-table-container"></div>
       </div>
@@ -78,7 +56,7 @@ function renderExamFilters() {
   const outline = DATA.getOutline(cert);
 
   if (!outline) {
-    block.innerHTML = `<div class="field"><label class="field-label">Sub-Module</label><select id="exam-module-select"><option value="all">All Modules</option></select></div>`;
+    block.innerHTML = `<select id="exam-module-select" aria-label="Module"><option value="all">All modules</option></select>`;
     const sel = document.getElementById('exam-module-select');
     DATA.getQuestionModules(cert).forEach((m, i) => {
       const opt = document.createElement('option');
@@ -90,15 +68,27 @@ function renderExamFilters() {
     return;
   }
 
+  // The picker is long, so it sits behind a button; the button says what is selected.
+  block.innerHTML = `
+    <details class="collapse-filter">
+      <summary id="exam-filter-summary">Topics: everything</summary>
+      <div id="exam-picker"></div>
+    </details>`;
+  const picker = document.getElementById('exam-picker');
+  const summary = document.getElementById('exam-filter-summary');
   const pool = getExamQuestionsPool(cert);
-  renderTopicPicker(block, outline, (node) => pool.filter((q) => DATA.skillInNode(q.skill, node)).length,
-    'Topics to be tested on', updateExamPoolCount);
+  renderTopicPicker(picker, outline, (node) => pool.filter((q) => DATA.skillInNode(q.skill, node)).length,
+    'Pick topics', () => {
+      const n = pickedTopics(picker).length;
+      summary.textContent = n ? `Topics: ${n} selected` : 'Topics: everything';
+      updateExamPoolCount();
+    });
 }
 
 function examFilterValue() {
   const moduleSel = document.getElementById('exam-module-select');
   if (moduleSel) return moduleSel.value || 'all';
-  const ticked = pickedTopics(document.getElementById('exam-filter-block'));
+  const ticked = pickedTopics(document.getElementById('exam-picker'));
   return ticked.length ? ticked.join(',') : 'all';
 }
 
@@ -188,6 +178,7 @@ function startPracticeExam() {
 
   if (examState.activeExamInterval) clearInterval(examState.activeExamInterval);
   examState.activeExamInterval = setInterval(updateExamTimer, 1000);
+  document.body.classList.add('exam-active');
 
   renderActiveQuestion();
 }
@@ -220,16 +211,13 @@ function renderActiveQuestion() {
   stage.innerHTML = `
     <div class="exam-layout question-card">
       <div class="exam-header">
-        <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-secondary);">
-          Question ${exam.currentIndex + 1} of ${exam.questions.length}
-        </div>
-        <div class="timer-box">
-          <span>⏱️</span>
-          <span id="active-exam-timer">00:00</span>
-        </div>
+        <button class="exam-exit" onclick="exitExam()" aria-label="Exit test">✕</button>
+        <div class="exam-count">${exam.currentIndex + 1} / ${exam.questions.length}</div>
+        <div class="timer-box"><span id="active-exam-timer">00:00</span></div>
       </div>
+      <div class="exam-progress"><div class="exam-progress-fill" style="width: ${(exam.currentIndex / exam.questions.length) * 100}%"></div></div>
 
-      <div class="glass-panel">
+      <div class="question-body">
         <div class="question-meta">${q.cert} • ${questionTopicLabel(q)}${typeBadge}</div>
         <div class="question-text">${q.text}</div>
 
@@ -368,9 +356,19 @@ function nextExamQuestion() {
   }
 }
 
+function exitExam() {
+  if (!confirm('Leave this test? Your answers so far will be lost.')) return;
+  if (examState.activeExamInterval) clearInterval(examState.activeExamInterval);
+  examState.activeExamInterval = null;
+  examState.activeExam = null;
+  document.body.classList.remove('exam-active');
+  initExamHub();
+}
+
 function finishPracticeExam() {
   if (examState.activeExamInterval) clearInterval(examState.activeExamInterval);
   examState.activeExamInterval = null;
+  document.body.classList.remove('exam-active');
 
   const exam = examState.activeExam;
   let correct = 0, wrong = 0, skipped = 0;
@@ -482,7 +480,7 @@ function renderExamResults(session) {
         </div>
 
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary" onclick="initExamHub()">Exit Test Hub</button>
+          <button class="btn btn-primary" onclick="initExamHub()">Done</button>
           <button class="btn btn-secondary" onclick="reviewExamAnswers(${session.id})">Review Answers</button>
         </div>
       </div>
@@ -581,8 +579,8 @@ function renderExamHistory() {
   const container = document.getElementById('exam-history-container');
   const h = Alpine.store('examHistory').forCert(currentCertId());
 
-  document.getElementById('exam-stat-total').textContent = h.length;
-  document.getElementById('exam-stat-pass-rate').textContent = `${Alpine.store('examHistory').passRate(currentCertId())}%`;
+  const statLine = document.getElementById('exam-stat-line');
+  if (statLine) statLine.textContent = h.length ? `${h.length} attempts · ${Alpine.store('examHistory').passRate(currentCertId())}% passed` : '';
 
   if (h.length === 0) {
     container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 30px 0;">No exam logs found. Ready for your first test?</div>`;

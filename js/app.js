@@ -41,6 +41,12 @@ function handleRouting() {
   }
 
   let tool = cert ? parts[1] || 'hub' : 'home';
+
+  // A certification has no landing page of its own: open its first mode directly.
+  if (cert && tool === 'hub' && cert.tools.length) {
+    window.location.replace(`#/${cert.id}/${cert.tools[0]}`);
+    return;
+  }
   if (cert && tool !== 'hub' && !cert.tools.includes(tool)) {
     window.location.hash = `#/${cert.id}`;
     return;
@@ -51,10 +57,9 @@ function handleRouting() {
   ui.tool = tool;
   ui.params = parts.slice(2);
   ui.tools = cert ? DATA.getCertTools(cert.id) : [];
-  // Sidebar rows: home alone, or the open cert's overview plus its tools.
+  // Sidebar rows: home alone, or the open certification's modes.
   ui.nav = cert
-    ? [{ id: 'hub', label: 'Overview', icon: '🏠', href: `#/${cert.id}` },
-       ...ui.tools.map((t) => ({ id: t.id, label: t.label, icon: t.icon, href: `#/${cert.id}/${t.id}` }))]
+    ? ui.tools.map((t) => ({ id: t.id, label: t.label, icon: t.icon, href: `#/${cert.id}/${t.id}` }))
     : [{ id: 'home', label: 'Certifications', icon: '🏠', href: '#/' }];
 
   if (tool !== 'test' && examState.activeExamInterval) {
@@ -62,6 +67,8 @@ function handleRouting() {
     examState.activeExamInterval = null;
     examState.activeExam = null;
   }
+
+  document.body.classList.toggle('exam-active', !!examState.activeExam);
 
   document.querySelectorAll('.view-section').forEach((section) => section.classList.remove('active'));
   const activeSection = document.getElementById(`view-${tool}`);

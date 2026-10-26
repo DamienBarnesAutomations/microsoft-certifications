@@ -77,7 +77,7 @@
     <p style="color:#64748b; font-size:0.9rem; margin-top:8px;">Initializing study data engines...</p>
   </div>
 
-  <div class="app-container" x-data :class="$store.ui.tools.length > 1 && 'has-bottom-nav'">
+  <div class="app-container" x-data>
 
     <!-- Sidebar (desktop). Home shows only the brand; inside a certification it shows that
          certification's tools. -->
@@ -102,18 +102,16 @@
       </ul>
     </aside>
 
-    <!-- Mobile top bar: where you are (home or the open certification) and the way back. -->
+    <!-- Top bar (phones): back to all certifications, the open certification, and its modes as tabs -->
     <header class="topbar">
-      <a href="#/" class="topbar-back" x-show="$store.ui.cert" aria-label="All certifications">‹ All</a>
-      <a :href="$store.ui.cert ? '#/' + $store.ui.cert : '#/'" class="topbar-title" x-text="$store.ui.certInfo ? $store.ui.certInfo.code + ' · ' + $store.ui.certInfo.title : 'FabricPrep'"></a>
+      <a href="#/" class="topbar-back" :class="!$store.ui.cert && 'is-hidden'" aria-label="All certifications">‹</a>
+      <span class="topbar-title" x-text="$store.ui.certInfo ? $store.ui.certInfo.code : 'FabricPrep'"></span>
+      <nav class="topbar-tabs">
+        <template x-for="t in $store.ui.tools" :key="t.id">
+          <a :href="'#/' + $store.ui.cert + '/' + t.id" class="topbar-tab" :class="$store.ui.tool === t.id && 'active'" x-text="t.label"></a>
+        </template>
+      </nav>
     </header>
-
-    <!-- Bottom navigation (mobile): the open certification's tools only -->
-    <nav class="bottom-nav" x-show="$store.ui.cert">
-      <template x-for="t in $store.ui.tools" :key="t.id">
-        <a :href="'#/' + $store.ui.cert + '/' + t.id" class="bottom-nav-item" :class="$store.ui.tool === t.id && 'active'"><span class="bottom-nav-icon" x-text="t.icon"></span><span x-text="t.short"></span></a>
-      </template>
-    </nav>
 
     <main class="main-content">
 
