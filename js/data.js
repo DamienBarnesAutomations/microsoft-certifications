@@ -1,5 +1,5 @@
 // Adapter layer: normalizes the legacy global-variable data files (window.DP300_QUESTIONS,
-// window.DP300_MODULES, window.DP300_DATA, window.FLASHCARDS_DP700, etc. — loaded via plain
+// window.DP300_MODULES, window.DP300_DATA, window.DP700_FLASHCARDS, etc. — loaded via plain
 // <script defer> tags before this file, an intentional legacy pattern we didn't want to churn
 // the underlying content files to change) into one clean in-memory catalog. Everything else in
 // the app reads from DATA.*, not from window.* directly.
@@ -130,10 +130,10 @@ function getQuestionModules(cert) {
   return [];
 }
 
-// Skills outline for certifications that have one (DP-600 so far), else null. Questions are
+// Skills outline for certifications that have one (DP-600, DP-700), else null. Questions are
 // matched to a skill by id; skill ids are dotted paths (domain.topic.skill).
 function getOutline(certId) {
-  const raw = certId === 'dp600' ? window.DP600_OUTLINE : null;
+  const raw = { dp600: window.DP600_OUTLINE, dp700: window.DP700_OUTLINE }[certId];
   if (!raw) return null;
   const skillOfQuestion = {};
   Object.keys(raw.questionsBySkill).forEach((skillId) => {
@@ -162,14 +162,14 @@ function getConceptCardData(certCode) {
   return null;
 }
 
-// Flashcard decks organised by module (DP-700).
-function getFlashcardModules(certId) {
-  return certId === 'dp700' ? window.FLASHCARDS_DP700 || [] : [];
+// Flashcard decks organised by module; no certification uses this now that DP-600 and DP-700 have outlines.
+function getFlashcardModules() {
+  return [];
 }
 
-// Flat flashcard list for certifications organised by skills outline (DP-600); each card has a skill id.
+// Flat flashcard list for certifications organised by skills outline (DP-600, DP-700); each card has a skill id.
 function getOutlineFlashcards(certId) {
-  return certId === 'dp600' ? window.DP600_FLASHCARDS || [] : [];
+  return { dp600: window.DP600_FLASHCARDS, dp700: window.DP700_FLASHCARDS }[certId] || [];
 }
 
 const DATA = {

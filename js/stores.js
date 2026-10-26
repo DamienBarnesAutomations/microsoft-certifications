@@ -28,6 +28,36 @@ document.addEventListener('alpine:init', () => {
     },
   });
 
+  // Test progress per question. A question is unseen, in the right queue or in the wrong queue,
+  // never in two. A miss sends it to the wrong queue (and back there from the right queue); two
+  // correct answers in a row get it out of the wrong queue and into the right one.
+  Alpine.store('questionQueue', {
+    KEY: 'fabric_question_queue',
+    NEEDED: 2,
+    data: JSON.parse(localStorage.getItem('fabric_question_queue') || '{}'),
+    save() { localStorage.setItem(this.KEY, JSON.stringify(this.data)); },
+    record(id, correct) {
+      const e = this.data[id];
+      if (!e) this.data[id] = correct ? { q: 'right' } : { q: 'wrong', streak: 0 };
+      else if (e.q === 'right') { if (!correct) this.data[id] = { q: 'wrong', streak: 0 }; }
+      else if (!correct) e.streak = 0;
+      else if (++e.streak >= this.NEEDED) this.data[id] = { q: 'right' };
+      this.save();
+    },
+    state(id) { return this.data[id] ? this.data[id].q : 'unseen'; },
+    streak(id) { return this.data[id] && this.data[id].q === 'wrong' ? this.data[id].streak : 0; },
+    // Counts over a list of question ids (ids no longer in the bank are ignored).
+    counts(ids) {
+      const c = { total: ids.length, right: 0, wrong: 0, unseen: 0 };
+      ids.forEach((id) => { c[this.state(id)]++; });
+      return c;
+    },
+    reset(ids) {
+      ids.forEach((id) => { delete this.data[id]; });
+      this.save();
+    },
+  });
+
   Alpine.store('streak', {
     data: JSON.parse(localStorage.getItem('fabric_study_streak') || '{"count":0,"lastDate":null}'),
     update() {

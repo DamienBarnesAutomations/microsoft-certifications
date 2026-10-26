@@ -5,12 +5,12 @@
       "id": "dp700-1-001",
       "text": "A data engineer creates a pipeline that copies data from an Azure Blob Storage container to a lakehouse. The pipeline must be triggered every 15 minutes. What should the engineer configure?",
       "options": [
-        "A scheduled pipeline run with a recurrence of 15 minutes",
         "A dataflow Gen2 scheduled refresh",
+        "A stored procedure called from a notebook",
         "An event-driven trigger on blob creation",
-        "A stored procedure called from a notebook"
+        "A scheduled pipeline run with a recurrence of 15 minutes"
       ],
-      "correct": 0,
+      "correct": 3,
       "module": 1,
       "explanation": "The requirement is a time-based trigger every 15 minutes. Scheduled pipeline run with recurrence is the standard way to achieve this. Dataflow refresh would run a dataflow, not the pipeline. Event-driven trigger reacts to blob creation, not a fixed schedule. A stored procedure in a notebook is overkill and not a trigger mechanism."
     },
@@ -18,12 +18,12 @@
       "id": "dp700-1-002",
       "text": "Which of the following statements about Dataflows Gen2 is TRUE?",
       "options": [
-        "Dataflows Gen2 can be used as a direct replacement for a data warehouse",
+        "Dataflows Gen2 can only load data to lakehouses",
         "Dataflows Gen2 support row-level security (RLS)",
-        "Dataflows Gen2 require a Fabric capacity workspace",
-        "Dataflows Gen2 can only load data to lakehouses"
+        "Dataflows Gen2 can be used as a direct replacement for a data warehouse",
+        "Dataflows Gen2 require a Fabric capacity workspace"
       ],
-      "correct": 2,
+      "correct": 3,
       "module": 1,
       "explanation": "Dataflows Gen2 run on Fabric capacity and require a capacity workspace. They are not a warehouse replacement, do not support RLS (RLS is applied in the destination or semantic model), and can load to many destinations including warehouses, lakehouses, and SQL databases."
     },
@@ -32,11 +32,11 @@
       "text": "Which of the following is a limitation of Dataflows Gen2 compared to a data warehouse?",
       "options": [
         "Dataflows Gen2 cannot connect to cloud sources",
+        "Dataflows Gen2 cannot load to lakehouses",
         "Dataflows Gen2 do not support row-level security",
-        "Dataflows Gen2 cannot be scheduled",
-        "Dataflows Gen2 cannot load to lakehouses"
+        "Dataflows Gen2 cannot be scheduled"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "Dataflows Gen2 do not support row-level security (RLS); RLS is enforced in the destination (e.g., warehouse or semantic model). They can connect to cloud sources, can be scheduled (as dataflow refreshes or via pipelines), and can load to lakehouses."
     },
@@ -57,12 +57,12 @@
       "id": "dp700-1-005",
       "text": "You need to configure a pipeline activity that transforms data before loading it to a destination. Which activity type should you use?",
       "options": [
-        "Copy Data",
         "Data Flow or Dataflow",
+        "Delete Data",
         "Stored Procedure",
-        "Delete Data"
+        "Copy Data"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 1,
       "explanation": "Data Flow or Dataflow activity (Dataflow Gen2) is designed for transformations. Copy Data moves data without transformation. Stored Procedure activity executes a procedure but is not for general transformations. Delete Data removes data."
     },
@@ -96,12 +96,12 @@
       "id": "dp700-1-008",
       "text": "You need to query a lakehouse table using Spark SQL. Which statement creates a temporary view that can be used in Spark SQL?",
       "options": [
-        "createOrReplaceTempView",
+        "createGlobalTempView",
         "createTempTable",
         "registerTempTable",
-        "createGlobalTempView"
+        "createOrReplaceTempView"
       ],
-      "correct": 0,
+      "correct": 3,
       "module": 1,
       "explanation": "createOrReplaceTempView is the DataFrame method that registers a temporary view accessible via Spark SQL. createTempTable is not a method; registerTempTable is deprecated. createGlobalTempView creates a global temp view with different scope."
     },
@@ -122,12 +122,12 @@
       "id": "dp700-1-010",
       "text": "You have a pipeline with a loop activity that iterates over a list of files. Which activity type is this?",
       "options": [
+        "Copy Data activity",
         "Data transformation activity",
         "Control flow activity",
-        "Copy Data activity",
         "Dataflow activity"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "Looping (e.g., ForEach, Until) is a control flow activity, not a data transformation. Copy Data and Dataflow are data movement/transformation activities."
     },
@@ -136,11 +136,11 @@
       "text": "You need to ingest data from a CSV file into a Lakehouse and then apply complex transformations using a visual interface. Which approach should you use?",
       "options": [
         "Copy Data activity in a pipeline only",
-        "Dataflows Gen2 with Power Query Online",
         "A Spark notebook with PySpark code",
-        "Direct COPY INTO T-SQL statement"
+        "Direct COPY INTO T-SQL statement",
+        "Dataflows Gen2 with Power Query Online"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 1,
       "explanation": "Dataflows Gen2 provide a visual (Power Query) interface for complex transformations. Copy Data has no transformations. Notebooks are code-based. COPY INTO is T-SQL for loading, not visual transformations."
     },
@@ -148,12 +148,12 @@
       "id": "dp700-1-012",
       "text": "A data engineer wants to combine a Dataflows Gen2 activity with additional downstream activities such as executing a stored procedure. What is the recommended approach?",
       "options": [
-        "Add the stored procedure as a transformation step inside the Dataflows Gen2",
         "Use a data pipeline to orchestrate the Dataflows Gen2 activity followed by a Stored Procedure activity",
+        "Add the stored procedure as a transformation step inside the Dataflows Gen2",
         "Schedule the Dataflows Gen2 to run first, then manually run the stored procedure",
         "Embed the stored procedure logic as a custom M function in the dataflow"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 1,
       "explanation": "Orchestration of multiple activities (Dataflow Gen2 then stored procedure) is done via a pipeline. Dataflows Gen2 do not support invoking stored procedures directly. Manual steps are not recommended."
     },
@@ -161,12 +161,12 @@
       "id": "dp700-1-013",
       "text": "You are building a Spark notebook that reads a large Parquet dataset. You want to optimize query performance by running Spark operations directly on lakehouse infrastructure. Which Spark property should you configure?",
       "options": [
+        "spark.executor.memory",
         "spark.sql.shuffle.partitions",
         "spark.native.enabled set to true",
-        "spark.executor.memory",
         "spark.dynamicAllocation.enabled"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "The native execution engine (spark.native.enabled=true) runs Spark operations directly on lakehouse infrastructure, improving performance. Shuffle partitions, executor memory, and dynamic allocation are general tuning, not specific to lakehouse direct execution."
     },
@@ -174,12 +174,12 @@
       "id": "dp700-1-014",
       "text": "Multiple data engineers need to share the same Spark session across concurrent notebooks while ensuring code isolation. Which feature should you enable?",
       "options": [
+        "Native execution engine",
         "Dynamic allocation",
         "High concurrency mode",
-        "Native execution engine",
         "Auto MLFlow logging"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "High concurrency mode allows multiple notebooks to share a Spark session with isolated variable namespaces. Dynamic allocation scales executors, native engine optimizes performance, MLFlow logs experiments."
     },
@@ -188,11 +188,11 @@
       "text": "You need to load data from a CSV file into a Spark dataframe, but the file has no header row and you want to ensure correct data types from the start. What should you do?",
       "options": [
         "Use spark.read.load with header=True and let Spark infer the schema",
+        "Convert the CSV to Parquet externally before loading into Spark",
         "Define an explicit StructType schema and set header=False when loading",
-        "Use the %%sql magic to create the table first, then load the CSV",
-        "Convert the CSV to Parquet externally before loading into Spark"
+        "Use the %%sql magic to create the table first, then load the CSV"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "Without a header, defining an explicit StructType schema ensures correct data types and avoids schema inference (which requires scanning data). header=True would treat first row as header, which doesn't exist. %%sql and external conversion add unnecessary complexity."
     },
@@ -214,11 +214,11 @@
       "text": "You create a temporary view in Spark using createOrReplaceTempView. When is this view automatically deleted?",
       "options": [
         "When the notebook cell completes execution",
-        "When the Spark session ends",
+        "It persists until explicitly deleted",
         "When you manually drop the view",
-        "It persists until explicitly deleted"
+        "When the Spark session ends"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 1,
       "explanation": "Temporary views are session-scoped; they are automatically removed when the Spark session ends (notebook detached or timed out). They are not cell-scoped and do not persist beyond the session unless manually dropped."
     },
@@ -227,11 +227,11 @@
       "text": "You need to write a Spark SQL query in a notebook cell that queries the Spark catalog. Which magic command should you use at the beginning of the cell?",
       "options": [
         "%%pyspark",
-        "%%spark",
         "%%sql",
+        "%%spark",
         "%%python"
       ],
-      "correct": 2,
+      "correct": 1,
       "module": 1,
       "explanation": "The %%sql magic tells the notebook to interpret the cell content as Spark SQL. %%pyspark and %%python are for Python code. %%spark is not a standard magic."
     },
@@ -252,12 +252,12 @@
       "id": "dp700-1-020",
       "text": "In an Eventhouse, what is the key characteristic of time-series data that enables KQL databases to automatically partition data by ingestion time?",
       "options": [
-        "Data is stored in JSON format",
         "Events are immutable and tied to specific moments in time",
+        "Tables are organized in a star schema",
         "Data is compressed using delta format",
-        "Tables are organized in a star schema"
+        "Data is stored in JSON format"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 1,
       "explanation": "Eventhouse leverages the immutable, time-based nature of events to automatically partition by ingestion time, enabling efficient time-range queries. JSON format, compression, and star schema are not the key characteristic."
     },
@@ -279,11 +279,11 @@
       "text": "You need to join a small VendorInfo table with a large TaxiTrips table in KQL. According to best practices, how should you structure the join for optimal performance?",
       "options": [
         "Put TaxiTrips first since it's the main table",
-        "Put VendorInfo first since it's the smaller table",
         "Use a broadcast join hint",
+        "Put VendorInfo first since it's the smaller table",
         "Create a materialized view of the join first"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "In KQL, for optimal join performance, put the smaller table on the left side of the join (first). The join operator processes the left input to match against the right. So VendorInfo (small) first, then TaxiTrips."
     },
@@ -292,11 +292,11 @@
       "text": "You create a materialized view in a KQL database. When you query it, the system combines two parts to return fresh results. What are these two parts?",
       "options": [
         "The raw table and the indexed table",
-        "The materialized part (precomputed) and the delta (new data since last update)",
         "The source table and the destination table",
+        "The materialized part (precomputed) and the delta (new data since last update)",
         "The hot partition and the cold partition"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 1,
       "explanation": "A KQL materialized view consists of a materialized part (precomputed historical aggregations) and a delta part (new data not yet materialized). The query combines both for fresh results."
     },
@@ -332,11 +332,11 @@
       "text": "You need to orchestrate a multi-step ETL pipeline that extracts data from Azure Blob Storage, transforms it with Spark, and loads it into a lakehouse. Which Fabric service should you use to define and schedule this workflow?",
       "options": [
         "Dataflow Gen2",
-        "Pipeline",
         "Notebook",
-        "Activator"
+        "Activator",
+        "Pipeline"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "Pipelines are the orchestration engine in Fabric, allowing you to chain activities like Copy Data, Notebook, and Dataflow. Dataflows Gen2 focus on transformation, not orchestration of multiple steps. Notebooks execute code but don't schedule complex workflows. Activator is for real-time alerts."
     },
     {
@@ -344,12 +344,12 @@
       "module": 1,
       "text": "A data engineer wants to run a Spark notebook that reads a large CSV file but must limit memory usage. Which Spark configuration is the BEST way to control memory consumption?",
       "options": [
+        "spark.memory.fraction",
         "spark.driver.memory",
         "spark.sql.shuffle.partitions",
-        "spark.memory.fraction",
         "spark.executor.cores"
       ],
-      "correct": 2,
+      "correct": 0,
       "explanation": "spark.memory.fraction controls the fraction of JVM heap used for Spark memory (execution and storage). Tuning this can limit overall memory usage. Driver memory affects the driver, not executors. Shuffle partitions affect parallelism, not total memory. Executor cores affect concurrency."
     },
     {
@@ -364,19 +364,6 @@
       ],
       "correct": 0,
       "explanation": "Query folding breaks when a transformation uses a function that cannot be translated into the source's native query language (e.g., complex M functions). Row limits, manual refresh, and source folding capability are not the direct cause after adding a custom column."
-    },
-    {
-      "id": "dp700-1-029",
-      "module": 1,
-      "text": "You need to process streaming data from Azure Event Hubs and write the results to a KQL database in real time. Which combination provides the lowest latency?",
-      "options": [
-        "Eventstream → Activator → KQL",
-        "Eventstream → Pipeline → KQL",
-        "Dataflow Gen2 → Lakehouse → KQL",
-        "Notebook → Eventstream → KQL"
-      ],
-      "correct": 0,
-      "explanation": "Eventstream directly to Activator to KQL database is the most direct real-time path with minimal latency. Pipelines and Dataflows introduce batch-oriented delays. Notebooks add overhead."
     },
     {
       "id": "dp700-1-030",
@@ -409,12 +396,12 @@
       "module": 1,
       "text": "You have a Dataflow Gen2 that reads from a REST API with pagination. Which Power Query function helps retrieve all pages efficiently?",
       "options": [
-        "List.Generate",
+        "Web.Contents with relativePath",
         "Table.Combine",
-        "Json.Document",
-        "Web.Contents with relativePath"
+        "List.Generate",
+        "Json.Document"
       ],
-      "correct": 0,
+      "correct": 2,
       "explanation": "List.Generate is a powerful function for creating lists with custom logic, often used to handle pagination by iterating over pages. Table.Combine merges tables, Json.Document parses JSON, Web.Contents fetches a single page."
     },
     {
@@ -436,11 +423,11 @@
       "text": "You must enforce schema validation on incoming JSON files before they are written to the bronze layer. Which tool provides the most flexible validation?",
       "options": [
         "Dataflow Gen2 with Power Query M",
-        "Notebook with Spark",
         "Eventstream with mapping",
+        "Notebook with Spark",
         "Pipeline with Data Flow activity"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Spark notebooks offer the most flexible schema validation through explicit schema definitions, complex logic, and error handling. Dataflows Gen2 are less flexible for custom validation. Eventstream mapping is limited. Pipeline Data Flow activity is similar to Dataflow."
     },
     {
@@ -449,11 +436,11 @@
       "text": "When configuring an Eventstream, which destination supports both KQL queries and T-SQL access?",
       "options": [
         "Lakehouse (Delta)",
+        "Eventhouse",
         "KQL database",
-        "Warehouse",
-        "Eventhouse"
+        "Warehouse"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "A KQL database supports both KQL and a subset of T-SQL. The KQL Queryset connected to the KQL database allows users to query the same data using either language. Lakehouses support T-SQL only via the SQL analytics endpoint. Warehouses are T-SQL only. Eventhouse is the container, not a destination."
     },
     {
@@ -462,25 +449,12 @@
       "text": "A pipeline contains a ForEach activity that iterates over 100 items. By default, how many iterations run in parallel?",
       "options": [
         "1",
-        "10",
         "20",
+        "10",
         "50"
       ],
-      "correct": 2,
-      "explanation": "In Fabric pipelines (and Azure Data Factory), the ForEach activity defaults to 20 parallel iterations. You can adjust this using the batchCount property (range 1-50)."
-    },
-    {
-      "id": "dp700-1-037",
-      "module": 1,
-      "text": "Which Spark configuration property must be set to enable the native execution engine, in addition to `spark.native.enabled`?",
-      "options": [
-        "spark.sql.adaptive.enabled",
-        "spark.shuffle.manager",
-        "spark.sql.legacy.allowUntrustedColumnar",
-        "spark.executor.memoryOverhead"
-      ],
       "correct": 1,
-      "explanation": "You must set spark.shuffle.manager to org.apache.spark.shuffle.sort.ColumnarShuffleManager. Both properties together enable the native vectorized execution engine."
+      "explanation": "In Fabric pipelines (and Azure Data Factory), the ForEach activity defaults to 20 parallel iterations. You can adjust this using the batchCount property (range 1-50)."
     },
     {
       "id": "dp700-1-038",
@@ -488,90 +462,38 @@
       "text": "A Spark notebook writes a DataFrame using `df.write.mode(\"overwrite\").partitionBy(\"year\").parquet(\"path\")`. What happens to existing data in `year=2023` folder?",
       "options": [
         "It is overwritten only if the new data contains 2023 records",
-        "The entire destination path is deleted before writing",
+        "An error occurs because partitionBy cannot be used with overwrite",
         "Only partitions that exist in the new data are overwritten",
-        "An error occurs because partitionBy cannot be used with overwrite"
+        "The entire destination path is deleted before writing"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "When using mode(\"overwrite\") with partitionBy on a directory path, Spark overwrites the entire destination directory, not just the partitions present in the new data. To preserve existing partitions, use mode(\"overwrite\") with insertInto() on a Hive-partitioned table."
-    },
-    {
-      "id": "dp700-1-039",
-      "module": 1,
-      "text": "A Dataflow Gen2 has a source query that takes 10 minutes to run. After adding a filter step, the refresh time becomes 11 minutes. What does this indicate?",
-      "options": [
-        "The filter step is causing a data type conversion",
-        "Query folding is occurring",
-        "Query folding is not occurring",
-        "The source does not support parallel processing"
-      ],
-      "correct": 2,
-      "explanation": "If the filter step was folding into the source query, the total time would be roughly the same (still 10 minutes). The extra 1 minute indicates the filter is applied after data is loaded into memory (no query folding), adding overhead."
     },
     {
       "id": "dp700-1-040",
       "module": 1,
       "text": "Which of the following pipeline activities can be used inside a ForEach loop to execute a dynamic SQL statement against a warehouse?",
       "options": [
-        "Copy Data",
-        "Script",
         "Stored Procedure",
+        "Script",
+        "Copy Data",
         "Lookup"
       ],
-      "correct": 2,
+      "correct": 0,
       "explanation": "Stored Procedure activity executes a stored procedure in a Fabric warehouse. It can be parameterized, making it suitable inside a loop to run dynamic SQL."
-    },
-    {
-      "id": "dp700-1-041",
-      "module": 1,
-      "text": "A Spark job writes 1 GB of data to a Delta table with OptimizeWrite enabled. Approximately how much data will be written temporarily during the operation?",
-      "options": [
-        "500 MB",
-        "1 GB",
-        "2 GB",
-        "4 GB"
-      ],
-      "correct": 1,
-      "explanation": "OptimizeWrite coalesces writes in memory but does not duplicate data. The write will still write approximately 1 GB of Parquet data to storage. It reduces the number of small files, not the total bytes written."
     },
     {
       "id": "dp700-1-042",
       "module": 1,
       "text": "A pipeline must copy data from a REST API to a lakehouse only if the API returns a success status code. Which control flow activity should you use to check the status?",
       "options": [
-        "Until",
         "If Condition",
+        "Until",
         "Switch",
         "Wait"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "If Condition activity allows branching based on an expression. You can use it after a Web activity (calling the API) to check the status code and proceed only if successful."
-    },
-    {
-      "id": "dp700-1-043",
-      "module": 1,
-      "text": "Which Spark DataFrame method is most efficient for removing duplicate rows based on a subset of columns?",
-      "options": [
-        "df.distinct()",
-        "df.dropDuplicates([\"col1\", \"col2\"])",
-        "df.groupBy(\"col1\", \"col2\").agg(first(\"*\"))",
-        "df.drop_duplicates(subset=[\"col1\", \"col2\"])"
-      ],
-      "correct": 1,
-      "explanation": "dropDuplicates(subset) removes duplicates based on the specified columns, keeping the first occurrence. It is optimized for this purpose. distinct() uses all columns. groupBy with first is a workaround but less efficient."
-    },
-    {
-      "id": "dp700-1-044",
-      "module": 1,
-      "text": "A Dataflow Gen2 is failing with a \"timeout\" error after 1 hour. Which setting can you adjust to allow longer execution?",
-      "options": [
-        "Dataflow size limit",
-        "Query folding timeout",
-        "Dataflow Gen2 does not support timeout adjustment",
-        "The timeout is controlled by the pipeline's activity policy"
-      ],
-      "correct": 3,
-      "explanation": "When a Dataflow Gen2 is run as a pipeline activity, the timeout is configured in the pipeline activity settings. Standalone dataflows have different limits."
     },
     {
       "id": "dp700-1-045",
@@ -579,11 +501,11 @@
       "text": "Which of the following best describes a Spark Environment in Microsoft Fabric?",
       "options": [
         "A container for notebook code and execution history",
+        "A built-in MLFlow tracking server for experiments",
         "A combination of a runtime, custom libraries, Spark properties, and resource files attached to a workspace or notebook",
-        "A managed Spark pool with predefined node sizes",
-        "A built-in MLFlow tracking server for experiments"
+        "A managed Spark pool with predefined node sizes"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "A Spark Environment defines the runtime version, custom libraries (PyPI, jar), Spark configuration properties, and resource files. It can be attached to a workspace or specific notebook, ensuring consistent execution across sessions."
     },
     {
@@ -591,12 +513,12 @@
       "module": 1,
       "text": "Which of the following describes the purpose of query folding in Dataflows Gen2?",
       "options": [
-        "Combining multiple dataflows into a single query",
         "Pushing transformation steps back to the source system for execution",
         "Splitting a large dataflow into smaller parallel queries",
+        "Combining multiple dataflows into a single query",
         "Creating a materialized view of the dataflow output"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Query folding means that Power Query transforms (e.g., filter, join, group by) are translated into the source system's native query language (SQL, OData, etc.) and executed there, reducing the amount of data pulled into the dataflow."
     },
     {
@@ -605,11 +527,11 @@
       "text": "Which of the following describes the role of the driver in a Spark pool?",
       "options": [
         "Executes data processing tasks on worker nodes",
-        "Coordinates the distributed job, schedules tasks, and collects results",
         "Manages storage of Delta tables in OneLake",
-        "Provides autoscaling decisions based on workload"
+        "Provides autoscaling decisions based on workload",
+        "Coordinates the distributed job, schedules tasks, and collects results"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "The driver runs on the head node and coordinates the execution of Spark jobs, schedules tasks on executors, and collects results. Executors on worker nodes perform the actual data processing."
     },
     {
@@ -630,12 +552,12 @@
       "module": 1,
       "text": "A data engineer needs to create a Dataflow Gen2 that will be shared across multiple analytics teams, each needing different subsets of the data. What is the recommended approach?",
       "options": [
-        "Create one large dataflow and have each team filter in their own reports",
         "Create a global dataflow first, then specialized dataflows that reference it",
+        "Duplicate the source queries for each team",
         "Create separate pipelines for each team",
-        "Duplicate the source queries for each team"
+        "Create one large dataflow and have each team filter in their own reports"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Horizontal partitioning using a global dataflow with specialized child dataflows allows different teams to work with subsets of the data without duplicating the extraction and transformation logic. This is the recommended approach for multi-team scenarios in Fabric."
     },
     {
@@ -656,12 +578,12 @@
       "module": 1,
       "text": "In the Power Query Online interface, what is the difference between how data sources are named during editing versus after they are loaded to a destination?",
       "options": [
-        "They are called queries during editing and tables once loaded to a destination",
+        "They are called sources during editing and datasets once loaded",
         "They are called tables during editing and queries once loaded",
         "The naming never changes",
-        "They are called sources during editing and datasets once loaded"
+        "They are called queries during editing and tables once loaded to a destination"
       ],
-      "correct": 0,
+      "correct": 3,
       "explanation": "In Power Query Online, data sources are called 'queries' during the editing phase. Once the dataflow is published and data is loaded to a destination, those same sources become 'tables'. This terminology distinction is a common exam point."
     },
     {
@@ -682,12 +604,12 @@
       "module": 1,
       "text": "A pipeline must pass a folder name to a Copy Data activity so the same pipeline can ingest different folders without modification. Which feature should be used?",
       "options": [
+        "A configuration file in OneLake",
         "A trigger with custom properties",
-        "A pipeline parameter defined in pipeline settings and referenced in the activity",
         "A global variable in the workspace settings",
-        "A configuration file in OneLake"
+        "A pipeline parameter defined in pipeline settings and referenced in the activity"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "Parameters make pipelines reusable by accepting dynamic values each time the pipeline runs. They are defined in pipeline settings and referenced within activities. This allows the same pipeline to process different folders, files, or sources without manual modification."
     },
     {
@@ -695,12 +617,12 @@
       "module": 1,
       "text": "Before executing a pipeline for the first time, a developer wants to check for configuration errors. What should they do?",
       "options": [
-        "Run the pipeline in debug mode",
         "Use the Validate option in the pipeline editor",
+        "Run the pipeline in debug mode",
         "Check the pipeline run history for errors",
         "Manually review each activity configuration"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "The Validate option checks the pipeline configuration for errors before execution. It helps catch issues like missing source connections, invalid parameter references, or incomplete activity settings. Running without validation may waste time and resources on failed executions."
     },
     {
@@ -721,12 +643,12 @@
       "module": 1,
       "text": "A developer creates a pipeline using a prebuilt ingestion scenario. Where can they find these templates?",
       "options": [
-        "The Templates tile when creating a new pipeline",
         "The Fabric documentation site",
+        "The Admin portal Templates section",
         "The workspace settings page",
-        "The Admin portal Templates section"
+        "The Templates tile when creating a new pipeline"
       ],
-      "correct": 0,
+      "correct": 3,
       "explanation": "Microsoft Fabric provides predefined pipeline templates for common ingestion scenarios. These are accessed from the Templates tile when creating a new pipeline. After selecting a template, you can customize the resulting activities on the canvas to fit your specific needs."
     },
     {
@@ -734,12 +656,12 @@
       "module": 1,
       "text": "A pipeline run fails and the engineer needs to find the error details. What unique identifier should they look for in the run history?",
       "options": [
+        "The unique run ID generated for each pipeline execution",
         "The pipeline name",
         "The workspace ID",
-        "The unique run ID generated for each pipeline execution",
         "The trigger name"
       ],
-      "correct": 2,
+      "correct": 0,
       "explanation": "Each time a pipeline is executed, a unique run ID is generated. This ID is used for monitoring and troubleshooting in the run history. You can review run details to confirm success or investigate failures using this identifier."
     },
     {
@@ -747,12 +669,12 @@
       "module": 1,
       "text": "A Fabric administrator needs to ensure that Spark jobs start quickly with minimal configuration. What should they use?",
       "options": [
+        "A third-party Spark cluster",
         "A custom Spark pool with specific node configurations",
         "The starter pool provided by default in each workspace",
-        "A third-party Spark cluster",
         "An Azure Databricks workspace"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "The starter pool is provided by default in each workspace and enables Spark jobs to start quickly with minimal setup. Custom pools require explicit configuration and are for specialized workloads. The starter pool can be configured to optimize nodes for specific workloads or cost constraints."
     },
     {
@@ -761,11 +683,11 @@
       "text": "A Spark administrator wants to control whether executor processes are dynamically allocated on worker nodes based on data volumes. Which setting should they configure?",
       "options": [
         "Autoscale",
-        "Dynamic allocation",
         "Node family",
-        "Native execution engine"
+        "Native execution engine",
+        "Dynamic allocation"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "Dynamic allocation controls whether executor processes are dynamically allocated on worker nodes based on data volumes. Autoscale controls whether nodes are automatically provisioned. These two settings work together but are independent of each other."
     },
     {
@@ -787,11 +709,11 @@
       "text": "A Spark developer needs to deploy a production ETL script that runs on a schedule without interactive debugging. Which option is most appropriate?",
       "options": [
         "A Spark notebook with %%sql magic commands",
-        "A Spark Job Definition that is script-based and supports scheduled execution",
         "A Dataflow Gen2 with Power Query transformations",
+        "A Spark Job Definition that is script-based and supports scheduled execution",
         "A Fabric Activator rule"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Spark Job Definitions are script-based and support on-demand or scheduled execution. They are best suited for production automation where reliability, scheduling, and repeatability are required. Notebooks are interactive and better for exploration and development."
     },
     {
@@ -799,12 +721,12 @@
       "module": 1,
       "text": "When does a Spark session begin in a Fabric notebook?",
       "options": [
-        "When the notebook is created",
         "When the first cell is executed",
+        "When the notebook is created",
         "When the workspace is created",
         "When the lakehouse is attached"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "A Spark session is initiated when you execute the first cell in a notebook. The session persists until it is stopped or times out from inactivity. This is important to understand for session management and resource planning."
     },
     {
@@ -826,24 +748,24 @@
       "text": "A Spark developer loads a CSV file using spark.read.load with format='csv' and does not specify a schema. What happens?",
       "options": [
         "The load fails because schema is required for CSV files",
-        "Spark infers the schema by scanning the data, which is slower but automatic",
         "Spark uses a default schema with all columns as strings",
+        "Spark infers the schema by scanning the data, which is slower but automatic",
         "Spark reads the file header as the schema automatically"
       ],
       "correct": 1,
-      "explanation": "When no schema is specified, Spark infers the schema by scanning the data. This requires a full data scan pass, making it slower than providing an explicit schema. Inferred schemas can also result in type mismatches if the data contains unexpected values."
+      "explanation": "Without a schema and without inferSchema, Spark reads every CSV column as a string (and names columns _c0, _c1, ... if there is no header option). Set inferSchema or supply a schema to get typed columns."
     },
     {
       "id": "dp700-1-065",
       "module": 1,
       "text": "A Spark developer writes a DataFrame using df.write.mode('overwrite').parquet('path'). If the path already contains data, what happens?",
       "options": [
+        "An error is thrown to prevent accidental data loss",
         "Only files matching the new data are overwritten",
         "The entire destination is deleted and replaced with the new data",
-        "An error is thrown to prevent accidental data loss",
         "New files are appended alongside existing files"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "The overwrite mode replaces the entire existing data at the specified path with the new data. It does not selectively overwrite only matching files. The append mode adds new data without removing existing data."
     },
     {
@@ -864,12 +786,12 @@
       "module": 1,
       "text": "A Spark DataFrame is partitioned by a high-cardinality column containing 1 million unique values. What performance issue is most likely to occur?",
       "options": [
-        "The data becomes read-only",
         "Too many small files are created, degrading read and write performance",
         "The partition column is automatically dropped from the schema",
+        "The data becomes read-only",
         "Spark automatically converts to a non-partitioned format"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Over-partitioning on high-cardinality columns creates too many small files, which degrades performance. The optimal pattern is to partition only on columns that are frequently used in WHERE filters and have a reasonable number of distinct values (e.g., year, month, region)."
     },
     {
@@ -890,12 +812,12 @@
       "module": 1,
       "text": "A data analyst wants to create a visualization from Spark DataFrame results using Matplotlib. What must they do first?",
       "options": [
-        "Register the DataFrame as a temporary view",
         "Convert the Spark DataFrame to a Pandas DataFrame using toPandas()",
         "Save the DataFrame to a lakehouse first",
+        "Register the DataFrame as a temporary view",
         "Use the %%python magic in a notebook cell"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Matplotlib requires Pandas DataFrames, not Spark DataFrames. You must convert using the toPandas() method. However, this conversion pulls data to the driver node, so it should be used selectively on aggregated or subset data rather than on full datasets."
     },
     {
@@ -904,11 +826,11 @@
       "text": "A developer wants to make KQL database data accessible to Power BI, Warehouse, and other Fabric services. What should they enable?",
       "options": [
         "A database shortcut to the KQL database",
-        "OneLake availability for the KQL database or specific tables",
         "A KQL Queryset shared with the workspace",
+        "OneLake availability for the KQL database or specific tables",
         "An Eventstream connected to the KQL database"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "OneLake availability makes KQL database data accessible throughout the Fabric ecosystem for cross-service integration with Power BI, Warehouse, Lakehouse, and other Fabric services. Database shortcuts are for querying external KQL databases without copying data."
     },
     {
@@ -917,11 +839,11 @@
       "text": "A team has KQL databases in multiple Eventhouses and wants to query them all from a single location without copying data. What should they use?",
       "options": [
         "OneLake availability",
+        "A Dataflow Gen2 to consolidate the data",
         "Database shortcuts to reference external KQL databases",
-        "A Union query in a KQL Queryset",
-        "A Dataflow Gen2 to consolidate the data"
+        "A Union query in a KQL Queryset"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Database shortcuts allow you to query data from external KQL databases in other Eventhouses or Azure Data Explorer without copying the data. The external data appears as if it were stored locally in your Eventhouse."
     },
     {
@@ -929,12 +851,12 @@
       "module": 1,
       "text": "Which Fabric component supports both KQL queries and a subset of T-SQL for querying real-time data?",
       "options": [
-        "KQL Queryset",
+        "Data Warehouse",
         "SQL analytics endpoint",
         "Lakehouse",
-        "Data Warehouse"
+        "KQL Queryset"
       ],
-      "correct": 0,
+      "correct": 3,
       "explanation": "The KQL Queryset supports both KQL and T-SQL queries against KQL databases. While T-SQL is a subset of what KQL provides for time-series analysis, it allows users familiar with SQL to query the same data. The SQL analytics endpoint and Warehouse support T-SQL only, not KQL."
     },
     {
@@ -968,12 +890,12 @@
       "module": 1,
       "text": "A developer wants to use Copilot to help write KQL queries against an Eventhouse. What must an administrator do first?",
       "options": [
-        "Create a KQL Queryset for each database",
         "Enable Copilot in the Fabric tenant settings and ensure it is not disabled for the user",
+        "Create a KQL Queryset for each database",
         "Install a Copilot extension in the KQL database",
         "Enable OneLake availability for the Eventhouse"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Copilot for Real-Time Intelligence must be enabled by an administrator in the Fabric tenant settings. Once enabled, it provides AI-powered KQL code generation in the KQL Queryset as a side pane, generating KQL code based on natural language questions."
     },
     {
@@ -982,11 +904,11 @@
       "text": "A data engineer needs to ingest data from Azure Event Hubs into a KQL database with minimal latency. Which ingestion method should they use?",
       "options": [
         "Schedule a Dataflow Gen2 to read from Event Hubs every minute",
-        "Use an Eventstream connected to Event Hubs with a KQL database destination",
+        "Use a Spark notebook with a foreachBatch sink",
         "Copy data first to a lakehouse, then to the KQL database",
-        "Use a Spark notebook with a foreachBatch sink"
+        "Use an Eventstream connected to Event Hubs with a KQL database destination"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "Eventstream provides the lowest latency path for streaming data from Azure Event Hubs to a KQL database. The Eventstream captures data in real time and routes it directly to the KQL database destination. Batch approaches like Dataflows or lakehouse staging introduce unnecessary delays."
     },
     {
@@ -995,11 +917,11 @@
       "text": "A KQL developer runs a query against a table named TaxiTrips but gets an error. The same query works when typed as taxitrips. What is the most likely cause?",
       "options": [
         "The table was recently renamed",
+        "The query exceeded the row limit",
         "KQL is case-sensitive and TaxiTrips does not match the actual table name",
-        "The table is in a different database",
-        "The query exceeded the row limit"
+        "The table is in a different database"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "KQL is strictly case-sensitive for all identifiers, including table names, column names, function names, and operators. TaxiTrips, taxitrips, and TAXITRIPS are all different identifiers. This is a common source of query errors and a frequently tested exam concept."
     },
     {
@@ -1008,11 +930,11 @@
       "text": "A Fabric administrator needs to prevent workspace users from customizing Spark pool settings. How can this be enforced?",
       "options": [
         "Remove the Contributor role from all users",
+        "Set the starter pool as the default for all workspaces",
         "Disable Spark pool customization at the Fabric capacity level",
-        "Delete all custom Spark pools",
-        "Set the starter pool as the default for all workspaces"
+        "Delete all custom Spark pools"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "The ability to customize Spark pool settings can be disabled by Fabric administrators at the Fabric capacity level. This prevents users from modifying pool configurations regardless of their workspace role. Workspace roles do not control this capability directly."
     },
     {
@@ -1033,12 +955,12 @@
       "module": 1,
       "text": "A pipeline runs a notebook activity and then a stored procedure activity. The stored procedure should only run if the notebook succeeds. How should the pipeline be configured?",
       "options": [
-        "Place both activities in parallel",
         "Connect the stored procedure activity with a success dependency from the notebook activity",
+        "Run the stored procedure in a separate pipeline",
         "Use an If Condition activity to check notebook status",
-        "Run the stored procedure in a separate pipeline"
+        "Place both activities in parallel"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Pipeline activities can be connected with dependency conditions. By default, an activity runs only after the preceding activity succeeds. You can also configure completion, failure, or skipped dependencies. This allows sequential execution with proper error handling."
     },
     {
@@ -1072,12 +994,12 @@
       "module": 1,
       "text": "A developer needs to create a reusable KQL query that calculates average order value by region and accepts a minimum order count parameter. What should they create?",
       "options": [
+        "An update policy",
         "A materialized view",
         "A stored function with parameters",
-        "An update policy",
         "A database shortcut"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Stored functions encapsulate KQL queries that accept parameters for reuse and consistency. They are created using the .create-or-alter function command with parameter definitions and a query body. Materialized views store precomputed results, not reusable logic with parameters."
     },
     {

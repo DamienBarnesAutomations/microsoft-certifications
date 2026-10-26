@@ -17,8 +17,17 @@ function initExamHub() {
 
       <div id="exam-filter-block"></div>
 
+      <div id="exam-queue-stats" class="queue-stats"></div>
+
       <div class="exam-actions">
         <div id="exam-pool-counter" class="exam-pool-counter">Loading pools...</div>
+        <div class="exam-actions-row exam-queue-row">
+          <select id="exam-queue-select" aria-label="Questions from" onchange="updateExamPoolCount()">
+            <option value="all">All questions</option>
+            <option value="unseen">Not seen yet</option>
+            <option value="wrong">Wrong queue</option>
+          </select>
+        </div>
         <div class="exam-actions-row">
           <select id="exam-count-select" aria-label="Question count">
             <option value="10">10 questions</option>
@@ -114,9 +123,43 @@ function filterExamPool(pool, filter) {
   return pool.filter((q) => nodes.some((n) => DATA.skillInNode(q.skill, n)));
 }
 
+// Narrows a pool to one of the progress queues: 'all', 'unseen' or 'wrong'.
+function filterByQueue(pool, queue) {
+  if (queue === 'all') return pool;
+  const store = Alpine.store('questionQueue');
+  return pool.filter((q) => store.state(q.id) === queue);
+}
+
+function examQueueValue() {
+  const sel = document.getElementById('exam-queue-select');
+  return sel ? sel.value : 'all';
+}
+
 function updateExamPoolCount() {
-  const pool = filterExamPool(getExamQuestionsPool(currentCertId()), examFilterValue());
+  const base = filterExamPool(getExamQuestionsPool(currentCertId()), examFilterValue());
+  const pool = filterByQueue(base, examQueueValue());
   document.getElementById('exam-pool-counter').textContent = `${pool.length} question${pool.length === 1 ? '' : 's'} in this selection`;
+
+  const c = Alpine.store('questionQueue').counts(base.map((q) => q.id));
+  const wrongOpt = document.querySelector('#exam-queue-select option[value="wrong"]');
+  if (wrongOpt) wrongOpt.textContent = `Wrong queue (${c.wrong})`;
+  const unseenOpt = document.querySelector('#exam-queue-select option[value="unseen"]');
+  if (unseenOpt) unseenOpt.textContent = `Not seen yet (${c.unseen})`;
+  const stats = document.getElementById('exam-queue-stats');
+  if (stats) {
+    stats.innerHTML = `
+      <div class="queue-stat"><b>${c.total - c.unseen}</b><span>seen of ${c.total}</span></div>
+      <div class="queue-stat is-right"><b>${c.right}</b><span>right</span></div>
+      <div class="queue-stat is-wrong"><b>${c.wrong}</b><span>wrong</span></div>
+      <button class="btn btn-sm queue-reset" onclick="resetQuestionProgress()">Reset</button>`;
+  }
+}
+
+function resetQuestionProgress() {
+  if (!confirm('Reset your seen, right and wrong progress for this selection?')) return;
+  const base = filterExamPool(getExamQuestionsPool(currentCertId()), examFilterValue());
+  Alpine.store('questionQueue').reset(base.map((q) => q.id));
+  updateExamPoolCount();
 }
 
 function shuffleQuestionOptions(q) {
@@ -151,10 +194,10 @@ function startPracticeExam() {
   const moduleVal = examFilterValue();
   const countSelect = document.getElementById('exam-count-select').value;
 
-  const pool = filterExamPool(getExamQuestionsPool(cert), moduleVal);
+  const pool = filterByQueue(filterExamPool(getExamQuestionsPool(cert), moduleVal), examQueueValue());
 
   if (pool.length === 0) {
-    alert('No questions available in selected pool.');
+    alert(examQueueValue() === 'wrong' ? 'The wrong queue is empty for this selection.' : 'No questions available in selected pool.');
     return;
   }
 
@@ -334,6 +377,7 @@ function revealQuestionAnswer(selectedIdx, recordToSrs) {
   nextBtn.onclick = isLast ? finishPracticeExam : nextExamQuestion;
 
   if (recordToSrs && q.id) {
+    Alpine.store('questionQueue').record(q.id, isAnswerCorrect(q, selectedIdx));
     Alpine.store('srs').record(q.id, isAnswerCorrect(q, selectedIdx), q.cert.toLowerCase().replace('-', ''));
   }
 }
@@ -357,7 +401,7 @@ function nextExamQuestion() {
 }
 
 function exitExam() {
-  if (!confirm('Leave this test? Your answers so far will be lost.')) return;
+  if (!confirm('Leave this test? It will not be saved to history, but your answers still count toward your progress.')) return;
   if (examState.activeExamInterval) clearInterval(examState.activeExamInterval);
   examState.activeExamInterval = null;
   examState.activeExam = null;

@@ -2,28 +2,15 @@
 (function() {
   var questions = [
     {
-      "id": "dp700-2-001",
-      "text": "A data engineer wants to create a Delta table in a lakehouse. The table should support time travel queries and efficient updates. Which option ensures the table is stored in Delta format?",
-      "options": [
-        "Save the DataFrame as CSV and rely on schema inference",
-        "Use saveAsTable with format set to parquet",
-        "Use saveAsTable with format set to delta or omit format (default is delta)",
-        "Use the Spark SQL CREATE TABLE statement without specifying FORMAT"
-      ],
-      "correct": 2,
-      "module": 2,
-      "explanation": "In Fabric, Delta is the default format for managed tables when using saveAsTable without specifying format or explicitly setting format('delta'). CSV does not support ACID or time travel. Parquet lacks transaction log support. CREATE TABLE without FORMAT defaults to Delta as well, but the most direct answer is saveAsTable with delta format."
-    },
-    {
       "id": "dp700-2-002",
       "text": "You have a lakehouse that contains a Delta table. You need to query the table using T-SQL and enforce row-level security. Which endpoint should you use?",
       "options": [
         "The lakehouse explorer in Fabric",
-        "The SQL analytics endpoint for the lakehouse",
         "A notebook connected to the lakehouse",
+        "The SQL analytics endpoint for the lakehouse",
         "Direct Lake mode from Power BI"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 2,
       "explanation": "The SQL analytics endpoint provides a read-only T‑SQL interface to Delta tables in a lakehouse and supports T‑SQL security features such as row‑level security. The lakehouse explorer does not support T‑SQL. Notebooks use Spark SQL, not T‑SQL. Direct Lake mode is for Power BI reporting, not ad‑hoc T‑SQL queries with RLS."
     },
@@ -31,12 +18,12 @@
       "id": "dp700-2-003",
       "text": "You are implementing a medallion architecture. The bronze layer contains raw JSON files. You need to clean and validate the data before moving it to the silver layer. Which tool is most appropriate?",
       "options": [
+        "A Direct Lake semantic model",
         "A notebook with Spark transformations",
         "A Real-Time Dashboard",
-        "A Direct Lake semantic model",
         "A KQL Queryset"
       ],
-      "correct": 0,
+      "correct": 1,
       "module": 2,
       "explanation": "Bronze to silver transformations typically involve complex data cleansing, schema enforcement, and validation, for which Spark notebooks are ideal. Real‑Time Dashboards are for visualization. Direct Lake semantic models are for reporting. KQL Querysets query KQL databases, not batch transform JSON files."
     },
@@ -45,11 +32,11 @@
       "text": "You need to optimize a Delta table that has many small Parquet files. Which command should you run?",
       "options": [
         "VACUUM",
-        "OPTIMIZE",
         "DESCRIBE HISTORY",
-        "REPAIR"
+        "REPAIR",
+        "OPTIMIZE"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 2,
       "explanation": "OPTIMIZE coalesces small files into larger ones, improving read performance. VACUUM removes old files no longer referenced but does not compact files. DESCRIBE HISTORY shows the transaction log. REPAIR is not a Delta command."
     },
@@ -58,11 +45,11 @@
       "text": "You have a Delta table with VACUUM set to the default retention. You want to time travel to a version created 10 days ago. What will happen?",
       "options": [
         "The query will succeed and return the historical data",
-        "The query will fail because the files have been removed by VACUUM",
+        "The query will return NULL values for the historical data",
         "The query will return only the current version",
-        "The query will return NULL values for the historical data"
+        "The query will fail because the files have been removed by VACUUM"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 2,
       "explanation": "Default VACUUM retention is 7 days. Files older than 7 days are removed, so time travel to a version 10 days ago will fail because the underlying Parquet files no longer exist. The transaction log may still show the version, but the data files are gone."
     },
@@ -70,12 +57,12 @@
       "id": "dp700-2-006",
       "text": "You need to load data from a Fabric lakehouse into a warehouse. The lakehouse table is in Delta format. Which cross-database query syntax should you use?",
       "options": [
-        "Three-part naming: lakehouse.schema.table",
+        "COPY INTO from the lakehouse",
         "OPENROWSET with the lakehouse path",
         "A linked server connection",
-        "COPY INTO from the lakehouse"
+        "Three-part naming: lakehouse.schema.table"
       ],
-      "correct": 0,
+      "correct": 3,
       "module": 2,
       "explanation": "Within the same workspace, Fabric supports cross‑database queries using three‑part naming: database.schema.table. This allows a warehouse to directly reference a lakehouse table. OPENROWSET is for external files. Linked servers are not used in Fabric. COPY INTO is for loading from files, not from a lakehouse table directly."
     },
@@ -83,12 +70,12 @@
       "id": "dp700-2-007",
       "text": "You need to ensure that a Delta table in a lakehouse can be queried by Power BI using Direct Lake mode. Which of the following is required?",
       "options": [
-        "The semantic model must be configured to use Direct Lake mode",
         "The lakehouse must have an SQL analytics endpoint enabled",
+        "The semantic model must be configured to use Direct Lake mode",
         "The Delta table must be partitioned",
         "The table must be in the Gold layer of a medallion architecture"
       ],
-      "correct": 0,
+      "correct": 1,
       "module": 2,
       "explanation": "Direct Lake mode is a setting on the semantic model, not on the lakehouse. As long as the semantic model uses Direct Lake mode and points to the lakehouse, the Delta table can be queried. SQL analytics endpoint is automatically created but not a requirement. Partitioning and gold layer are optional."
     },
@@ -96,12 +83,12 @@
       "id": "dp700-2-008",
       "text": "Which of the following describes the difference between a managed table and an external table in a Fabric lakehouse?",
       "options": [
+        "There is no difference",
         "Managed tables are stored in OneLake; external tables reference data outside OneLake",
-        "Managed tables support ACID; external tables do not",
         "Managed tables can only be created with notebooks; external tables use pipelines",
-        "There is no difference"
+        "Managed tables support ACID; external tables do not"
       ],
-      "correct": 0,
+      "correct": 1,
       "module": 2,
       "explanation": "Managed tables store data in the lakehouse's managed Tables folder (OneLake). External tables reference data elsewhere (e.g., Files folder or external storage) and deleting the table does not delete the data. Both support ACID if stored in Delta format. Creation methods vary but not exclusive."
     },
@@ -148,12 +135,12 @@
       "id": "dp700-2-012",
       "text": "You need to create a shortcut in a lakehouse to reference data stored in an external ADLS Gen2 storage account. What does a shortcut do?",
       "options": [
-        "Copies the data into OneLake",
         "Creates a reference to the external data without copying it",
+        "Copies the data into OneLake",
         "Moves the data to the lakehouse Tables folder",
         "Creates a symbolic link that requires periodic sync"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 2,
       "explanation": "A shortcut creates a reference to external data without copying it; the data stays in the external location but appears as if it is in OneLake. It does not copy or move data and does not require periodic sync."
     },
@@ -161,12 +148,12 @@
       "id": "dp700-2-013",
       "text": "You have a notebook that reads a Delta table. You want to query a specific version of the table from 2 hours ago. Which function should you use?",
       "options": [
-        "versionAsOf",
         "timestampAsOf",
+        "versionAsOf",
         "timeTravel",
         "history()"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 2,
       "explanation": "Delta Lake's time travel uses the `timestamp as of` syntax: `SELECT * FROM table TIMESTAMP AS OF ...`. `version as of` uses version numbers. `timeTravel` is not a function. `history()` shows the history but does not query a version."
     },
@@ -174,12 +161,12 @@
       "id": "dp700-2-014",
       "text": "Which of the following is true about the default VACUUM retention period for Delta tables?",
       "options": [
-        "1 day",
         "7 days",
+        "1 day",
         "30 days",
         "90 days"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 2,
       "explanation": "The default retention period for Delta VACUUM is 7 days. This can be changed by setting the table property `delta.deletedFileRetentionDuration`."
     },
@@ -188,11 +175,11 @@
       "text": "You need to partition a Delta table in a lakehouse. Which of the following is true about partitioning?",
       "options": [
         "Partitioning is always beneficial regardless of data size",
-        "Partitioning is recommended for large datasets but can hurt performance for small or high-cardinality columns",
         "Partitioning is only supported for CSV files",
+        "Partitioning is recommended for large datasets but can hurt performance for small or high-cardinality columns",
         "Partitioning requires a Fabric premium capacity"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 2,
       "explanation": "Partitioning improves performance for large tables when filtering on the partition column, but it can degrade performance for small tables or high‑cardinality columns (too many small files). Partitioning is supported for Delta tables and does not require premium capacity."
     },
@@ -223,29 +210,16 @@
       "explanation": "The Medallion architecture is a pattern, not a rigid rule. You can customize layers (e.g., add Platinum) and store them in lakehouses, warehouses, etc. Layers are not required to be in separate workspaces. Bronze can be any format, not specifically KQL."
     },
     {
-      "id": "dp700-2-018",
-      "module": 2,
-      "text": "You need to add a new column to a Delta table that must be populated with default values for existing rows without rewriting the entire table. What is the recommended approach?",
-      "options": [
-        "ALTER TABLE ADD COLUMN with DEFAULT",
-        "Create a new table with the column and swap",
-        "Use UPDATE with SET on the new column",
-        "Recreate the table using CTAS"
-      ],
-      "correct": 0,
-      "explanation": "Delta Lake supports ALTER TABLE ADD COLUMN with a DEFAULT clause. This adds the column and populates existing rows with the default value without rewriting the entire table. UPDATE would require scanning all rows. CTAS or swap would be heavy."
-    },
-    {
       "id": "dp700-2-019",
       "module": 2,
       "text": "You want to optimize query performance for range filters on two columns in a large Delta table. Which OPTIMIZE option should you use?",
       "options": [
         "OPTIMIZE with VACUUM",
-        "OPTIMIZE with ZORDER BY (col1, col2)",
         "OPTIMIZE with REPAIR",
-        "OPTIMIZE alone (default compaction)"
+        "OPTIMIZE alone (default compaction)",
+        "OPTIMIZE with ZORDER BY (col1, col2)"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "OPTIMIZE with ZORDER BY col1, col2 co-locates related data from both columns within files, improving data skipping for multi-column range filters. OPTIMIZE alone only compacts files. VACUUM and REPAIR are unrelated."
     },
     {
@@ -253,38 +227,25 @@
       "module": 2,
       "text": "You must ensure a Delta table can be time‑travelled to a point 12 days ago. Which setting must you adjust?",
       "options": [
-        "VACUUM retention period",
         "Delta lake versioning to 30 days",
+        "Set table property 'retentionHours'",
         "Enable streaming checkpoint",
-        "Set table property 'retentionHours'"
+        "VACUUM retention period"
       ],
-      "correct": 0,
+      "correct": 3,
       "explanation": "Time travel is possible only within the VACUUM retention period. Default is 7 days; to time travel 12 days back, set VACUUM retention to >=12 days (e.g., 'delta.deletedFileRetentionDuration' = '12 days')."
-    },
-    {
-      "id": "dp700-2-021",
-      "module": 2,
-      "text": "When partitioning a Delta table by a date column, which practice yields the best query performance for range queries on recent data?",
-      "options": [
-        "Partition by year only",
-        "Partition by year‑month‑day",
-        "No partitioning; rely on file size",
-        "Partition by a high‑cardinality string"
-      ],
-      "correct": 1,
-      "explanation": "Partitioning by year-month-day (e.g., 2025-01-15) allows efficient pruning for queries filtering on specific dates or date ranges. Year only is too coarse. No partitioning may scan more data. High cardinality string creates too many small files."
     },
     {
       "id": "dp700-2-022",
       "module": 2,
       "text": "You need to merge incremental updates from a staging Delta table into a production Delta table. Which Delta command guarantees idempotency?",
       "options": [
-        "MERGE INTO target USING source ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT ...",
-        "INSERT OVERWRITE target SELECT * FROM source",
         "UPDATE target SET ... FROM source",
+        "INSERT OVERWRITE target SELECT * FROM source",
+        "MERGE INTO target USING source ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT ...",
         "APPEND mode in Spark write"
       ],
-      "correct": 0,
+      "correct": 2,
       "explanation": "MERGE is idempotent; running it multiple times with the same source produces the same final state. INSERT OVERWRITE replaces all data, not idempotent for incremental. UPDATE only updates existing rows, ignoring new ones. APPEND mode would duplicate rows."
     },
     {
@@ -292,12 +253,12 @@
       "module": 2,
       "text": "Which of the following is NOT a valid reason to use the gold layer in a Medallion architecture?",
       "options": [
+        "To provide fast query performance for reporting",
         "To store curated, business‑ready data",
         "To hold raw, unvalidated data",
-        "To provide fast query performance for reporting",
         "To enforce schema and data quality"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "The gold layer contains business‑ready, aggregated, curated data. Raw, unvalidated data belongs in the bronze layer, not gold."
     },
     {
@@ -331,12 +292,12 @@
       "module": 2,
       "text": "You need to move data from a bronze Delta table to silver while applying schema enforcement. Which tool provides the most straightforward solution?",
       "options": [
+        "Pipeline Copy Data activity",
         "Dataflow Gen2 with schema mapping",
         "Spark notebook with DataFrame API",
-        "Pipeline Copy Data activity",
         "Activator"
       ],
-      "correct": 0,
+      "correct": 1,
       "explanation": "Dataflow Gen2 provides a visual interface with schema mapping and data type enforcement, making it straightforward for bronze to silver transformations with schema enforcement. Spark notebooks are more code‑intensive. Copy Data has limited schema enforcement. Activator is for real‑time rules."
     },
     {
@@ -353,29 +314,16 @@
       "explanation": "OPTIMIZE compacts small files into larger ones, reducing file count and improving read query performance. It may slightly increase storage due to rewriting, not reduce it. Schema evolution and time travel are separate features."
     },
     {
-      "id": "dp700-2-028",
-      "module": 2,
-      "text": "You have a Delta table with VACUUM retention set to 7 days. You run VACUUM on day 10. Which versions can still be time-traveled?",
-      "options": [
-        "Only the current version",
-        "Versions from day 3 to day 10",
-        "Versions from day 3 onward (last 7 days)",
-        "All versions since table creation"
-      ],
-      "correct": 2,
-      "explanation": "VACUUM removes files older than the retention period (7 days). On day 10, files from day 3 and earlier are removed. Versions from the last 7 days (day 3 to 10) remain accessible for time travel."
-    },
-    {
       "id": "dp700-2-029",
       "module": 2,
       "text": "Which operation in Delta Lake requires rewriting the entire Parquet file containing the affected rows?",
       "options": [
-        "UPDATE",
         "INSERT",
+        "UPDATE",
         "SELECT",
         "DROP TABLE"
       ],
-      "correct": 0,
+      "correct": 1,
       "explanation": "UPDATE in Delta Lake requires rewriting the Parquet files that contain the rows being updated because Parquet files are immutable. INSERT appends new files, SELECT reads, DROP TABLE removes metadata."
     },
     {
@@ -397,11 +345,11 @@
       "text": "You have a medallion architecture with Bronze, Silver, and Gold layers. Where should you apply data quality rules such as \"email address must be valid\"?",
       "options": [
         "Only in Bronze during ingestion",
-        "Only in Gold before reporting",
         "In Silver during validation and cleansing",
+        "Only in Gold before reporting",
         "At each layer independently"
       ],
-      "correct": 2,
+      "correct": 1,
       "explanation": "Silver layer is where data is validated, cleansed, and standardized. Data quality rules like email validation belong in Silver. Bronze stores raw data, Gold stores aggregated business-ready data."
     },
     {
@@ -411,10 +359,10 @@
       "options": [
         "To another lakehouse table",
         "To an external ADLS Gen2 container",
-        "To an AWS S3 bucket",
-        "To a row in a specific Delta table"
+        "To a row in a specific Delta table",
+        "To an AWS S3 bucket"
       ],
-      "correct": 3,
+      "correct": 2,
       "explanation": "Shortcuts can point to folders, containers, or tables, but not to individual rows. They operate at the file/folder/table level, not row granularity."
     },
     {
@@ -423,11 +371,11 @@
       "text": "A Delta table has the property `delta.appendOnly = true`. Which operation will fail?",
       "options": [
         "INSERT",
-        "MERGE with only inserts",
         "UPDATE",
-        "SELECT"
+        "SELECT",
+        "MERGE with only inserts"
       ],
-      "correct": 2,
+      "correct": 1,
       "explanation": "appendOnly = true allows only insert operations (including MERGE that only inserts). UPDATE and DELETE are prohibited because they modify or remove existing data."
     },
     {
@@ -448,12 +396,12 @@
       "module": 2,
       "text": "You have a Delta table partitioned by `event_date`. A query filters on `event_date = '2025-01-01' AND product_id = 123`. How does partition pruning help?",
       "options": [
-        "It scans only the partition for 2025-01-01, then filters by product_id",
-        "It builds an index on product_id",
         "It scans all partitions but skips rows with product_id 123",
+        "It builds an index on product_id",
+        "It scans only the partition for 2025-01-01, then filters by product_id",
         "It rewrites the query to avoid scanning Parquet files"
       ],
-      "correct": 0,
+      "correct": 2,
       "explanation": "Partition pruning eliminates all partitions except the one matching '2025-01-01', then the product_id filter is applied to the remaining data. This dramatically reduces I/O."
     },
     {
@@ -500,12 +448,12 @@
       "module": 2,
       "text": "A lakehouse stores data in two main folders. Which of the following describes the Tables folder?",
       "options": [
-        "Stores raw files in any format for staging before transformation",
         "Stores Delta Lake tables that support SQL queries, ACID transactions, and schema enforcement",
         "Stores only CSV and JSON files for ad-hoc analysis",
+        "Stores raw files in any format for staging before transformation",
         "Stores compressed Parquet files with no schema enforcement"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "The Tables folder contains Delta Lake tables that provide structured, queryable data with ACID transactions, schema enforcement, and SQL access through the SQL analytics endpoint. The Files folder stores raw or semi-structured data in native formats without schema enforcement."
     },
     {
@@ -514,11 +462,11 @@
       "text": "Which of the following is true about OptimizeWrite in Microsoft Fabric?",
       "options": [
         "It is disabled by default and must be enabled per table",
-        "It reduces the number of small files by writing fewer, larger files at write time",
+        "It reorganizes data within Parquet files to accelerate read performance",
         "It removes old Parquet files no longer referenced by the transaction log",
-        "It reorganizes data within Parquet files to accelerate read performance"
+        "It reduces the number of small files by writing fewer, larger files at write time"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "OptimizeWrite reduces the number of small files by consolidating data into fewer, larger Parquet files as they are written. It is enabled by default in Fabric. VACUUM removes old files. V-Order reorganizes data within files for faster reads."
     },
     {
@@ -565,12 +513,12 @@
       "module": 2,
       "text": "A Fabric workspace needs to be configured so that a team member can view and read items but cannot create or modify them. Which workspace role should be assigned?",
       "options": [
-        "Admin",
+        "Viewer",
         "Member",
         "Contributor",
-        "Viewer"
+        "Admin"
       ],
-      "correct": 3,
+      "correct": 0,
       "explanation": "Fabric workspaces have four roles: Admin (full control), Member (modify and share), Contributor (modify existing items), and Viewer (read-only). Viewer is the correct role for read-only access. There is no Owner role in Fabric."
     },
     {
@@ -592,11 +540,11 @@
       "text": "On which Azure storage technology is Microsoft OneLake built?",
       "options": [
         "Azure Blob Storage",
-        "Azure Data Lake Storage Gen2",
         "Azure Data Lake Storage Gen1",
-        "Azure NetApp Files"
+        "Azure NetApp Files",
+        "Azure Data Lake Storage Gen2"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "OneLake is built on top of Azure Data Lake Storage Gen2 (ADLS Gen2). It uses Delta-Parquet as its default format for enabling efficient analytical queries."
     },
     {
@@ -604,12 +552,12 @@
       "module": 2,
       "text": "You need to reference a complete schema from another lakehouse in the same Fabric workspace without copying data. Which feature should you use?",
       "options": [
+        "A Copy Data activity in a pipeline",
         "An external table pointing to the schema",
-        "A schema shortcut",
         "A Dataflow Gen2 that reads the schema",
-        "A Copy Data activity in a pipeline"
+        "A schema shortcut"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "Schema shortcuts extend the shortcut concept to reference schema-level objects from other OneLake locations. Unlike external tables (which point to individual tables), schema shortcuts provide access to all objects within a schema without copying data."
     },
     {
@@ -618,11 +566,11 @@
       "text": "A Fabric lakehouse has two primary folders. What best describes the purpose of the Files folder?",
       "options": [
         "Stores Delta Lake tables with full ACID transaction support",
-        "Stores raw or semi-structured data in native formats without schema enforcement",
+        "Stores pre-aggregated views for Power BI reporting",
         "Stores only compressed Parquet files for optimized querying",
-        "Stores pre-aggregated views for Power BI reporting"
+        "Stores raw or semi-structured data in native formats without schema enforcement"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "The Files folder stores raw or semi-structured data in its original format (CSV, JSON, Parquet, images, etc.) without schema enforcement. It provides flexibility for staging and transformation. The Tables folder holds Delta tables with ACID support."
     },
     {
@@ -657,11 +605,11 @@
       "text": "You configure a Delta table as a streaming sink in Spark Structured Streaming. Which option is required for fault tolerance and recovery?",
       "options": [
         "triggerInterval",
-        "checkpointLocation",
         "outputMode",
-        "watermark"
+        "watermark",
+        "checkpointLocation"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "When using Delta as a streaming sink, checkpointLocation is mandatory. It stores the progress of the stream so that if the stream fails, it can resume from where it left off. triggerInterval, outputMode, and watermark are optional configurations."
     },
     {
@@ -683,11 +631,11 @@
       "text": "One user is writing data to a Delta table while another user is reading from it concurrently. What ensures the reader does not see partial or uncommitted writes?",
       "options": [
         "Partition pruning isolates read and write operations",
+        "V-Order optimization separates read and write paths",
         "Delta Lake's ACID transaction isolation guarantees readers see only committed data",
-        "Schema enforcement prevents partial writes from being visible",
-        "V-Order optimization separates read and write paths"
+        "Schema enforcement prevents partial writes from being visible"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Delta Lake's ACID transaction isolation ensures that concurrent readers never see uncommitted or partial writes. Writes are atomic: either all changes are committed and visible, or none are. This is a core ACID property that distinguishes Delta Lake from raw Parquet file storage."
     },
     {
@@ -695,12 +643,12 @@
       "module": 2,
       "text": "You are designing security for a medallion architecture. What is a recommended best practice for the Gold layer?",
       "options": [
+        "Restrict all access to only the data engineering team",
         "Grant all users full read-write access for maximum flexibility",
         "Grant read-only access to downstream consumers such as analysts and reporting tools",
-        "Restrict all access to only the data engineering team",
         "Store Gold layer data in the Files folder without any access controls"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Granting read-only access to the Gold layer is a security best practice. Downstream consumers (analysts, Power BI) need to query the data but should not modify it. Write access should be restricted to the ETL processes that populate the Gold layer."
     },
     {
@@ -721,12 +669,12 @@
       "module": 2,
       "text": "A compliance auditor requires that raw ingested data remains immutable and can never be modified after ingestion. Which medallion architecture layer serves this purpose?",
       "options": [
+        "Gold layer, because data is aggregated for reporting",
         "Bronze layer, because it stores unaltered source data as an immutable archive",
         "Silver layer, because data is cleaned and validated",
-        "Gold layer, because data is aggregated for reporting",
         "None of the layers guarantee immutability"
       ],
-      "correct": 0,
+      "correct": 1,
       "explanation": "The Bronze layer stores raw, unaltered data exactly as ingested from source systems, serving as an immutable archive for auditing and compliance. It provides a single source of truth that can always be referenced for reprocessing or regulatory requirements."
     },
     {
@@ -735,11 +683,11 @@
       "text": "Which of the following correctly distinguishes a Fabric Warehouse from a SQL analytics endpoint?",
       "options": [
         "A Warehouse is read-only; a SQL analytics endpoint supports full read-write operations",
-        "A Warehouse is a standalone resource; a SQL analytics endpoint is automatically provisioned when a Lakehouse is created",
         "A Warehouse uses Spark for querying; a SQL analytics endpoint uses T-SQL",
+        "A Warehouse is a standalone resource; a SQL analytics endpoint is automatically provisioned when a Lakehouse is created",
         "A Warehouse supports only Delta format; a SQL analytics endpoint supports all formats"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "A Fabric Warehouse is a standalone, fully managed T-SQL endpoint with its own independent storage. A SQL analytics endpoint is automatically created alongside each Lakehouse and provides read-only T-SQL access to the Lakehouse's Delta tables. Both use T-SQL, not Spark."
     },
     {
@@ -747,12 +695,12 @@
       "module": 2,
       "text": "Which features are supported by both a Fabric Warehouse and a SQL analytics endpoint?",
       "options": [
-        "Full DDL and DML operations including INSERT, UPDATE, and DELETE",
         "Views, stored procedures, and row-level and column-level security",
         "Data modification through MERGE statements",
+        "Full DDL and DML operations including INSERT, UPDATE, and DELETE",
         "Table creation and schema modification"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Both a Warehouse and a SQL analytics endpoint support views, stored procedures, and SQL-based security (RLS, CLS). However, only the Warehouse supports write operations (DDL, DML, MERGE); the SQL analytics endpoint is read-only and cannot create or modify tables."
     },
     {
@@ -761,11 +709,11 @@
       "text": "A data architect needs to choose between a Fabric Warehouse and a SQL analytics endpoint. The requirement is full read-write T-SQL capabilities with independent storage and transaction support. Which should be chosen?",
       "options": [
         "SQL analytics endpoint with Direct Lake mode",
-        "Fabric Warehouse",
+        "A Lakehouse with default semantic model",
         "A Spark notebook with T-SQL magic",
-        "A Lakehouse with default semantic model"
+        "Fabric Warehouse"
       ],
-      "correct": 1,
+      "correct": 3,
       "explanation": "A Fabric Warehouse provides full read-write T-SQL capabilities (DDL, DML, MERGE), ACID transactions, and stores its own data independently. The SQL analytics endpoint is read-only and reads from Lakehouse Delta tables. Spark notebooks use Spark SQL, not T-SQL."
     },
     {

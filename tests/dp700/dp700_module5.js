@@ -5,12 +5,12 @@
       "id": "dp700-5-001",
       "text": "A Fabric workspace contains a lakehouse, a warehouse, and a semantic model. A user has the Contributor role on the workspace. What can the user do?",
       "options": [
+        "Manage workspace settings and access",
         "Read data from the lakehouse Files folder but not the Tables folder",
-        "Create new items in the workspace and run existing items",
         "Only view items but not create or modify them",
-        "Manage workspace settings and access"
+        "Create new items in the workspace and run existing items"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 5,
       "explanation": "Contributor can create, modify, and run items but cannot manage workspace settings or permissions. The Files folder access is not controlled by Contributor role per se; read access to data depends on item permissions and OneLake roles. Contributor can create new items and run existing pipelines, notebooks, etc."
     },
@@ -31,12 +31,12 @@
       "id": "dp700-5-003",
       "text": "Which of the following is true about Fabric Viewer role on a workspace?",
       "options": [
+        "Viewers can share items with other users",
         "Viewers can create and edit items in the workspace",
         "Viewers can view items but have no OneLake data access by default",
-        "Viewers can share items with other users",
         "Viewers can run pipelines and notebooks"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 5,
       "explanation": "Viewers can see items in the workspace but by default have no access to read data from lakehouses or warehouses; they require explicit OneLake security roles or item permissions to read data. Viewers cannot create, edit, share, or run items."
     },
@@ -44,12 +44,12 @@
       "id": "dp700-5-004",
       "text": "You have a Fabric workspace. Which of the following workspace roles can manage workspace settings and access?",
       "options": [
-        "Admin",
         "Member",
+        "Viewer",
         "Contributor",
-        "Viewer"
+        "Admin"
       ],
-      "correct": 0,
+      "correct": 3,
       "module": 5,
       "explanation": "Only Admin can manage workspace settings and access. Member can manage content but not permissions. Contributor can create and modify items but cannot manage settings. Viewer is read-only."
     },
@@ -77,7 +77,7 @@
       ],
       "correct": 1,
       "module": 5,
-      "explanation": "F64 or higher capacities allow users with Fabric Free licenses to view Power BI content shared to them. Not all features are available on smaller SKUs (e.g., Copilot requires F64). Capacity is managed at the capacity level, not workspace only. Capacity directly affects Spark performance (CU allocation)."
+      "explanation": "F64 or higher capacities let users with a Fabric Free license view Power BI content shared with them. Capacity sizes also differ in the compute they provide. Capacity is assigned to workspaces and is not managed at the workspace level only."
     },
     {
       "id": "dp700-5-007",
@@ -96,38 +96,25 @@
       "id": "dp700-5-008",
       "text": "You need to monitor Fabric job execution. Which centralized view provides this?",
       "options": [
-        "Monitor Hub",
         "Admin portal",
         "Capacity Metrics app",
+        "Monitor Hub",
         "Audit logs"
       ],
-      "correct": 0,
+      "correct": 2,
       "module": 5,
       "explanation": "Monitor Hub is the centralized interface for monitoring job executions (pipelines, dataflows, Spark jobs, etc.). Admin portal holds tenant settings and audit logs. Capacity Metrics app shows capacity usage. Audit logs show user actions, not job execution details."
-    },
-    {
-      "id": "dp700-5-009",
-      "text": "You need to deploy content between Fabric workspaces using a REST API. Which endpoint should you use?",
-      "options": [
-        "POST /deployments/deploy",
-        "GET /workspaces/{workspaceId}/items",
-        "POST /git/commit",
-        "All of the above"
-      ],
-      "correct": 0,
-      "module": 5,
-      "explanation": "The Deployment Pipeline REST API includes an endpoint like `POST /deployments/{deploymentId}/stages/{stageId}/deploy` to deploy content. GET /workspaces/{workspaceId}/items lists items, does not deploy. POST /git/commit commits to Git, not workspace deployment."
     },
     {
       "id": "dp700-5-010",
       "text": "Which of the following is true about Fabric item-level permissions?",
       "options": [
-        "Item permissions override workspace roles",
-        "Item permissions can only grant Read access",
         "Item permissions are only available for lakehouses",
+        "Item permissions can only grant Read access",
+        "Item permissions override workspace roles",
         "Item permissions replace workspace roles entirely"
       ],
-      "correct": 0,
+      "correct": 2,
       "module": 5,
       "explanation": "Item permissions (e.g., Share, Read, ReadData) can override workspace roles by granting additional access. They are not limited to Read (Share, Build, etc. exist) and are available for many item types. They complement workspace roles, not replace them."
     },
@@ -136,11 +123,11 @@
       "text": "You have a Fabric workspace with multiple items. A user needs to build reports on a lakehouse but should not be able to modify the data. Which permission combination should you assign?",
       "options": [
         "Contributor role on the workspace",
-        "Viewer role on the workspace with ReadData permission on the lakehouse",
         "Member role on the workspace",
-        "No workspace role, only item-level sharing"
+        "No workspace role, only item-level sharing",
+        "Viewer role on the workspace with ReadData permission on the lakehouse"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 5,
       "explanation": "Viewer role provides read-only access to item metadata, but to read data from a lakehouse, you must grant ReadData permission (via OneLake security roles or item permissions). Contributor and Member would allow modification. No workspace role would make it hard to discover the lakehouse."
     },
@@ -148,12 +135,12 @@
       "id": "dp700-5-012",
       "text": "You connect a Fabric workspace to a Git repository. A developer makes changes in the workspace. How do the changes get synchronized with the Git branch?",
       "options": [
-        "Changes are automatically pushed to Git in real-time",
         "The developer uses the Source control panel to commit changes to the connected Git branch",
         "Changes must be exported manually and uploaded to Git",
+        "Changes are automatically pushed to Git in real-time",
         "Git integration automatically creates pull requests for all workspace changes"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 5,
       "explanation": "Git integration in Fabric is manual: the developer must use the Source control panel to commit changes to the connected branch. Changes are not automatic, nor do they auto-create pull requests."
     },
@@ -162,11 +149,11 @@
       "text": "You create a deployment pipeline with three stages: Development, Test, and Production. Each stage is assigned to a different workspace. When you deploy from Development to Test, what happens to existing items in the Test workspace?",
       "options": [
         "Existing items in Test are deleted and replaced with Development content",
-        "Items are updated if they exist in both stages; new items are created; items only in Test remain unchanged",
         "The deployment fails if Test already contains items",
+        "Items are updated if they exist in both stages; new items are created; items only in Test remain unchanged",
         "Only items that exist in Development are copied; Test items are preserved as-is"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 5,
       "explanation": "Deployment pipelines perform an upsert: items that exist in both stages are updated, new items are created, and items that exist only in the target stage are left untouched. This allows incremental promotion."
     },
@@ -174,12 +161,12 @@
       "id": "dp700-5-014",
       "text": "You need to commit workspace changes to Git and deploy content between pipeline stages programmatically. Which Fabric REST APIs should you use?",
       "options": [
-        "Only the deployment pipeline REST API",
         "The Git REST APIs for committing and the deployment pipeline REST APIs for deploying stage content",
+        "The monitoring REST APIs for both operations",
         "The Fabric administrative REST APIs only",
-        "The monitoring REST APIs for both operations"
+        "Only the deployment pipeline REST API"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 5,
       "explanation": "Git operations (commit, sync) have dedicated Git REST APIs. Deployment pipeline operations have their own REST APIs. You need both for programmatic CI/CD. Admin and monitoring APIs are not for these operations."
     },
@@ -200,12 +187,12 @@
       "id": "dp700-5-016",
       "text": "A new lakehouse is created in a Fabric workspace. A Viewer role user tries to read data from it through the SQL analytics endpoint. What happens by default?",
       "options": [
-        "The Viewer can query all tables through the SQL endpoint",
         "The Viewer has no OneLake data access by default; they need OneLake security roles or item permissions to access data",
         "The Viewer can read data but cannot write",
+        "The Viewer can query all tables through the SQL endpoint",
         "The Viewer is automatically added to the DefaultReader security role"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 5,
       "explanation": "By default, Viewer role only allows viewing item metadata, not reading data. To read data, you must grant OneLake security roles (e.g., DefaultReader) or item ReadData permissions. The Viewer is not automatically added to DefaultReader."
     },
@@ -239,12 +226,12 @@
       "id": "dp700-5-019",
       "text": "A Fabric administrator delegates the Certification setting to a domain admin. What can the domain admin now do?",
       "options": [
-        "Override all tenant settings for their domain",
         "Specify their own certifiers for items within their domain's workspaces",
+        "Override all tenant settings for their domain",
         "Create new capacities for their domain",
         "Manage all workspaces across the tenant"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 5,
       "explanation": "Delegating Certification allows the domain admin to define who can certify items (certifiers) within their domain. They cannot override all tenant settings, create capacities, or manage workspaces outside the domain."
     },
@@ -252,12 +239,12 @@
       "id": "dp700-5-020",
       "text": "Your organization has an F64 Fabric capacity. A user with a Free license needs to view Power BI reports in a workspace assigned to this capacity. What is required?",
       "options": [
-        "The user must have a Pro license to view any Power BI content",
         "The user needs a viewer role on the workspace; on F64+ capacity, Free license users can view Power BI content",
+        "The user must have a Pro license to view any Power BI content",
         "The user must be upgraded to Premium Per User (PPU)",
         "The user cannot view Power BI content regardless of capacity"
       ],
-      "correct": 1,
+      "correct": 0,
       "module": 5,
       "explanation": "F64 or higher capacities include Premium capabilities, allowing Free license users to consume Power BI reports if they have Viewer role (or equivalent) on the workspace. Pro or PPU licenses are not required."
     },
@@ -288,28 +275,15 @@
       "explanation": "Domains are for governance and organization, not for access control. Access is still managed by workspace roles and item permissions. Domains do not automatically restrict access to department users."
     },
     {
-      "id": "dp700-5-023",
-      "text": "You assign a workspace to the F64 capacity. What happens to workspaces not assigned to any capacity?",
-      "options": [
-        "They run on shared capacity with limitations, which is not suitable for production workloads",
-        "They are automatically assigned to the first available F capacity",
-        "They cannot be accessed by any users",
-        "They run on a trial capacity with full functionality"
-      ],
-      "correct": 0,
-      "module": 5,
-      "explanation": "Workspaces not assigned to a Fabric capacity run on shared capacity (free tier) with limited functionality and performance, not suitable for production. They are not auto-assigned, are accessible, and trial capacity is separate."
-    },
-    {
       "id": "dp700-5-024",
       "text": "A developer branches out from a shared development workspace to create an isolated workspace for feature development. What is the purpose of this branching approach?",
       "options": [
         "To create a production copy of the workspace",
-        "To keep development work isolated so changes don't affect other workspace users until merged via pull request",
         "To automatically deploy changes to production",
+        "To keep development work isolated so changes don't affect other workspace users until merged via pull request",
         "To grant the developer admin access to the main workspace"
       ],
-      "correct": 1,
+      "correct": 2,
       "module": 5,
       "explanation": "Branching workspaces in Fabric (using Git integration) allows developers to work in isolation without affecting the shared dev workspace. Changes are later merged via pull request. It does not create production copies, auto-deploy, or grant admin access."
     },
@@ -317,12 +291,12 @@
       "id": "dp700-5-025",
       "text": "You need to ensure that only designated data stewards can certify Fabric items as trusted. Which tenant setting should the administrator configure?",
       "options": [
-        "Enable certification tenant-wide but limit it to a 'Data Stewards' security group",
+        "Configure certification at the domain level only",
         "Disable certification for all users",
         "Enable certification for all users without restrictions",
-        "Configure certification at the domain level only"
+        "Enable certification tenant-wide but limit it to a 'Data Stewards' security group"
       ],
-      "correct": 0,
+      "correct": 3,
       "module": 5,
       "explanation": "The Certification tenant setting allows you to enable certification and specify which security groups can certify items. Limiting to 'Data Stewards' achieves the goal. Disabling would prevent all. Enabling for all would not restrict."
     },
@@ -331,11 +305,11 @@
       "text": "A Fabric administrator uses the admin monitoring workspace. What is the primary difference between the admin monitoring workspace and the Monitor Hub?",
       "options": [
         "The admin monitoring workspace shows individual job status for diagnosing failures; the Monitor Hub shows adoption trends",
-        "The Monitor Hub shows individual job execution status; the admin monitoring workspace shows platform-wide usage and adoption patterns",
+        "The admin monitoring workspace is only available to workspace admins",
         "They are identical tools with different interfaces",
-        "The admin monitoring workspace is only available to workspace admins"
+        "The Monitor Hub shows individual job execution status; the admin monitoring workspace shows platform-wide usage and adoption patterns"
       ],
-      "correct": 1,
+      "correct": 3,
       "module": 5,
       "explanation": "Monitor Hub is for detailed job-level monitoring (pipeline runs, dataflow refreshes). The admin monitoring workspace (available to Fabric admins) provides aggregated platform-wide metrics, adoption trends, and capacity usage."
     },
@@ -370,12 +344,12 @@
       "module": 5,
       "text": "A CI/CD pipeline needs to automatically promote items from a dev workspace to prod after successful validation. Which Fabric feature should be used?",
       "options": [
-        "Deployment pipelines",
         "Git integration",
+        "Deployment pipelines",
         "REST API",
         "Workspace apps"
       ],
-      "correct": 0,
+      "correct": 1,
       "explanation": "Deployment pipelines are designed for promoting content between stages (dev/test/prod) and can be automated via REST APIs. Git integration is for source control, not promotion. REST API alone is not a feature, but can be used with deployment pipelines. Workspace apps are for distribution."
     },
     {
@@ -383,12 +357,12 @@
       "module": 5,
       "text": "Which role can manage workspace settings and assign permissions in a Fabric workspace?",
       "options": [
+        "Contributor",
         "Admin",
         "Member",
-        "Contributor",
         "Viewer"
       ],
-      "correct": 0,
+      "correct": 1,
       "explanation": "Only Admin can manage workspace settings and assign permissions. Member can manage content but not permissions. Contributor can create/modify content. Viewer is read-only."
     },
     {
@@ -409,12 +383,12 @@
       "module": 5,
       "text": "Which of the following is NOT a valid action type in Activator?",
       "options": [
-        "Email",
-        "Teams",
         "Power Automate",
-        "Azure Function"
+        "Teams",
+        "Azure Function",
+        "Email"
       ],
-      "correct": 3,
+      "correct": 2,
       "explanation": "Activator supports Email, Teams, Power Automate, and Fabric item actions. Azure Function is not a direct action type; you can call it via Power Automate."
     },
     {
@@ -422,38 +396,25 @@
       "module": 5,
       "text": "You need to schedule a pipeline to run every 15 minutes. Which trigger type should you configure?",
       "options": [
+        "Dataflow refresh trigger",
         "Scheduled trigger with recurrence of 15 minutes",
-        "Event-driven trigger on blob creation",
         "Manual trigger only",
-        "Dataflow refresh trigger"
-      ],
-      "correct": 0,
-      "explanation": "Scheduled trigger with recurrence is the correct way to run a pipeline on a fixed interval (every 15 minutes). Event-driven trigger reacts to events, not time. Manual trigger requires manual start. Dataflow refresh trigger is for dataflows."
-    },
-    {
-      "id": "dp700-5-034",
-      "module": 5,
-      "text": "A warehouse query fails because the user lacks permission to view query insights. Which permission must be added?",
-      "options": [
-        "VIEW SERVER STATE",
-        "MONITOR QUERY INSIGHTS",
-        "READ DATABASE",
-        "ADMINISTER DATABASE BULK OPERATIONS"
+        "Event-driven trigger on blob creation"
       ],
       "correct": 1,
-      "explanation": "The specific permission for viewing query insights is MONITOR QUERY INSIGHTS. VIEW SERVER STATE is for DMVs. READ DATABASE allows reading data. ADMINISTER BULK is for COPY INTO."
+      "explanation": "Scheduled trigger with recurrence is the correct way to run a pipeline on a fixed interval (every 15 minutes). Event-driven trigger reacts to events, not time. Manual trigger requires manual start. Dataflow refresh trigger is for dataflows."
     },
     {
       "id": "dp700-5-035",
       "module": 5,
       "text": "When using the COPY INTO statement to load Parquet files from ADLS, which authentication methods are supported?",
       "options": [
-        "SQL authentication only",
         "Managed identity or SAS token",
+        "SQL authentication only",
         "Windows authentication",
         "OAuth 2.0 client credentials"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "COPY INTO supports managed identity (workspace identity) and SAS tokens for authenticating to ADLS. SQL authentication is for the database, not external storage. Windows auth and OAuth client credentials are not supported directly."
     },
     {
@@ -461,12 +422,12 @@
       "module": 5,
       "text": "Which function safely incorporates user input into a dynamic SQL string in a Fabric warehouse?",
       "options": [
-        "QUOTENAME",
         "CONCAT",
+        "FORMATMESSAGE",
         "STRING_AGG",
-        "FORMATMESSAGE"
+        "QUOTENAME"
       ],
-      "correct": 0,
+      "correct": 3,
       "explanation": "QUOTENAME escapes and quotes identifiers, preventing SQL injection. CONCAT, STRING_AGG, and FORMATMESSAGE do not provide injection protection."
     },
     {
@@ -474,12 +435,12 @@
       "module": 5,
       "text": "You need to mask email addresses in a column. Which dynamic data masking function should you use?",
       "options": [
-        "email()",
+        "default()",
         "partial()",
-        "random()",
-        "default()"
+        "email()",
+        "random()"
       ],
-      "correct": 0,
+      "correct": 2,
       "explanation": "email() is the DDM function specifically for email addresses, showing first letter and '.com' suffix."
     },
     {
@@ -487,26 +448,13 @@
       "module": 5,
       "text": "Which Git branch strategy is recommended for a team of 5 developers working on Fabric items?",
       "options": [
-        "Direct commits to main branch",
         "Feature branches with pull requests to a development branch",
         "Each developer has their own repository",
+        "Direct commits to main branch",
         "Git is not recommended for teams"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Feature branches with pull requests to a development branch allows code review, testing, and isolation before merging, preventing conflicts and broken deployments to production."
-    },
-    {
-      "id": "dp700-5-039",
-      "module": 5,
-      "text": "A deployment pipeline fails with \"cannot overwrite item locked by another deployment\". What is the most likely cause?",
-      "options": [
-        "The target workspace is full",
-        "Another deployment is in progress to the same stage",
-        "The source workspace has conflicting items",
-        "The user lacks permissions"
-      ],
-      "correct": 1,
-      "explanation": "Deployment pipelines lock the target stage during deployment to prevent conflicts. This error indicates another deployment is already running to the same workspace/stage."
     },
     {
       "id": "dp700-5-040",
@@ -527,11 +475,11 @@
       "text": "You need to audit all access to a specific lakehouse table over the last 90 days. Where should you look?",
       "options": [
         "Monitor Hub",
-        "Audit logs (Admin portal) filtered by item ID",
         "OneLake catalog activity pane",
+        "Audit logs (Admin portal) filtered by item ID",
         "Table history via DESCRIBE HISTORY"
       ],
-      "correct": 1,
+      "correct": 2,
       "explanation": "Audit logs in the Admin portal capture access events and can be filtered by item ID. Monitor Hub shows job runs, not user access. DESCRIBE HISTORY shows table changes, not who read it."
     },
     {
@@ -539,25 +487,25 @@
       "module": 5,
       "text": "Which Fabric capacity SKU is the minimum required for Copilot across all workloads?",
       "options": [
-        "F2",
+        "F128",
         "F16",
         "F64",
-        "F128"
+        "F2"
       ],
-      "correct": 2,
-      "explanation": "Copilot requires Fabric capacity F64 or higher (or P1). Smaller SKUs like F2, F16 do not support Copilot features."
+      "correct": 0,
+      "explanation": "Copilot in Fabric is available from F2 upward (and on P SKUs), so F2 is the minimum. It is not available on trial capacities."
     },
     {
       "id": "dp700-5-043",
       "module": 5,
       "text": "Which of the following describes a Fabric domain?",
       "options": [
-        "A security boundary that restricts workspace access to specific users",
         "A logical grouping of workspaces for governance and delegated administration",
+        "A security boundary that restricts workspace access to specific users",
         "A container for Fabric capacities",
         "A replacement for workspaces in large organizations"
       ],
-      "correct": 1,
+      "correct": 0,
       "explanation": "Domains organize workspaces into logical groups (e.g., Finance, Sales) and allow domain admins to delegate governance settings such as certification and data lineage policies. They do not control access."
     },
     {
@@ -572,19 +520,6 @@
       ],
       "correct": 1,
       "explanation": "The Monitor Hub shows the status, start/end times, and details of Fabric job executions. You can drill into failures, retry runs, and view Spark logs. It is the primary operational monitoring tool."
-    },
-    {
-      "id": "dp700-5-045",
-      "module": 5,
-      "text": "Which of the following describes the purpose of a deployment pipeline in Fabric?",
-      "options": [
-        "To synchronize workspace content with a Git repository",
-        "To promote content (e.g., lakehouses, reports) between stages (Dev → Test → Prod) using zero-copy cloning and deployment rules",
-        "To automate the creation of Fabric capacities",
-        "To deploy Fabric items to external cloud providers"
-      ],
-      "correct": 1,
-      "explanation": "Deployment pipelines allow you to assign workspaces to stages and then promote items from one stage to the next. Deployment rules can swap connection strings (e.g., Dev lakehouse → Prod lakehouse) automatically."
     },
     {
       "id": "dp700-5-046",
