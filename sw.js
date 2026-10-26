@@ -2,7 +2,7 @@
 // (index.html plus every script and stylesheet it references, including the CDN libraries). After
 // that, GET requests are served from cache and refreshed in the background, so content updates
 // show up on the next visit. Bump VERSION to drop old caches.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `fabricprep-${VERSION}`;
 
 self.addEventListener('install', (event) => {

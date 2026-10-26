@@ -2,7 +2,7 @@
 
 Checked against `study-guide.md` (skills measured as of October 19, 2026). Every skill has module material, practice questions (7 or more) and at least 3 flashcards. 27 questions on topics outside the outline (AI, Copilot, Purview, platform admin) are excluded from test mode.
 
-Questions come from modules 1-7 (modules 6 and 7 fill outline gaps and add depth); flashcards are in `flashcards/dp600.js`. Not covered: case-study and multi-select question formats.
+Questions come from modules 1-7 (modules 6 and 7 fill outline gaps and add depth); flashcards are in `flashcards/dp600.js`. Module 8 (40 questions) adds the exam formats: 5 case studies (4 questions each, shared scenario), 10 ordering and 10 yes/no-series questions (each case also ends with one yes/no). Test tab has a Mock exam (50 questions, 100-minute countdown, domain-weighted, answers revealed at the end). Still thin: genuine multi-select questions (about 7).
 
 ## Maintain a data analytics solution 25-30%
 

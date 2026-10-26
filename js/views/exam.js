@@ -28,6 +28,11 @@ function initExamHub() {
             <option value="wrong">Wrong queue</option>
           </select>
         </div>
+        ${DATA.getOutline(currentCertId()) ? `
+        <div class="mock-card">
+          <div><b>Mock exam</b><span>50 questions · 100 min countdown · weighted by domain · answers shown at the end</span></div>
+          <button class="btn btn-accent" onclick="startMockExam()">Start mock</button>
+        </div>` : ''}
         <div class="exam-actions-row">
           <select id="exam-count-select" aria-label="Question count">
             <option value="10">10 questions</option>
@@ -171,6 +176,8 @@ function shuffleQuestionOptions(q) {
   const oldToNew = new Array(order.length);
   order.forEach((oldIdx, newIdx) => { oldToNew[oldIdx] = newIdx; });
 
+  if (isFormatQuestion(q)) return shuffleFormatQuestion(q, order, oldToNew);
+
   const newOptions = order.map((oldIdx) => q.options[oldIdx]);
   const newCorrect = q.type === 'multi'
     ? q.correct.map((oldIdx) => oldToNew[oldIdx])
@@ -181,6 +188,7 @@ function shuffleQuestionOptions(q) {
 
 function isAnswerCorrect(q, ans) {
   if (ans === null || ans === undefined) return false;
+  if (isFormatQuestion(q)) return isFormatCorrect(q, ans);
   if (q.type === 'multi') {
     const correctKey = [...q.correct].sort((a, b) => a - b).join(',');
     const ansKey = [...ans].sort((a, b) => a - b).join(',');
@@ -230,8 +238,11 @@ function updateExamTimer() {
   if (!examState.activeExam) return;
   examState.activeExam.elapsedSeconds = Math.floor((Date.now() - examState.activeExam.startTime) / 1000);
 
-  const m = Math.floor(examState.activeExam.elapsedSeconds / 60);
-  const s = examState.activeExam.elapsedSeconds % 60;
+  const limit = examState.activeExam.limitSeconds;
+  const shown = limit ? Math.max(0, limit - examState.activeExam.elapsedSeconds) : examState.activeExam.elapsedSeconds;
+  const m = Math.floor(shown / 60);
+  const s = shown % 60;
+  if (limit && shown === 0) { finishMockExam(true); return; }
 
   const timerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   const timerBox = document.getElementById('active-exam-timer');
@@ -249,7 +260,8 @@ function renderActiveQuestion() {
     ? ' • <span class="q-type-badge q-type-multi">Select all that apply</span>'
     : q.type === 'truefalse'
       ? ' • <span class="q-type-badge q-type-tf">True / False</span>'
-      : '';
+      : formatTypeBadge(q);
+  const isFormat = isFormatQuestion(q);
 
   stage.innerHTML = `
     <div class="exam-layout question-card">
@@ -262,6 +274,7 @@ function renderActiveQuestion() {
 
       <div class="question-body">
         <div class="question-meta">${q.cert} • ${questionTopicLabel(q)}${typeBadge}</div>
+        ${scenarioHtml(q)}
         <div class="question-text">${q.text}</div>
 
         <div class="options-list" id="active-options-list"></div>
@@ -272,6 +285,7 @@ function renderActiveQuestion() {
       <div class="exam-nav">
         <button class="btn btn-secondary" id="btn-skip" onclick="skipQuestion()">Skip</button>
         ${isMulti ? '<button class="btn btn-accent" id="btn-multi-submit" style="display:none;" onclick="submitMultiAnswer()">Submit Answer</button>' : ''}
+        ${isFormat ? '<button class="btn btn-accent" id="btn-fmt-submit" style="display:none;" onclick="submitFormatAnswer()">Submit Answer</button>' : ''}
         <button class="btn btn-primary" id="btn-exam-next" style="display:none;"></button>
       </div>
     </div>
@@ -283,6 +297,25 @@ function renderActiveQuestion() {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   if (isMulti) exam.pendingMultiSelect = [];
+
+  if (isFormat) {
+    exam.pendingFormat = null;
+    const done = exam.answers[exam.currentIndex];
+    renderFormatWidget(q, optList, {
+      answer: done,
+      locked: done !== null,
+      onChange: (ans) => {
+        exam.pendingFormat = ans;
+        document.getElementById('btn-fmt-submit').style.display = isFormatAnswered(q, ans) ? 'inline-flex' : 'none';
+      },
+    });
+    if (done !== null) revealQuestionAnswer(done, false);
+    else if (q.type === 'ordering') {
+      exam.pendingFormat = q.options.map((_, i) => i);
+      document.getElementById('btn-fmt-submit').style.display = 'inline-flex';
+    }
+    return;
+  }
 
   q.options.forEach((opt, idx) => {
     const item = document.createElement('div');
@@ -326,6 +359,18 @@ function selectExamOption(optionIdx) {
   }
 }
 
+function submitFormatAnswer() {
+  const exam = examState.activeExam;
+  const q = exam.questions[exam.currentIndex];
+  const ans = exam.pendingFormat;
+  if (!isFormatAnswered(q, ans)) return;
+  exam.answers[exam.currentIndex] = ans;
+  exam.pendingFormat = null;
+  const host = document.getElementById('active-options-list');
+  renderFormatWidget(q, host, { answer: ans, locked: true, reveal: true });
+  revealQuestionAnswer(ans, true);
+}
+
 function submitMultiAnswer() {
   const exam = examState.activeExam;
   const pending = [...(exam.pendingMultiSelect || [])].sort((a, b) => a - b);
@@ -343,13 +388,19 @@ function revealQuestionAnswer(selectedIdx, recordToSrs) {
   const items = document.querySelectorAll('.option-item');
   const nextBtn = document.getElementById('btn-exam-next');
   const skipBtn = document.getElementById('btn-skip');
-  const submitBtn = document.getElementById('btn-multi-submit');
+  const submitBtn = document.getElementById('btn-multi-submit') || document.getElementById('btn-fmt-submit');
 
   const isMulti = q.type === 'multi';
+  const isFormat = isFormatQuestion(q);
   const correctSet = isMulti ? new Set(q.correct) : null;
   const selectedSet = isMulti ? new Set(Array.isArray(selectedIdx) ? selectedIdx : [selectedIdx]) : null;
 
-  items.forEach((item, idx) => {
+  if (isFormat && !recordToSrs) {
+    // Re-visiting an answered question: show the locked, marked widget.
+    renderFormatWidget(q, document.getElementById('active-options-list'), { answer: selectedIdx, locked: true, reveal: true });
+  }
+
+  (isFormat ? [] : items).forEach((item, idx) => {
     item.classList.add('disabled');
     if (isMulti) {
       if (correctSet.has(idx)) item.classList.add('correct');
@@ -438,6 +489,7 @@ function finishPracticeExam() {
     skipped,
     pct,
     pass,
+    mode: exam.mode || 'practice',
     elapsed: exam.elapsedSeconds,
     answers: exam.answers,
     questions: exam.questions,
@@ -495,7 +547,7 @@ function renderExamResults(session) {
 
   stage.innerHTML = `
     <div class="exam-layout">
-      <h1>Practice Exam Completed</h1>
+      <h1>${session.mode === 'mock' ? 'Mock Exam Completed' : 'Practice Exam Completed'}</h1>
       <p class="subtitle">Review your score and details below.</p>
 
       <div class="glass-panel results-score-panel">
@@ -506,7 +558,9 @@ function renderExamResults(session) {
         </div>
 
         <h2 style="margin-bottom: 8px;">${session.pass ? 'Congratulations! You Passed' : 'Study Required'}</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 24px;">Passing score is 70%</p>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">${session.mode === 'mock'
+          ? `Approx. scaled score ${session.pct * 10} / 1000 (pass mark 700). Microsoft's real scaling is not published, so treat this as a guide.`
+          : 'Passing score is 70%'}</p>
 
         <div class="results-stats-row">
           <div class="stat-card">
@@ -571,10 +625,20 @@ function reviewExamAnswers(sessionId) {
           <span>Question ${idx + 1}</span>
           <span style="color: ${border}">${statusText}</span>
         </div>
+        ${scenarioHtml(q)}
         <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 20px; line-height: 1.5;">${q.text}</div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
     `;
+
+    if (isFormatQuestion(q)) {
+      html += `${formatReviewHtml(q, chosen)}</div>`;
+      if (q.explanation) {
+        html += `<div style="margin-top: 16px; border-left: 3px solid var(--accent-indigo); background: rgba(99,102,241,0.05); padding: 12px 16px; font-size: 0.85rem; border-radius: 0 8px 8px 0; line-height: 1.6; color: var(--text-secondary);"><strong>Explanation:</strong><br>${q.explanation}</div>`;
+      }
+      html += `</div>`;
+      return;
+    }
 
     const correctSet = q.type === 'multi' ? new Set(q.correct) : null;
     const chosenSet = (q.type === 'multi' && Array.isArray(chosen)) ? new Set(chosen) : null;
@@ -655,7 +719,7 @@ function renderExamHistory() {
     html += `
       <tr>
         <td>${date}</td>
-        <td style="font-weight: 600;">${session.cert}</td>
+        <td style="font-weight: 600;">${session.cert}${session.mode === 'mock' ? ' · Mock' : ''}</td>
         <td style="font-weight: bold;">${session.pct}% <span style="font-size:0.75rem; font-weight:normal; color: var(--text-muted);">(${session.correct}/${session.total})</span></td>
         <td><span class="badge-result ${session.pass ? 'badge-pass' : 'badge-fail'}">${session.pass ? 'PASS' : 'FAIL'}</span></td>
         <td style="font-family: var(--font-mono);">${timeStr}</td>
