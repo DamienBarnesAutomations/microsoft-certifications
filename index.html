@@ -6,6 +6,15 @@
   <meta name="description" content="Microsoft Certification Study Portal - DP-300, DP-600, DP-700 & DP-750 Study Materials, Flashcards & Practice Exams.">
   <title>Microsoft Certification Prep Portal</title>
 
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#080c14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FabricPrep">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
   <link rel="stylesheet" href="css/style.css">
 
   <!-- Markdown Parser CDN -->
@@ -147,5 +156,10 @@
     </div>
   </div>
 
+  <script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+  </script>
 </body>
 </html>
