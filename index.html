@@ -99,10 +99,14 @@
       </ul>
     </aside>
 
-    <!-- Bottom navigation (mobile): same items as the sidebar -->
-    <nav class="bottom-nav">
-      <a href="#/" class="bottom-nav-item" :class="$store.ui.tool === 'home' && 'active'"><span class="bottom-nav-icon">🏠</span><span x-text="$store.ui.cert ? 'All' : 'Home'"></span></a>
-      <a :href="'#/' + $store.ui.cert" class="bottom-nav-item" x-show="$store.ui.cert" :class="$store.ui.tool === 'hub' && 'active'"><span class="bottom-nav-icon">📍</span><span x-text="$store.ui.certInfo && $store.ui.certInfo.code"></span></a>
+    <!-- Mobile top bar: where you are (home or the open certification) and the way back. -->
+    <header class="topbar">
+      <a href="#/" class="topbar-back" x-show="$store.ui.cert" aria-label="All certifications">‹ All</a>
+      <a :href="$store.ui.cert ? '#/' + $store.ui.cert : '#/'" class="topbar-title" x-text="$store.ui.certInfo ? $store.ui.certInfo.code + ' · ' + $store.ui.certInfo.title : 'FabricPrep'"></a>
+    </header>
+
+    <!-- Bottom navigation (mobile): the open certification's tools only -->
+    <nav class="bottom-nav" x-show="$store.ui.cert">
       <template x-for="t in $store.ui.tools" :key="t.id">
         <a :href="'#/' + $store.ui.cert + '/' + t.id" class="bottom-nav-item" :class="$store.ui.tool === t.id && 'active'"><span class="bottom-nav-icon" x-text="t.icon"></span><span x-text="t.short"></span></a>
       </template>

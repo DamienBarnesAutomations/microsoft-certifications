@@ -163,7 +163,7 @@ body {
   font-weight: 500;
   gap: 4px;
   flex: 1;
-  min-width: 56px;
+  min-width: 0;
   min-height: var(--tap-target-min);
   padding: 8px 4px;
   position: relative;
@@ -296,10 +296,11 @@ h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; }
 /* ---------------------------------------------------- */
 /* E-Reader */
 /* ---------------------------------------------------- */
-.reader-layout { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
+.reader-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.reader-layout > * { min-width: 0; }
 .reader-sidebar { position: static; max-height: none; overflow-y: visible; }
 .toc-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.toc-item a { display: block; font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; padding: 8px 12px; border-left: 2px solid transparent; transition: all 0.2s; }
+.toc-item a { display: block; overflow-wrap: anywhere; font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; padding: 8px 12px; border-left: 2px solid transparent; transition: all 0.2s; }
 .toc-item a:hover { color: var(--text-primary); }
 .toc-item.active a { color: var(--accent-teal); border-left-color: var(--accent-teal); font-weight: 600; }
 .reader-panel { padding: 20px; }
@@ -508,7 +509,7 @@ h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; }
 .badge-fail { background: var(--color-danger-glow); color: var(--color-danger); }
 
 /* Projects */
-.project-card { display: flex; flex-direction: column; gap: 14px; border-left: 4px solid var(--accent-teal); }
+.project-card { overflow-wrap: anywhere; display: flex; flex-direction: column; gap: 14px; border-left: 4px solid var(--accent-teal); }
 
 /* ---------------------------------------------------- */
 /* Tablet and up */
@@ -525,7 +526,7 @@ h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; }
   .dashboard-stats { grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .certs-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
 
-  .reader-layout { grid-template-columns: 280px 1fr; gap: 32px; }
+  .reader-layout { grid-template-columns: 280px minmax(0, 1fr); gap: 32px; }
   .reader-sidebar { position: sticky; top: 40px; max-height: calc(100vh - 80px); overflow-y: auto; }
   .reader-panel { padding: 40px; }
   .reader-nav .btn { flex: none; }
@@ -570,3 +571,23 @@ h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 12px; }
 .sidebar-cert-code { font-size: 1.3rem; font-weight: 800; }
 .sidebar-cert-title { font-size: 0.8rem; color: var(--text-secondary); }
 a.brand { text-decoration: none; color: inherit; }
+
+/* Mobile top bar (hidden from 768px up, where the sidebar takes over) */
+.topbar {
+  position: sticky; top: 0; z-index: 90;
+  display: none; align-items: center; gap: 12px;
+  height: 52px; padding: 0 max(16px, env(safe-area-inset-left));
+  padding-top: env(safe-area-inset-top, 0px);
+  background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--surface-border);
+}
+.topbar-back { color: var(--accent-teal); text-decoration: none; font-weight: 700; font-size: 0.95rem; min-height: var(--tap-target-min); display: flex; align-items: center; }
+.topbar-title { flex: 1; min-width: 0; color: var(--text-primary); text-decoration: none; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 767px) {
+  .topbar { display: flex; }
+  .app-container { flex-direction: column; }
+  .btn-sm { min-height: var(--tap-target-min); }
+}
+
+/* A lone tool (e.g. DP-750) doesn't need a bottom bar */
+.bottom-nav:has(.bottom-nav-item:only-of-type) { display: none; }
