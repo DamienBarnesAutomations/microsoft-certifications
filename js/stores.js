@@ -58,8 +58,12 @@ document.addEventListener('alpine:init', () => {
       this.data = {};
       localStorage.setItem('flashcards_dp700_progress', '{}');
     },
-    masteredCount() {
-      return Object.values(this.data).filter((r) => r === 'got_it').length;
+    // Card ids: DP-600 cards start with 'dp600-fc-'; everything else is the DP-700 deck.
+    masteredCount(certId) {
+      return Object.keys(this.data).filter((id) => {
+        if (this.data[id] !== 'got_it') return false;
+        return certId === 'dp600' ? id.startsWith('dp600-fc-') : !id.startsWith('dp600-fc-');
+      }).length;
     },
   });
 

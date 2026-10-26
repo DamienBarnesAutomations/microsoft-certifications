@@ -24,6 +24,7 @@
   <script src="flashcards/dp700-m5.js" defer></script>
   <script src="flashcards/dp700-m6.js" defer></script>
   <script src="flashcards/dp700.js" defer></script>
+  <script src="flashcards/dp600.js" defer></script>
 
   <!-- Practice Exam Question Banks (DP-300, DP-600, DP-700) -->
   <script src="tests/dp600/dp600_module1.js" defer></script>
@@ -31,6 +32,7 @@
   <script src="tests/dp600/dp600_module3.js" defer></script>
   <script src="tests/dp600/dp600_module4.js" defer></script>
   <script src="tests/dp600/dp600_module5.js" defer></script>
+  <script src="tests/dp600/dp600_module6.js" defer></script>
   <script src="tests/dp600/dp600.js" defer></script>
   <script src="tests/dp600/dp600_outline.js" defer></script>
 
@@ -58,6 +60,7 @@
   <script src="js/views/study.js" defer></script>
   <script src="js/views/cards.js" defer></script>
   <script src="js/views/flashcards.js" defer></script>
+  <script src="js/views/topic-picker.js" defer></script>
   <script src="js/views/exam.js" defer></script>
   <script src="js/views/review.js" defer></script>
   <script src="js/views/projects.js" defer></script>
@@ -73,7 +76,7 @@
     <p style="color:#64748b; font-size:0.9rem; margin-top:8px;">Initializing study data engines...</p>
   </div>
 
-  <div class="app-container" x-data>
+  <div class="app-container" x-data :class="$store.ui.tools.length > 1 && 'has-bottom-nav'">
 
     <!-- Sidebar (desktop). Home shows only the brand; inside a certification it shows that
          certification's tools. -->

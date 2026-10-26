@@ -88,10 +88,10 @@ const TOOLS = [
 
 // `tools` lists which TOOLS the UI offers for each certification. The app is deliberately limited
 // to flashcards (study) and test mode; the study/cards/review/projects views still exist and are
-// reachable again by adding their ids here. Flashcards only exist for DP-700 so far.
+// reachable again by adding their ids here. DP-700 and DP-600 have flashcards.
 const CERT_DETAILS = [
   { code: 'DP-700', id: 'dp700', title: 'Fabric Data Engineer', tools: ['flashcards', 'test'] },
-  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['test'] },
+  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['flashcards', 'test'] },
   { code: 'DP-300', id: 'dp300', title: 'Azure Database Administrator', tools: ['test'] },
   { code: 'DP-750', id: 'dp750', title: 'Azure Databricks Data Engineer (Preview)', tools: [] },
 ];
@@ -162,8 +162,14 @@ function getConceptCardData(certCode) {
   return null;
 }
 
-function getFlashcardModules() {
-  return window.FLASHCARDS_DP700 || [];
+// Flashcard decks organised by module (DP-700).
+function getFlashcardModules(certId) {
+  return certId === 'dp700' ? window.FLASHCARDS_DP700 || [] : [];
+}
+
+// Flat flashcard list for certifications organised by skills outline (DP-600); each card has a skill id.
+function getOutlineFlashcards(certId) {
+  return certId === 'dp600' ? window.DP600_FLASHCARDS || [] : [];
 }
 
 const DATA = {
@@ -178,6 +184,7 @@ const DATA = {
   skillInNode,
   getConceptCardData,
   getFlashcardModules,
+  getOutlineFlashcards,
 };
 
 window.DATA = DATA;

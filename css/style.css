@@ -593,11 +593,48 @@ a.brand { text-decoration: none; color: inherit; }
 .bottom-nav:has(.bottom-nav-item:only-of-type),
 .bottom-nav:not(:has(.bottom-nav-item)) { display: none; }
 
-/* Stacked labelled selects (exam filters) */
+/* Exam filters: labelled select (modules) and the domain/topic checkbox picker (outline) */
 .filter-stack { display: flex; flex-direction: column; gap: 12px; }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
 .field select { width: 100%; }
-@media (min-width: 768px) {
-  .filter-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.topic-hint { text-transform: none; font-weight: 500; color: var(--text-muted); }
+.topic-picker { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.topic-domain { border: 1px solid var(--surface-border); border-radius: 12px; overflow: hidden; }
+.topic-row { display: flex; align-items: center; gap: 12px; min-height: var(--tap-target-min); padding: 8px 14px; cursor: pointer; }
+.topic-row input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--accent-indigo); }
+.topic-domain-head { background: rgba(99, 102, 241, 0.08); font-weight: 700; }
+.topic-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px 14px; }
+.topic-chip { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tap-target-min); padding: 0 16px; border: 1px solid var(--surface-border); border-radius: 22px; cursor: pointer; font-size: 0.9rem; }
+.topic-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.topic-chip .topic-count { font-size: 0.75rem; }
+.topic-chip:has(input:checked) { background: var(--accent-indigo); border-color: var(--accent-indigo); color: #fff; }
+.topic-chip:has(input:checked) .topic-count { color: rgba(255, 255, 255, 0.8); }
+.topic-chip:has(input:focus-visible) { outline: 2px solid var(--accent-teal); outline-offset: 2px; }
+.topic-chip:has(input:disabled) { opacity: 0.4; cursor: default; }
+.topic-title { flex: 1; min-width: 0; }
+.topic-weight { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-left: 6px; }
+.topic-count { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.topic-row:has(input:disabled) { opacity: 0.45; cursor: default; }
+
+/* Exam start controls: pinned above the bottom nav on phones so Start is always reachable */
+.exam-pool-counter { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+.exam-actions-row { display: flex; gap: 12px; }
+.exam-actions-row select { flex: 3; min-width: 0; }
+.exam-actions-row .btn { flex: 2; min-height: var(--tap-target-min); }
+@media (max-width: 767px) {
+  .exam-actions {
+    position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 80;
+    margin: 0 -20px -20px; padding: 12px 20px;
+    background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--surface-border);
+  }
+  .has-bottom-nav .exam-actions { bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px)); }
 }
+@media (min-width: 768px) {
+  .exam-actions-row { max-width: 420px; }
+}
+
+/* Collapsible topic picker on the flashcards screen */
+.flash-filter > summary { cursor: pointer; min-height: var(--tap-target-min); display: flex; align-items: center; font-weight: 600; color: var(--text-secondary); }
+.flash-filter[open] > summary { margin-bottom: 4px; }

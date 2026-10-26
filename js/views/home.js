@@ -3,7 +3,7 @@ function certSummary(cert) {
   const exams = Alpine.store('examHistory');
   const attempts = exams.forCert(cert.id).length;
   const parts = [];
-  if (cert.tools.includes('flashcards')) parts.push(`${Alpine.store('flashcardProgress').masteredCount()} cards mastered`);
+  if (cert.tools.includes('flashcards')) parts.push(`${Alpine.store('flashcardProgress').masteredCount(cert.id)} cards mastered`);
   if (cert.tools.includes('test')) parts.push(attempts ? `${attempts} exams · ${exams.averageScore(cert.id)}% avg` : 'No exams yet');
   return parts.length ? parts.join(' · ') : 'Coming soon';
 }
@@ -33,7 +33,7 @@ function renderHub(cert) {
   const attempts = exams.forCert(cert.id).length;
 
   const meta = {
-    flashcards: `${Alpine.store('flashcardProgress').masteredCount()} mastered`,
+    flashcards: `${Alpine.store('flashcardProgress').masteredCount(cert.id)} mastered`,
     test: attempts ? `${attempts} attempts · ${exams.averageScore(cert.id)}% average` : 'No attempts yet',
   };
 

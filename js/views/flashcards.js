@@ -1,4 +1,5 @@
-// 3D Flashcards view (DP-700 only, as in the legacy app — no other cert has a flashcard deck yet).
+// 3D Flashcards view. DP-700 decks are organised by module; certifications with a skills outline
+// (DP-600) are organised by outline topic with the same picker test mode uses.
 const flashState = {
   deck: [],
   currentIdx: 0,
@@ -11,14 +12,11 @@ function initFlashcards() {
 
   container.innerHTML = `
     <h1>${Alpine.store('ui').certInfo.code} Flashcards</h1>
-    <p class="subtitle">Flip and master 240+ certification concepts. Swipe or press Space to flip.</p>
+    <p class="subtitle">Flip and master the concepts. Swipe or press Space to flip.</p>
 
     <div class="glass-panel" style="width: 100%; margin-bottom: 24px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
-          <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Module</label>
-          <select id="flash-mod-filter"></select>
-        </div>
+        <div id="flash-filter-block" style="flex: 1 1 100%; min-width: 0;"></div>
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
           <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Type</label>
           <select id="flash-type-filter">
@@ -93,17 +91,7 @@ function initFlashcards() {
     </div>
   `;
 
-  const modFilter = document.getElementById('flash-mod-filter');
-  modFilter.innerHTML = '<option value="all">All Modules</option>';
-
-  DATA.getFlashcardModules().forEach((m, idx) => {
-    const opt = document.createElement('option');
-    opt.value = idx;
-    opt.textContent = `${m.module}: ${m.title}`;
-    modFilter.appendChild(opt);
-  });
-
-  modFilter.onchange = buildFlashcardDeck;
+  renderFlashcardFilters();
   document.getElementById('flash-type-filter').onchange = buildFlashcardDeck;
 
   const shuffleBtn = document.getElementById('btn-flash-shuffle');
@@ -127,20 +115,67 @@ function initFlashcards() {
   buildFlashcardDeck();
 }
 
+// Module select for decks organised by module (DP-700); topic picker for decks with an outline.
+function renderFlashcardFilters() {
+  const block = document.getElementById('flash-filter-block');
+  const cert = currentCertId();
+  const outline = DATA.getOutline(cert);
+
+  if (!outline) {
+    block.innerHTML = `<div class="field"><label class="field-label">Module</label><select id="flash-mod-filter"><option value="all">All Modules</option></select></div>`;
+    const modFilter = document.getElementById('flash-mod-filter');
+    DATA.getFlashcardModules(cert).forEach((m, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = `${m.module}: ${m.title}`;
+      modFilter.appendChild(opt);
+    });
+    modFilter.onchange = buildFlashcardDeck;
+    return;
+  }
+
+  // The picker is long, so it sits in a collapsible panel (closed on phones) to keep the card in view.
+  block.innerHTML = `
+    <details class="flash-filter"${window.innerWidth >= 768 ? ' open' : ''}>
+      <summary id="flash-filter-summary">Topics: everything</summary>
+      <div id="flash-picker"></div>
+    </details>`;
+  const picker = document.getElementById('flash-picker');
+  const summary = document.getElementById('flash-filter-summary');
+  const cards = DATA.getOutlineFlashcards(cert);
+  renderTopicPicker(picker, outline, (node) => cards.filter((c) => DATA.skillInNode(c.skill, node)).length,
+    'Topics to study', () => {
+      const n = pickedTopics(picker).length;
+      summary.textContent = n ? `Topics: ${n} selected` : 'Topics: everything';
+      buildFlashcardDeck();
+    });
+}
+
 function buildFlashcardDeck() {
-  const modVal = document.getElementById('flash-mod-filter').value;
   const typeVal = document.getElementById('flash-type-filter').value;
+  const cert = currentCertId();
+  const outline = DATA.getOutline(cert);
 
   flashState.deck = [];
 
-  DATA.getFlashcardModules().forEach((mod, modIdx) => {
-    if (modVal !== 'all' && parseInt(modVal) !== modIdx) return;
-
-    mod.cards.forEach((c) => {
+  if (outline) {
+    const picked = pickedTopics(document.getElementById('flash-picker'));
+    DATA.getOutlineFlashcards(cert).forEach((c) => {
       if (typeVal !== 'all' && c.type !== typeVal) return;
-      flashState.deck.push({ ...c, moduleName: mod.module, moduleTitle: mod.title });
+      if (picked.length && !picked.some((n) => DATA.skillInNode(c.skill, n))) return;
+      const topicId = c.skill.split('.').slice(0, 2).join('.');
+      flashState.deck.push({ ...c, moduleName: outline.titles[topicId], topic: outline.titles[c.skill] });
     });
-  });
+  } else {
+    const modVal = document.getElementById('flash-mod-filter').value;
+    DATA.getFlashcardModules(cert).forEach((mod, modIdx) => {
+      if (modVal !== 'all' && parseInt(modVal) !== modIdx) return;
+      mod.cards.forEach((c) => {
+        if (typeVal !== 'all' && c.type !== typeVal) return;
+        flashState.deck.push({ ...c, moduleName: mod.module, moduleTitle: mod.title });
+      });
+    });
+  }
 
   if (flashState.filters.shuffle) {
     for (let i = flashState.deck.length - 1; i > 0; i--) {
@@ -287,7 +322,7 @@ function updateFlashcardProgressUI() {
 
 function setupFlashcardKeyboardControls() {
   const handler = (e) => {
-    if (Alpine.store('ui').route !== 'flashcards') return;
+    if (Alpine.store('ui').tool !== 'flashcards') return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
     switch (e.key) {
