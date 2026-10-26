@@ -635,6 +635,14 @@ a.brand { text-decoration: none; color: inherit; }
   .exam-actions-row { max-width: 420px; }
 }
 
-/* Collapsible topic picker on the flashcards screen */
-.flash-filter > summary { cursor: pointer; min-height: var(--tap-target-min); display: flex; align-items: center; font-weight: 600; color: var(--text-secondary); }
-.flash-filter[open] > summary { margin-bottom: 4px; }
+/* Collapsible topic picker on the flashcards screen: the summary is styled as a button */
+.flash-filter > summary {
+  list-style: none; cursor: pointer; min-height: var(--tap-target-min);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 16px; border: 1px solid var(--accent-indigo); border-radius: 12px;
+  background: rgba(99, 102, 241, 0.12); font-weight: 600; color: var(--text-primary);
+}
+.flash-filter > summary::-webkit-details-marker { display: none; }
+.flash-filter > summary::after { content: '▾'; transition: transform 0.2s; }
+.flash-filter[open] > summary::after { transform: rotate(180deg); }
+.flash-filter[open] > summary { margin-bottom: 12px; }

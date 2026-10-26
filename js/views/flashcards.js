@@ -137,7 +137,7 @@ function renderFlashcardFilters() {
   // The picker is long, so it sits in a collapsible panel (closed on phones) to keep the card in view.
   block.innerHTML = `
     <details class="flash-filter"${window.innerWidth >= 768 ? ' open' : ''}>
-      <summary id="flash-filter-summary">Topics: everything</summary>
+      <summary id="flash-filter-summary">Choose topics: everything</summary>
       <div id="flash-picker"></div>
     </details>`;
   const picker = document.getElementById('flash-picker');
@@ -146,7 +146,7 @@ function renderFlashcardFilters() {
   renderTopicPicker(picker, outline, (node) => cards.filter((c) => DATA.skillInNode(c.skill, node)).length,
     'Topics to study', () => {
       const n = pickedTopics(picker).length;
-      summary.textContent = n ? `Topics: ${n} selected` : 'Topics: everything';
+      summary.textContent = n ? `Choose topics: ${n} selected` : 'Choose topics: everything';
       buildFlashcardDeck();
     });
 }
