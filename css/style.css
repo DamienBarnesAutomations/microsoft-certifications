@@ -592,3 +592,12 @@ a.brand { text-decoration: none; color: inherit; }
 /* A lone tool (e.g. DP-750) doesn't need a bottom bar */
 .bottom-nav:has(.bottom-nav-item:only-of-type),
 .bottom-nav:not(:has(.bottom-nav-item)) { display: none; }
+
+/* Stacked labelled selects (exam filters) */
+.filter-stack { display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
+.field select { width: 100%; }
+@media (min-width: 768px) {
+  .filter-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}

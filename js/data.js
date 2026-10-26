@@ -130,6 +130,31 @@ function getQuestionModules(cert) {
   return [];
 }
 
+// Skills outline for certifications that have one (DP-600 so far), else null. Questions are
+// matched to a skill by id; skill ids are dotted paths (domain.topic.skill).
+function getOutline(certId) {
+  const raw = certId === 'dp600' ? window.DP600_OUTLINE : null;
+  if (!raw) return null;
+  const skillOfQuestion = {};
+  Object.keys(raw.questionsBySkill).forEach((skillId) => {
+    raw.questionsBySkill[skillId].forEach((qid) => { skillOfQuestion[qid] = skillId; });
+  });
+  const titles = {};
+  raw.domains.forEach((d) => {
+    titles[d.id] = d.title;
+    d.topics.forEach((t) => {
+      titles[t.id] = t.title;
+      t.skills.forEach((sk) => { titles[sk.id] = sk.title; });
+    });
+  });
+  return { domains: raw.domains, skillOfQuestion, titles };
+}
+
+// True when a question's skill id is the node itself or sits beneath it (2.1 contains 2.1.3).
+function skillInNode(skillId, nodeId) {
+  return !!skillId && (skillId === nodeId || skillId.startsWith(nodeId + '.'));
+}
+
 function getConceptCardData(certCode) {
   if (certCode === 'DP-700') return window.DP700_DATA || null;
   if (certCode === 'DP-600') return window.DP600_DATA || null;
@@ -149,6 +174,8 @@ const DATA = {
   getCertTools,
   buildQuestionCatalog,
   getQuestionModules,
+  getOutline,
+  skillInNode,
   getConceptCardData,
   getFlashcardModules,
 };

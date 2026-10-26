@@ -20,14 +20,7 @@ function initExamHub() {
         <div class="glass-panel">
           <h2>Configure Practice Exam</h2>
           <div style="display: flex; flex-direction: column; gap: 16px;">
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 6px;">
-                <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Sub-Module</label>
-                <select id="exam-module-select">
-                  <option value="all">All Modules</option>
-                </select>
-              </div>
-            </div>
+            <div id="exam-filter-block" class="filter-stack"></div>
 
             <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
               <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 6px;">
@@ -72,47 +65,97 @@ function initExamHub() {
     </div>
   `;
 
-  const modSelector = document.getElementById('exam-module-select');
-  modSelector.onchange = updateExamPoolCount;
-
-  updateExamModulesDropdown();
+  renderExamFilters();
   updateExamPoolCount();
   renderExamHistory();
 }
 
-function updateExamModulesDropdown() {
+// Question filter. Certifications with a skills outline get Domain > Topic > Skill selects;
+// the others keep a single module select. examFilterValue() returns 'all', a skill-outline node
+// id ('2', '2.1', '2.1.3') or a module key ('dp700_3').
+function renderExamFilters() {
   const cert = currentCertId();
-  const selector = document.getElementById('exam-module-select');
-  selector.innerHTML = '<option value="all">All Modules</option>';
+  const block = document.getElementById('exam-filter-block');
+  const outline = DATA.getOutline(cert);
+  const pool = getExamQuestionsPool(cert);
+  const label = (t) => `<label class="field-label">${t}</label>`;
 
-  const modules = DATA.getQuestionModules(cert);
+  if (!outline) {
+    block.innerHTML = `<div class="field">${label('Sub-Module')}<select id="exam-module-select"><option value="all">All Modules</option></select></div>`;
+    const sel = document.getElementById('exam-module-select');
+    DATA.getQuestionModules(cert).forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = `${cert}_${i + 1}`;
+      opt.textContent = m;
+      sel.appendChild(opt);
+    });
+    sel.onchange = updateExamPoolCount;
+    return;
+  }
 
-  modules.forEach((m, i) => {
-    const opt = document.createElement('option');
-    opt.value = `${cert}_${i + 1}`;
-    opt.textContent = m;
-    selector.appendChild(opt);
-  });
+  block.innerHTML = `
+    <div class="field">${label('Domain')}<select id="exam-domain-select"></select></div>
+    <div class="field">${label('Topic')}<select id="exam-topic-select"></select></div>
+    <div class="field">${label('Skill')}<select id="exam-skill-select"></select></div>`;
+
+  const count = (node) => pool.filter((q) => DATA.skillInNode(q.skill, node)).length;
+  const fill = (id, allLabel, nodes) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = `<option value="">${allLabel}</option>` + nodes
+      .map((n) => `<option value="${n.id}"${count(n.id) ? '' : ' disabled'}>${n.title} (${count(n.id)})</option>`)
+      .join('');
+    sel.disabled = nodes.length === 0;
+  };
+  const domainSel = document.getElementById('exam-domain-select');
+  const topicSel = document.getElementById('exam-topic-select');
+  const skillSel = document.getElementById('exam-skill-select');
+  const topicsOf = (d) => (outline.domains.find((x) => x.id === d) || { topics: [] }).topics;
+  const skillsOf = (t) => {
+    const topic = topicsOf(t.split('.')[0]).find((x) => x.id === t);
+    return topic ? topic.skills : [];
+  };
+
+  fill('exam-domain-select', 'All domains', outline.domains);
+  fill('exam-topic-select', 'All topics', []);
+  fill('exam-skill-select', 'All skills', []);
+
+  domainSel.onchange = () => {
+    fill('exam-topic-select', 'All topics', topicsOf(domainSel.value));
+    fill('exam-skill-select', 'All skills', []);
+    updateExamPoolCount();
+  };
+  topicSel.onchange = () => {
+    fill('exam-skill-select', 'All skills', skillsOf(topicSel.value));
+    updateExamPoolCount();
+  };
+  skillSel.onchange = updateExamPoolCount;
 }
 
+function examFilterValue() {
+  const pick = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+  if (document.getElementById('exam-module-select')) return pick('exam-module-select') || 'all';
+  return pick('exam-skill-select') || pick('exam-topic-select') || pick('exam-domain-select') || 'all';
+}
+
+// Questions for a certification, each tagged with the skill it tests (when the cert has an outline).
 function getExamQuestionsPool(cert) {
-  if (cert === 'dp700' && window.DP700_QUESTIONS) return window.DP700_QUESTIONS.map((q) => ({ ...q, cert: 'DP-700' }));
-  if (cert === 'dp600' && window.DP600_QUESTIONS) return window.DP600_QUESTIONS.map((q) => ({ ...q, cert: 'DP-600' }));
-  if (cert === 'dp300' && window.DP300_QUESTIONS) return window.DP300_QUESTIONS.map((q) => ({ ...q, cert: 'DP-300' }));
-  return [];
+  const banks = { dp700: window.DP700_QUESTIONS, dp600: window.DP600_QUESTIONS, dp300: window.DP300_QUESTIONS };
+  const outline = DATA.getOutline(cert);
+  const code = DATA.getCert(cert).code;
+  return (banks[cert] || []).map((q) => ({ ...q, cert: code, skill: outline ? outline.skillOfQuestion[q.id] : undefined }));
+}
+
+function filterExamPool(pool, filter) {
+  if (filter === 'all') return pool;
+  if (filter.includes('_')) {
+    const [, modNum] = filter.split('_');
+    return pool.filter((q) => q.module === parseInt(modNum));
+  }
+  return pool.filter((q) => DATA.skillInNode(q.skill, filter));
 }
 
 function updateExamPoolCount() {
-  const cert = currentCertId();
-  const moduleVal = document.getElementById('exam-module-select').value;
-
-  let pool = getExamQuestionsPool(cert);
-
-  if (moduleVal !== 'all') {
-    const [, modNum] = moduleVal.split('_');
-    pool = pool.filter((q) => q.module === parseInt(modNum));
-  }
-
+  const pool = filterExamPool(getExamQuestionsPool(currentCertId()), examFilterValue());
   document.getElementById('exam-pool-counter').textContent = `${pool.length} practice questions currently available in this selection.`;
 }
 
@@ -145,15 +188,10 @@ function isAnswerCorrect(q, ans) {
 
 function startPracticeExam() {
   const cert = currentCertId();
-  const moduleVal = document.getElementById('exam-module-select').value;
+  const moduleVal = examFilterValue();
   const countSelect = document.getElementById('exam-count-select').value;
 
-  let pool = getExamQuestionsPool(cert);
-
-  if (moduleVal !== 'all') {
-    const [, modNum] = moduleVal.split('_');
-    pool = pool.filter((q) => q.module === parseInt(modNum));
-  }
+  const pool = filterExamPool(getExamQuestionsPool(cert), moduleVal);
 
   if (pool.length === 0) {
     alert('No questions available in selected pool.');
@@ -222,7 +260,7 @@ function renderActiveQuestion() {
       </div>
 
       <div class="glass-panel">
-        <div class="question-meta">${q.cert} • Module ${q.module}${typeBadge}</div>
+        <div class="question-meta">${q.cert} • ${questionTopicLabel(q)}${typeBadge}</div>
         <div class="question-text">${q.text}</div>
 
         <div class="options-list" id="active-options-list"></div>
@@ -398,6 +436,44 @@ function finishPracticeExam() {
   renderExamResults(session);
 }
 
+// What to show next to a question: its skill when the cert has an outline, else its module.
+function questionTopicLabel(q) {
+  const outline = DATA.getOutline(String(q.cert).toLowerCase().replace('-', ''));
+  return outline && q.skill ? outline.titles[q.skill] : `Module ${q.module}`;
+}
+
+// Score per outline topic for the results screen: [{ title, correct, total }], outline order.
+function scoreByTopic(session) {
+  const outline = DATA.getOutline(String(session.cert).toLowerCase().replace('-', ''));
+  if (!outline) return [];
+  const rows = {};
+  session.questions.forEach((q, i) => {
+    if (!q.skill) return;
+    const topicId = q.skill.split('.').slice(0, 2).join('.');
+    const row = rows[topicId] || (rows[topicId] = { title: outline.titles[topicId], correct: 0, total: 0 });
+    row.total++;
+    if (isAnswerCorrect(q, session.answers[i])) row.correct++;
+  });
+  return Object.keys(rows).sort().map((id) => rows[id]);
+}
+
+function renderTopicScores(session) {
+  const rows = scoreByTopic(session);
+  if (!rows.length) return '';
+  return `
+    <div class="glass-panel" style="margin-top: 24px;">
+      <h2 style="margin-bottom: 16px;">Score by topic</h2>
+      ${rows.map((r) => {
+        const pct = Math.round((r.correct / r.total) * 100);
+        return `
+        <div style="margin-bottom: 14px;">
+          <div class="cert-progress"><span>${r.title}</span><span>${r.correct} / ${r.total} (${pct}%)</span></div>
+          <div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
 function renderExamResults(session) {
   const stage = document.getElementById('view-test');
 
@@ -440,6 +516,7 @@ function renderExamResults(session) {
           <button class="btn btn-secondary" onclick="reviewExamAnswers(${session.id})">Review Answers</button>
         </div>
       </div>
+      ${renderTopicScores(session)}
     </div>
   `;
 }
