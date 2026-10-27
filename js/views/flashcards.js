@@ -234,7 +234,7 @@ function renderFlashcardFilters() {
 
   block.innerHTML = '<div id="flash-picker"></div>';
   const picker = document.getElementById('flash-picker');
-  const cards = DATA.getOutlineFlashcards(cert);
+  const cards = learnOnly(cert) ? DATA.getTeachCards(cert) : DATA.getOutlineFlashcards(cert);
   renderTopicPicker(picker, outline, (node) => cards.filter((c) => DATA.skillInNode(c.skill, node)).length,
     'Topics to study', updateFlashSetupCount);
 

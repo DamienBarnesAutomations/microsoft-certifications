@@ -6,18 +6,33 @@ window.DP600_TEACH = (window.DP600_TEACH || []).concat([
   { skill: '3.1.1', title: 'DirectQuery', text: 'Queries go to the <b>source</b> every time. Real-time, no stored data; speed depends on the source. For huge or must-stay-at-source data.' },
   { skill: '3.1.1', title: 'Dual and composite', text: '<b>Composite</b>: tables use different modes. <b>Dual</b>: a table acts as Import or DirectQuery per query.' },
   { skill: '3.1.1', title: 'Direct Lake "refresh"', text: 'It is <b>framing</b>: a metadata update pointing at the latest Delta files. No data is imported.' },
+  { skill: '3.1.1', title: 'Where models start', text: 'A model created from a lakehouse or warehouse in the service starts in <b>Direct Lake</b>. One built from scratch in Desktop starts in Import.' },
+  { skill: '3.1.1', title: 'Why Import', text: 'The most modelling freedom and the best speed when data fits: every Power Query and DAX feature works. Data changes only when a scheduled or triggered <b>refresh</b> runs.' },
+  { skill: '3.1.1', title: 'DirectQuery limits', text: 'Performance depends on the source. Power Query steps must <b>fold</b>. Some modelling features are reduced.' },
+  { skill: '3.1.1', title: 'Dual for dimensions', text: 'Dimensions related to a DirectQuery fact table: set <b>Dual</b>. Slicers are answered from cache, and queries can be pushed to the source to join with the fact.' },
 
   // 3.1.2 Star schema for model
   { skill: '3.1.2', title: 'Filters flow downhill', text: 'Dimensions filter facts through <b>one-to-many</b> relationships, dimension to fact. Prefer <b>single-direction</b> filters.' },
   { skill: '3.1.2', title: 'Flatten snowflakes', text: 'Merge Product, Subcategory, Category into one table before the model. Fewer tables = simpler DAX and clearer for Copilot.' },
   { skill: '3.1.2', title: 'When to keep a snowflake', text: 'Many-level hierarchies, a sub-dimension shared by several facts, or RLS needed at a specific level.' },
   { skill: '3.1.2', title: 'Date table', text: 'Use a proper date table and <b>mark it as the date table</b> so time intelligence works.' },
+  { skill: '3.1.2', title: 'Why star', text: 'Simpler DAX, fewer and more predictable relationships, better compression and speed.' },
+  { skill: '3.1.2', title: 'Hide the keys', text: 'Hide fact-table <b>foreign keys</b> so people filter by dimension attributes instead.' },
+  { skill: '3.1.2', title: 'Create attributes upstream', text: 'Build a calculated attribute such as Category at the source or in Power Query. A DAX calculated column is computed at refresh and adds to model size.' },
 
   // 3.1.3 Relationships
   { skill: '3.1.3', title: 'Many-to-many', text: 'Use a <b>bridge table</b>: unique key pairs, with one-to-many relationships from each dimension to the bridge. E.g. customers and accounts.' },
   { skill: '3.1.3', title: 'Filter direction', text: 'Single direction by default. <b>Bi-directional</b> is sometimes needed for many-to-many but can hurt performance and surprise you.' },
   { skill: '3.1.3', title: 'One active relationship', text: 'Only one active relationship between two tables. Others are <b>inactive</b>; switch on in a measure with <code>USERELATIONSHIP</code>.' },
   { skill: '3.1.3', title: 'Assume referential integrity', text: 'Lets the engine use <b>INNER</b> joins (faster in Direct Lake and DirectQuery). If wrong, unmatched rows silently vanish.' },
+  { skill: '3.1.3', title: 'Cardinality options', text: 'One-to-many, many-to-one, one-to-one and many-to-many. The related columns need compatible data types; their names can differ.' },
+  { skill: '3.1.3', title: 'Filter reaches the fact?', text: 'A filter flows from the one side to the many side. A bridge sits on the many side of its link to the fact, so set that relationship to <b>Both</b> for a dimension filter to reach the fact.' },
+  { skill: '3.1.3', title: 'Totals above the grand total', text: 'With a bridge, one sale can match several promotions. It appears in each promotion row but is counted once in the grand total. Expected, not an error.' },
+  { skill: '3.1.3', title: 'Native many-to-many', text: 'Has no unique "one" side, so <code>RELATED</code> cannot fetch columns across it. A bridge keeps relationships one-to-many and explicit.' },
+  { skill: '3.1.3', title: 'Two date roles at once', text: 'Order-date and ship-date slicers together need <b>a date table per role</b>, each with an active relationship. <code>USERELATIONSHIP</code> switches only one relationship at a time.' },
+  { skill: '3.1.3', title: 'No relationship: TREATAS', text: '<code>TREATAS(VALUES(Selection[Category]), DimProduct[Category])</code> applies the values of one column as a filter on another, like a virtual relationship.' },
+  { skill: '3.1.3', title: 'CROSSFILTER', text: 'Changes the direction of an existing relationship (or turns it off) inside CALCULATE. It cannot activate an inactive one; <code>USERELATIONSHIP</code> does that.' },
+  { skill: '3.1.3', title: 'Bi-directional risk', text: 'Both-direction filtering on many relationships creates ambiguous filter paths and slower queries. Use it only where needed.' },
 
   // 3.1.4 DAX
   { skill: '3.1.4', title: 'Two contexts', text: '<b>Row context</b>: the current row (iterators, calculated columns). <b>Filter context</b>: rows left by slicers and relationships (measures).' },
@@ -26,35 +41,69 @@ window.DP600_TEACH = (window.DP600_TEACH || []).concat([
   { skill: '3.1.4', title: 'Table filtering', text: '<code>FILTER</code> returns rows that pass. <code>ALL</code> / <code>REMOVEFILTERS</code> clear filters. <code>KEEPFILTERS</code> intersects instead of replacing.' },
   { skill: '3.1.4', title: 'Windowing functions', text: '<code>INDEX</code>, <code>OFFSET</code>, <code>WINDOW</code>, <code>RANK</code>, <code>ROWNUMBER</code>: rows relative to the current one. Set <code>orderBy</code>; <code>partitionBy</code> restarts per group.' },
   { skill: '3.1.4', title: 'Information functions', text: '<b>HASONEVALUE</b>: one value in context.<br><b>ISFILTERED</b>: column directly filtered.<br><b>ISCROSSFILTERED</b>: filtered directly or via relationships.<br><b>ISINSCOPE</b>: current hierarchy level.' },
+  { skill: '3.1.4', title: 'Boolean filter replaces', text: '<code>CALCULATE([Sales], Product[Color] = "Red")</code> replaces a slicer on Color: with Blue selected it still returns Red. <code>KEEPFILTERS</code> would intersect instead.' },
+  { skill: '3.1.4', title: 'DIVIDE', text: '<code>DIVIDE(num, den, alt)</code> returns blank (or the alternate result) for a zero or blank denominator. The <code>/</code> operator gives Infinity or NaN instead.' },
+  { skill: '3.1.4', title: 'SELECTEDVALUE', text: 'Returns the single value in the current context, or an alternate result. HASONEVALUE tests whether there is exactly one.' },
+  { skill: '3.1.4', title: 'Fiscal year to date', text: '<code>TOTALYTD([Sales], \'Date\'[Date], "3/31")</code>: the last argument is the fiscal year-<b>end</b>, so a year starting April 1 ends 3/31. Needs a marked date table.' },
+  { skill: '3.1.4', title: 'Year over year', text: '<code>SAMEPERIODLASTYEAR</code> shifts dates back a year. Growth = <code>DIVIDE([Sales] - PY, PY)</code>, with PY stored in a VAR.' },
+  { skill: '3.1.4', title: 'ALL, ALLSELECTED, ALLEXCEPT', text: '<b>ALL</b>: ignore every filter. <b>ALLSELECTED</b>: keep slicer and page context, drop only that column\'s own filter (share of the selection). <b>ALLEXCEPT</b>: keep only the listed columns (rank within a category).' },
+  { skill: '3.1.4', title: 'RANKX ties', text: '<code>RANKX(ALL(Product), [Sales], , DESC, DENSE)</code>: DENSE gives 1, 2, 2, 3; SKIP gives 1, 2, 2, 4. DESC makes the highest value rank 1.' },
+  { skill: '3.1.4', title: 'Moving average', text: '<code>AVERAGEX(DATESINPERIOD(Date[Date], LASTDATE(Date[Date]), -3, MONTH), [Total Sales])</code> averages the daily total over the last 3 months.' },
+  { skill: '3.1.4', title: 'A table inside an iterator', text: '<code>MAXX(ALL(Date[Date]), [Sales])</code>: ALL returns a table, so it works as the iterator\'s table. REMOVEFILTERS only modifies CALCULATE and returns no table.' },
+  { skill: '3.1.4', title: 'Three calculation types', text: '<b>Calculated table</b>: DAX returning a table (a Ship Date copy). <b>Calculated column</b>: row context, computed at refresh, adds size. <b>Measure</b>: filter context at query time, stores nothing.' },
+  { skill: '3.1.4', title: 'CALENDARAUTO', text: 'Scans the date columns in the model (not calculated columns) and returns whole calendar years: Jan 1 of the earliest year to Dec 31 of the latest.' },
+  { skill: '3.1.4', title: 'Sort by column', text: 'Text labels like "Jan 2025" sort alphabetically. Add a numeric key (year x 100 + month) and set <b>Sort by column</b>.' },
 
   // 3.1.5 Calc groups etc
   { skill: '3.1.5', title: 'Calculation groups', text: 'Items that modify <b>whichever measure</b> is in context via <code>SELECTEDMEASURE()</code>. One group replaces YTD/QTD/MTD copies of every measure.' },
   { skill: '3.1.5', title: 'When to use', text: 'Three or more measures sharing a pattern: time intelligence, currency conversion, actual vs budget. Implicit measures do not work with them.' },
   { skill: '3.1.5', title: 'Dynamic format strings', text: 'A format expression on a calculation item, e.g. <code>"0.0%"</code> for a YoY % item, so one measure shows as currency or percent.' },
   { skill: '3.1.5', title: 'Field parameters', text: 'Let report users <b>swap the measure or axis field</b> of a visual with a slicer. Built from <code>NAMEOF</code>; disconnected from the model.' },
+  { skill: '3.1.5', title: 'Precedence', text: 'If two calculation groups hit the same measure, the group with the <b>higher precedence</b> is applied first.' },
+  { skill: '3.1.5', title: 'Dynamic format in use', text: 'The expression returns the format string (such as a currency pattern chosen by a slicer) while the measure stays numeric and chartable. <code>FORMAT()</code> would turn it into text.' },
+  { skill: '3.1.5', title: 'Field parameter table', text: 'One row per field: a display name, a <code>NAMEOF</code> reference and an order column. A disconnected calculated table. Swaps the measure <b>or</b> the axis field.' },
+  { skill: '3.1.5', title: 'Build a calculation group', text: 'Create the group (Tabular Editor, or Model view in newer Desktop), add items, set order and format, then test. Each item uses <code>SELECTEDMEASURE()</code>.' },
+  { skill: '3.1.5', title: 'What-If parameter', text: 'A numeric parameter table read with <code>SELECTEDVALUE</code> in a <b>measure</b> lets consumers change thresholds with a slicer. A calculated column would not react to slicers.' },
+  { skill: '3.1.5', title: 'How or which?', text: 'Calculation group: changes <b>how</b> a measure is calculated. Field parameter: changes <b>which</b> field a visual shows.' },
 
   // 3.1.6 Large format
   { skill: '3.1.6', title: 'Why it exists', text: 'Service default model limit is <b>1 GB</b>. The large format lets a model grow on refresh up to the <b>capacity size</b>. (10 GB is the Desktop upload ceiling.)' },
   { skill: '3.1.6', title: 'What it unlocks', text: 'Prerequisite for <b>XMLA read-write</b>, <b>query scale-out</b> and <b>version history</b>. Also faster XMLA writes.' },
   { skill: '3.1.6', title: 'Direct Lake and scale-out', text: 'Direct Lake models enable it <b>automatically</b>. Query scale-out spreads reads across replicas for many concurrent users.' },
+  { skill: '3.1.6', title: 'Turn it on', text: 'A model setting in the service. A good fit: an Import model with a very large fact table that must load and refresh efficiently, since partitions load on demand from storage.' },
 
   // 3.1.7 Composite models
   { skill: '3.1.7', title: 'When to use', text: 'Mix Fabric and non-Fabric sources, keep real-time beside cached tables, or <b>extend a published model</b> with extra tables.' },
   { skill: '3.1.7', title: 'Limited relationships', text: 'A relationship across <b>source groups</b> is <b>limited</b>: many-to-many with INNER join semantics; unmatched rows disappear.' },
   { skill: '3.1.7', title: 'Dual dimensions', text: 'Set shared dimension tables to <b>Dual</b> to avoid limited relationships. It is a performance optimisation; a stale cache can differ from the source.' },
   { skill: '3.1.7', title: 'Aggregations', text: 'Classic composite pattern: an <b>Import summary table</b> answers common queries; the <b>DirectQuery detail table</b> handles the rest.' },
+  { skill: '3.1.7', title: 'What makes it composite', text: 'More than one storage mode, or more than one data source, in a single model.' },
+  { skill: '3.1.7', title: 'Rows missing?', text: 'An Import table related to a DirectQuery table from another source forms a limited relationship. It doesn\'t enforce referential integrity and drops non-matching rows.' },
+  { skill: '3.1.7', title: 'Extend a published model', text: 'Add local tables and measures to a shared model with a composite model (DirectQuery for Power BI semantic models) instead of copying it.' },
+  { skill: '3.1.7', title: 'Manage aggregations', text: 'Map the Import summary table to the detail table with <b>GroupBy, Sum, Count</b> mappings. Queries answerable at that grain use it automatically; the rest go to the source.' },
 
   // 3.2.1 Query and visual performance
   { skill: '3.2.1', title: 'Find it first', text: '<b>Performance analyzer</b>: Start recording, interact, Stop. Clear the cache first. It splits time into <b>DAX query</b>, visual display, direct query and other.' },
   { skill: '3.2.1', title: 'Go deeper', text: 'Copy a visual\'s query to <b>DAX query view</b> or <b>DAX Studio</b> (server timings, query plan, model metrics).' },
   { skill: '3.2.1', title: 'Lighter pages', text: 'Fewer visuals and slicers; avoid <b>high-cardinality</b> fields in visuals.' },
   { skill: '3.2.1', title: 'Reduce cardinality', text: 'Remove unused columns (GUIDs, free text), truncate datetime to date, bucket values, filter old rows, use numeric keys.' },
+  { skill: '3.2.1', title: 'VertiPaq Analyzer', text: 'In DAX Studio or Tabular Editor. Shows table and column size, dictionary size and cardinality, so you can find what to remove or reduce.' },
+  { skill: '3.2.1', title: 'Auto date/time', text: 'Creates a hidden date table for every date column and bloats the model. Turn it off and use one marked date table.' },
+  { skill: '3.2.1', title: 'Aggregation types', text: '<b>User-defined</b>: you build an Import summary table and map it. <b>Automatic</b> (DirectQuery models): Power BI learns from query history and builds and maintains in-memory aggregations.' },
+  { skill: '3.2.1', title: 'Fewer queries', text: 'Fewer visuals per page. An <b>Apply</b> button on slicers batches changes so one query runs instead of one per click.' },
+  { skill: '3.2.1', title: 'Best Practice Analyzer', text: 'Scans a model against dozens of rules for structural and performance issues: in Tabular Editor, or from a notebook in Fabric.' },
+  { skill: '3.2.1', title: 'Troubleshooting loop', text: '1. <b>Identify</b> the slowest visual in Performance Analyzer. 2. <b>Isolate</b>: run its DAX in DAX query view or DAX Studio. 3. <b>Fix and verify</b>: change it, then measure again.' },
 
   // 3.2.2 DAX performance
   { skill: '3.2.2', title: 'Variables stop repeats', text: 'An expression used twice (like prior year) is calculated <b>once</b> with a variable.' },
   { skill: '3.2.2', title: 'Column filter over FILTER', text: '<code>CALCULATE([Sales], Sales[Amount] &gt; 1000)</code> beats <code>FILTER(Sales, ...)</code>. Use FILTER only for measures, multiple columns or OR.' },
   { skill: '3.2.2', title: 'Avoid heavy patterns', text: '<code>COUNTROWS(FILTER(...))</code> > use <code>CALCULATE(COUNTROWS(...), cond)</code>. Avoid deep nested CALCULATE and iterators over huge tables when <code>SUM</code> works.' },
   { skill: '3.2.2', title: 'Move work upstream', text: 'Do static calculations in <b>Power Query or the source</b>. DAX calculated columns compress worse and slow refresh.' },
+  { skill: '3.2.2', title: 'Read Server Timings', text: 'Mostly formula-engine time with quick storage-engine queries? The cost is the DAX logic (iterators, nested row-by-row work), so rewrite the measure, not the data.' },
+  { skill: '3.2.2', title: 'Why column filters win', text: 'A simple column filter can be resolved by the storage engine. Iterating a whole table with FILTER pushes the work to the slower formula engine.' },
+  { skill: '3.2.2', title: 'Nested iterators', text: 'Rows multiply across the levels. Pre-aggregate or restructure to cut the iteration.' },
+  { skill: '3.2.2', title: 'DISTINCTCOUNT cost', text: 'The engine must track every unique value, so the cost grows with cardinality.' },
+  { skill: '3.2.2', title: 'DIVIDE', text: 'Preferred over <code>/</code>: it handles zero denominators without an IF and is optimized.' },
 
   // 3.2.3 Direct Lake fallback/refresh
   { skill: '3.2.3', title: 'Fallback', text: 'Only <b>Direct Lake on SQL endpoint</b> can fall back to DirectQuery. Direct Lake on OneLake fails instead.' },
@@ -62,15 +111,29 @@ window.DP600_TEACH = (window.DP600_TEACH || []).concat([
   { skill: '3.2.3', title: 'Direct Lake behavior', text: '<b>Automatic</b> (default): fall back. <b>Direct Lake only</b>: error instead. <b>DirectQuery only</b>: for testing.' },
   { skill: '3.2.3', title: 'Diagnose and fix', text: '<code>EVALUATE TABLETRAITS()</code> > <b>DirectLakeFallbackInfo</b>. Fix: <b>materialize the view</b> as a Delta table, move SQL RLS into the model, <code>OPTIMIZE</code>.' },
   { skill: '3.2.3', title: 'Refresh = framing', text: 'Automatic updates are <b>on by default</b>. With them off and no refresh, the model keeps serving the last framed version.' },
+  { skill: '3.2.3', title: 'Data loads on demand', text: 'Framing is metadata only. A column is read from Parquet and transcoded into memory the first time a query needs it, and can be evicted under memory pressure.' },
+  { skill: '3.2.3', title: 'New column missing', text: 'Framing doesn\'t change the model schema. Use <b>Edit tables</b> to refresh the table schema and add the new Delta column.' },
+  { skill: '3.2.3', title: 'Small files', text: 'Thousands of small Parquet files slow Direct Lake and count against the files-per-table guardrail. Run <code>OPTIMIZE</code> and <code>VACUUM</code>.' },
+  { skill: '3.2.3', title: 'Guardrails', text: 'Limits on files, row groups and rows per table depend on the capacity SKU. Exceed them: the SQL-endpoint flavor falls back to DirectQuery; the OneLake flavor fails. Fix with OPTIMIZE or a larger SKU.' },
+  { skill: '3.2.3', title: 'Triggering framing', text: 'Refresh the model manually, by API or in a pipeline. <b>Keep your Direct Lake data up to date</b> reframes automatically when the Delta tables change.' },
+  { skill: '3.2.3', title: 'Direct Lake only', text: 'A correctness control for the SQL-endpoint flavor, not a speed setting: unsupported queries fail instead of running in DirectQuery.' },
 
   // 3.2.4 DL on OneLake vs SQL
   { skill: '3.2.4', title: 'Direct Lake on OneLake', text: 'Reads Delta from <b>one or more</b> Fabric items. No SQL layer, <b>never falls back</b>. Supports composite with Import tables.' },
   { skill: '3.2.4', title: 'Direct Lake on SQL endpoint', text: 'Single source, goes through the endpoint. Can use <b>views</b> and SQL security, but can <b>fall back</b> to DirectQuery.' },
   { skill: '3.2.4', title: 'Which to pick', text: 'Default to <b>OneLake</b>. Pick <b>SQL endpoint</b> when you need a SQL view or permissions enforced in the endpoint, and accept fallback.' },
+  { skill: '3.2.4', title: 'OneLake flavor security', text: 'Reads Delta files directly, so access comes from OneLake permissions and the model, <b>not SQL row-level security</b>. Cloud connections only; no gateway.' },
+  { skill: '3.2.4', title: 'SQL endpoint flavor limits', text: 'One source. It can\'t be mixed with DirectQuery or Dual tables. SQL-layer RLS or a SQL view means those queries fall back to DirectQuery.' },
+  { skill: '3.2.4', title: 'View table slow?', text: 'A table based on a SQL view falls back to DirectQuery. Fix it by materializing the view as a Delta table. "Direct Lake only" would make it fail, not fix it.' },
+  { skill: '3.2.4', title: 'Guardrail breach (OneLake)', text: 'No fallback: queries and refresh fail until the table is optimized with OPTIMIZE and VACUUM, or the model moves to a larger SKU.' },
 
   // 3.2.5 Incremental refresh
   { skill: '3.2.5', title: 'The idea', text: 'Partition a big Import table so each refresh reloads only <b>recent</b> data. Saves refresh time, memory and source load, <b>not</b> visual render time.' },
   { skill: '3.2.5', title: 'Setup', text: 'Date/Time parameters <b>RangeStart</b> and <b>RangeEnd</b> > filter the date column (<code>&gt;=</code> start, <code>&lt;</code> end) > Incremental refresh policy > publish.' },
   { skill: '3.2.5', title: 'Periods', text: '<b>Archive period</b>: history to keep. <b>Refresh period</b>: recent window reloaded each time. The window rolls forward.' },
   { skill: '3.2.5', title: 'First refresh', text: 'Partitions are created in the <b>service</b> on the first refresh. The filter must <b>fold</b> to the source to help.' },
+  { skill: '3.2.5', title: 'The two parameters', text: 'Exactly <b>RangeStart</b> and <b>RangeEnd</b> (case-sensitive), type Date/Time. The service overrides them per partition; Desktop loads only a sample range. Filter with <code>&gt;=</code> start and <code>&lt;</code> end to avoid duplicates.' },
+  { skill: '3.2.5', title: 'Detect data changes', text: 'Uses an audit column such as <code>LastUpdated</code>, different from the partition column, so only periods whose data changed are refreshed.' },
+  { skill: '3.2.5', title: 'Real-time partition', text: '<b>Get the latest data in real time</b> adds a DirectQuery partition for rows newer than the refresh period: a hybrid table. Needs Premium or Fabric capacity.' },
+  { skill: '3.2.5', title: 'Not for Direct Lake', text: 'Direct Lake tables have no model partitions, so incremental refresh doesn\'t apply; partitioning happens at the Delta table.' },
 ]);

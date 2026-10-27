@@ -1,17 +1,28 @@
 // DP-600 teaching cards, domain 1: Maintain a data analytics solution. Each card is one short idea.
-// They appear before a skill's recall cards in the flashcard "Learn path".
+// They are the whole DP-600 Learn mode. Card ids are numbered by position within a skill and read
+// progress is stored by id, so add new cards at the end of their skill's block, never in the middle.
 window.DP600_TEACH = (window.DP600_TEACH || []).concat([
   // 1.1.1 Workspace-level access
   { skill: '1.1.1', title: 'Four workspace roles', text: 'From most to least access: <b>Admin, Member, Contributor, Viewer</b>. A role applies to <b>every item</b> in the workspace.' },
   { skill: '1.1.1', title: 'What each role can do', text: '<b>Admin</b>: everything, incl. delete the workspace.<br><b>Member</b>: create, edit, share, add people.<br><b>Contributor</b>: create and edit, no sharing.<br><b>Viewer</b>: read only.' },
   { skill: '1.1.1', title: 'Assign groups, not people', text: 'Give roles to <b>security groups</b> so access is managed in one place. In several groups? You get the <b>highest</b> role.' },
   { skill: '1.1.1', title: 'Roles beat finer controls', text: 'Admin, Member and Contributor can read all OneLake data and <b>bypass</b> RLS, OLS and T-SQL DENY. Only a <b>Viewer</b> is restricted.' },
+  { skill: '1.1.1', title: 'Who can manage access', text: 'Only <b>Admin</b> can delete a workspace or add other Admins. <b>Admin and Member</b> can add people; a Member only up to their own role. Contributors and Viewers cannot.' },
+  { skill: '1.1.1', title: 'Contributor in practice', text: 'Creates, edits and deletes items and <b>runs pipelines</b>, but cannot share or manage access. The fit for "edit, never share".' },
+  { skill: '1.1.1', title: 'Where roles are assigned', text: 'Workspace > <b>Manage access</b> > add a person or group > pick a role. Roles go to individuals, security groups, Microsoft 365 groups and distribution lists.' },
+  { skill: '1.1.1', title: 'Viewer and data', text: 'A Viewer sees items and opens reports but has <b>no OneLake data access by default</b>. Data for Viewers comes from item permissions or OneLake security roles.' },
 
   // 1.1.2 Item-level access
   { skill: '1.1.2', title: 'Share one item, not the workspace', text: 'To give access to a single lakehouse or warehouse, <b>share that item</b> (... > Manage permissions). Least privilege.' },
   { skill: '1.1.2', title: 'Read does not mean data', text: 'Sharing a lakehouse always grants <b>Read</b>: see the item, <b>not</b> its data. Data needs an extra permission.' },
   { skill: '1.1.2', title: 'The extra permissions', text: '<b>Read all SQL endpoint data</b>: T-SQL access.<br><b>Read all Apache Spark</b>: Spark and OneLake access.<br><b>Build reports</b> on the default semantic model.' },
   { skill: '1.1.2', title: 'Watch DefaultReader', text: 'Granting Spark access adds the person to the <b>DefaultReader</b> OneLake role, which reads everything. Remove them from it if you restrict them to a custom role.' },
+  { skill: '1.1.2', title: 'Access is checked in layers', text: '1. <b>Microsoft Entra ID</b> sign-in.<br>2. <b>Fabric access</b>: is Fabric enabled for the user and tenant.<br>3. <b>Data security</b>: workspace roles, item permissions, compute permissions, OneLake security.<br>Every layer must pass.' },
+  { skill: '1.1.2', title: 'Four data controls', text: 'Broadest to narrowest: <b>workspace roles</b> (every item), <b>item permissions</b> (one item), <b>compute permissions</b> (T-SQL GRANT/DENY in one engine), <b>OneLake security</b> (tables and folders).' },
+  { skill: '1.1.2', title: 'How to share an item', text: 'Item ... > <b>Manage permissions</b> > share with a person or group > tick permissions. The <b>reshare</b> option lets recipients pass access on; it changes no role or ownership.' },
+  { skill: '1.1.2', title: 'Data permissions are broad', text: '<b>Read all SQL endpoint data</b> and <b>Read all Apache Spark</b> each expose <b>all</b> the lakehouse data by default. Narrow it with OneLake security roles.' },
+  { skill: '1.1.2', title: 'Semantic model: Read or Build', text: '<b>Read</b>: view existing reports on the model. <b>Build</b>: create new reports or Excel connections on it. Share with Read only and they cannot make new content.' },
+  { skill: '1.1.2', title: 'Warehouse: grant in T-SQL', text: 'A user with the Member role can grant object permissions in a warehouse, e.g. <code>GRANT SELECT ON TableName TO [ServicePrincipal]</code>.' },
 
   // 1.1.3 Row/column/object/file-level
   { skill: '1.1.3', title: 'Row-level security (semantic model)', text: 'A <b>role</b> with a DAX filter, e.g. <code>[Email] = USERPRINCIPALNAME()</code>. Filter <b>dimension</b> tables; relationships carry it to facts.' },
@@ -20,48 +31,108 @@ window.DP600_TEACH = (window.DP600_TEACH || []).concat([
   { skill: '1.1.3', title: 'RLS gotchas', text: 'A Viewer in <b>no role</b> sees <b>all rows</b>. Several roles = <b>union</b> of rows. Admin, Member and Contributor bypass RLS.' },
   { skill: '1.1.3', title: 'In a warehouse: T-SQL', text: '<b>RLS</b>: security policy with a filter predicate.<br><b>Column-level</b>: <code>GRANT SELECT</code> on a column list.<br><b>Dynamic data masking</b>: hides values at query time; <code>UNMASK</code> reveals. Not encryption.' },
   { skill: '1.1.3', title: 'Files and folders: OneLake security', text: '<b>OneLake security roles</b> grant Read or ReadWrite on chosen tables or <b>folders</b>, with optional row and column filters. Same in Spark, SQL and APIs.' },
+  { skill: '1.1.3', title: 'Test and assign RLS roles', text: 'Preview with <b>View as</b> in Desktop or the service. Add members in the service, ideally <b>Entra security groups</b> rather than individuals.' },
+  { skill: '1.1.3', title: 'Security table pattern', text: 'A table maps users to regions or departments, so access is managed as data. For several regions per user, filter with <code>IN</code> over <code>CALCULATETABLE</code> and <code>USERPRINCIPALNAME()</code>; <code>LOOKUPVALUE</code> errors when more than one row matches.' },
+  { skill: '1.1.3', title: 'Keep relationship chains intact', text: 'RLS reaches facts through relationships. A <b>broken chain</b> can expose data you meant to hide, so test the model.' },
+  { skill: '1.1.3', title: 'OLS hides metadata too', text: 'A table or column secured with OLS is invisible to unauthorized users, <b>metadata included</b>. It applies to Viewers only; Admin, Member and Contributor bypass it.' },
+  { skill: '1.1.3', title: 'Warehouse RLS: two steps', text: '1. An <b>inline table-valued function</b> as the predicate, created <code>WITH SCHEMABINDING</code>.<br>2. <code>CREATE SECURITY POLICY ... ADD FILTER PREDICATE</code>, with <code>STATE = ON</code>.' },
+  { skill: '1.1.3', title: 'What a filter predicate hits', text: 'Filters rows for <b>SELECT, UPDATE and DELETE</b>, not INSERT. Blocking writes needs a <b>block predicate</b>. Crafted WHERE clauses can leak data through side channels.' },
+  { skill: '1.1.3', title: 'Column-level security in T-SQL', text: '<code>DENY SELECT ON Employees(Salary) TO [group]</code> gives a permission error on that column (or GRANT SELECT on the allowed columns only). More granular than a view and adapts to schema changes.' },
+  { skill: '1.1.3', title: 'Masking functions', text: '<code>default()</code>: full mask. <code>email()</code>: first letter and .com. <code>partial(prefix, \'padding\', suffix)</code>, e.g. <code>partial(2, \'XXXX\', 0)</code>. <code>random()</code>: numbers. Set with <code>ALTER COLUMN ... ADD MASKED WITH (FUNCTION = ...)</code>.' },
+  { skill: '1.1.3', title: 'Masking vs column security', text: 'A masked column can still be queried and shows obfuscated values; users can <b>infer</b> real ones by filtering. <code>UNMASK</code> reveals them. To block a column outright, use column-level security.' },
+  { skill: '1.1.3', title: 'DENY beats GRANT', text: 'T-SQL <code>GRANT</code>, <code>DENY</code> and <code>REVOKE</code> work on tables, views, functions and procedures. <b>DENY always wins</b>, even when another role grants the permission.' },
+  { skill: '1.1.3', title: 'Parts of a OneLake security role', text: '<b>Data</b>: tables or folders. <b>Permission</b>: Read or ReadWrite. <b>Members</b>: users and groups. <b>Constraints</b>: optional row or column filters. Enforced the same in Spark, SQL and OneLake APIs.' },
+  { skill: '1.1.3', title: 'Who OneLake roles apply to', text: 'Only workspace <b>Admin and Member</b> can create them. They restrict Viewers and Read-permission users; Admin, Member and Contributor bypass them. Roles are <b>additive</b>.' },
+  { skill: '1.1.3', title: 'Create a OneLake role', text: 'Lakehouse > <b>Manage OneLake security</b> > New role > Read or ReadWrite and the tables or folders > save > edit to add members and constraints.' },
+  { skill: '1.1.3', title: 'Pick the control', text: 'Rows: <b>RLS</b>. Columns: <b>CLS</b> (warehouse) or <b>OLS</b> (model). Whole tables: OLS. Obscure values: <b>masking</b>. Tables or folders in a lakehouse: <b>OneLake security</b>.' },
+  { skill: '1.1.3', title: 'Keep views generic', text: 'Don\'t hard-code users in a view\'s WHERE clause. Build the view without user filters and enforce RLS with a <b>security policy</b>.' },
 
   // 1.1.4 Sensitivity labels
   { skill: '1.1.4', title: 'What a label is', text: 'A <b>Microsoft Purview</b> sensitivity label (Public, General, Confidential...) applied to an item. It classifies and can restrict access.' },
   { skill: '1.1.4', title: 'Labels travel', text: 'Exports to Excel, PDF, PowerPoint and .pbix <b>keep the label</b>. <b>CSV and TXT do not</b>.' },
   { skill: '1.1.4', title: 'Inheritance does the work', text: 'A label on a lakehouse flows <b>downstream</b> to the SQL endpoint, semantic model and reports. Label the <b>sources</b>.' },
   { skill: '1.1.4', title: 'Default and mandatory', text: '<b>Default labeling</b> gives new items a baseline label. <b>Mandatory labeling</b> blocks saving Power BI items with no label.' },
+  { skill: '1.1.4', title: 'Where labels come from', text: '<b>Microsoft Purview Information Protection</b>. The tenant setting "Allow users to apply sensitivity labels for content" switches them on for Fabric and Power BI.' },
+  { skill: '1.1.4', title: 'Label vs protection', text: 'A label alone only <b>classifies</b>. Access is enforced when it carries <b>protection</b> (IRM encryption): users outside the allowed group are blocked from the item entirely.' },
+  { skill: '1.1.4', title: 'Why a label is missing', text: 'Users only see labels <b>published to them by a label policy</b>. Widen the policy to include the user or group.' },
+  { skill: '1.1.4', title: 'Default label location', text: 'Set it in the <b>Purview sensitivity label policy</b>. The Fabric tenant setting only turns labels on.' },
 
   // 1.1.5 Endorsement
   { skill: '1.1.5', title: 'Three endorsement levels', text: '<b>Promoted</b>: ready to share. <b>Certified</b>: meets org standards. <b>Master data</b>: the single source of truth.' },
   { skill: '1.1.5', title: 'Who can set them', text: 'Promote: anyone with <b>write</b> access.<br>Certify and master data: only users the <b>Fabric admin</b> authorizes.' },
   { skill: '1.1.5', title: 'Visibility, not access', text: 'Endorsement adds a badge and ranks items higher in search. It <b>never</b> changes who can open the item.' },
   { skill: '1.1.5', title: 'Limits', text: 'Master data applies only to items that <b>hold data</b> (lakehouses, semantic models). <b>Dashboards</b> cannot be endorsed.' },
+  { skill: '1.1.5', title: 'Find endorsed items', text: 'The <b>OneLake catalog</b> shows endorsement badges and filters by endorsement (also by domain, item type and keyword).' },
+  { skill: '1.1.5', title: 'Meaning of each level', text: '<b>Promoted</b>: an owner or writer says it is ready to reuse. <b>Certified</b>: an authorized reviewer verified it meets quality standards. <b>Master data</b>: the authoritative source for core entities such as customers or products.' },
+  { skill: '1.1.5', title: 'Certification setup', text: 'The Fabric admin names who may certify (users or security groups) in the tenant\'s certification settings. Certification is never automatic: a human reviewer does it.' },
 
   // 1.2.1 Version control
   { skill: '1.2.1', title: 'Git integration', text: 'Connect a workspace to a repo in <b>Azure DevOps</b> or <b>GitHub</b>: Workspace settings > Git integration. One workspace = <b>one branch</b>.' },
   { skill: '1.2.1', title: 'Commit and update', text: '<b>Commit</b> sends workspace changes to Git. <b>Update all</b> pulls the latest commit in. A change on both sides is a <b>conflict</b> you must resolve.' },
   { skill: '1.2.1', title: 'Definitions, not data', text: 'Git stores item <b>definitions</b>, not the data inside them. It works for notebooks, pipelines, lakehouses and warehouses too.' },
   { skill: '1.2.1', title: 'Limits', text: 'Only Azure DevOps and cloud GitHub. You cannot update single items: an update brings the <b>whole branch</b> to the latest commit.' },
+  { skill: '1.2.1', title: 'Supported providers', text: '<b>Azure DevOps</b> and <b>cloud GitHub</b>. Not on-premises Git servers, submodules or sovereign clouds.' },
+  { skill: '1.2.1', title: 'Connect a workspace', text: 'Workspace settings > Git integration > provider > repo, branch and folder > <b>initial sync</b>. Only a workspace <b>Admin</b> connects or disconnects.' },
+  { skill: '1.2.1', title: 'Git roles', text: 'Contributors and Members can commit and update depending on their Git role. <b>Viewers cannot</b>.' },
+  { skill: '1.2.1', title: 'Status labels', text: '<b>Update required</b>: the branch has a newer commit than the workspace. Workspace changes not yet in Git show as uncommitted. Unsupported items are flagged and ignored.' },
+  { skill: '1.2.1', title: 'Conflicts', text: 'The same item changed in the workspace and the branch blocks Update. Choose which version wins, or merge, before you continue.' },
+  { skill: '1.2.1', title: 'Branch out', text: '<b>Branch out to a new workspace</b> creates a workspace on a new branch for isolated work, merged back through Git.' },
+  { skill: '1.2.1', title: 'Numbers to remember', text: 'Up to <b>1,000 items</b> per workspace. A commit is limited to <b>50 MB</b> in total and <b>25 MB</b> per file.' },
+  { skill: '1.2.1', title: 'Pull requests as gates', text: 'Require at least one reviewer before merging to main. The pull request is the quality gate between development and the workspace.' },
 
   // 1.2.2 .pbip
   { skill: '1.2.2', title: 'Why .pbip', text: 'A .pbix is one binary file Git cannot diff. A <b>.pbip</b> project saves report and model as <b>text files</b> so changes are readable.' },
   { skill: '1.2.2', title: 'What is inside', text: '<b>.SemanticModel</b> folder: the model in <b>TMDL</b>.<br><b>.Report</b> folder: the report in <b>PBIR</b> (JSON).<br>The .pbip file is just a shortcut.' },
   { skill: '1.2.2', title: 'Working with it', text: 'Save via <b>File > Save as > Power BI Project</b>. Desktop adds a <code>.gitignore</code> that excludes cache and local settings. It holds no imported data.' },
+  { skill: '1.2.2', title: 'TMDL', text: '<b>Tabular Model Definition Language</b>: a YAML-like text format. Each table, measure and relationship is a readable file (<code>model.tmdl</code>, a <code>tables</code> folder). A model can instead be saved as TMSL (<code>model.bim</code>).' },
+  { skill: '1.2.2', title: 'PBIR report format', text: 'Each page and visual is its own <b>JSON</b> file. <code>definition.pbir</code> is the report folder\'s entry point; the .pbip is only a shortcut.' },
+  { skill: '1.2.2', title: 'What .gitignore excludes', text: 'Per-user files only: <code>.pbi/localSettings.json</code> and <code>.pbi/cache.abf</code>. The report and model definitions stay in Git.' },
+  { skill: '1.2.2', title: 'Editing outside Desktop', text: 'Change a .tmdl file in a text editor and you must <b>close and reopen</b> Desktop to see it. You also can\'t save a .pbip directly to OneDrive or SharePoint.' },
+  { skill: '1.2.2', title: 'Why .pbip for Git', text: 'Fabric Git integration tracks individual text files, so it needs the project format, not a single .pbix. Set Git\'s <b>autocrlf</b> to avoid line-ending noise in diffs.' },
+  { skill: '1.2.2', title: 'Scripted changes', text: 'Because the model is text, scripts can make batch edits, such as adding a description to every measure, and you commit them through Git.' },
 
   // 1.2.3 Deployment pipelines
   { skill: '1.2.3', title: 'Stages', text: 'A pipeline has <b>2 to 10 stages</b> (default Dev, Test, Prod), each linked to its own workspace. Deploying copies <b>items</b>, not data.' },
   { skill: '1.2.3', title: 'Compare and select', text: 'Compare two stages before deploying (orange = different, green = same). You can deploy <b>selected items</b> only.' },
   { skill: '1.2.3', title: 'Deployment rules', text: 'Change settings per stage: <b>data source rules</b> (server, database) and <b>parameter rules</b>. Set on the <b>target</b> stage; they apply on the next deploy.' },
   { skill: '1.2.3', title: 'Git vs pipelines', text: '<b>Git</b>: what changed and who approved it.<br><b>Pipelines</b>: is the right content in the right environment.' },
+  { skill: '1.2.3', title: 'Create a pipeline', text: 'Workspaces > Deployment pipelines > Create > name it, set the stage count > <b>assign a workspace to each stage</b> (each on Fabric or Premium capacity).' },
+  { skill: '1.2.3', title: 'What a deployment copies', text: 'Item definitions and metadata, not data. The target stage gets its data from a refresh there.' },
+  { skill: '1.2.3', title: 'Which rule to use', text: 'A model whose source uses <b>Power Query parameters</b> can\'t take a data source rule: use a <b>parameter rule</b>. Rules sit on the target stage, under the item.' },
+  { skill: '1.2.3', title: 'When rules apply', text: 'Set rules <b>before the first deployment</b>. They don\'t change the source item; after editing a rule, redeploy to apply it.' },
+  { skill: '1.2.3', title: 'Variable libraries', text: 'Microsoft\'s first choice now for environment-specific settings. Deployment rules are still supported.' },
+  { skill: '1.2.3', title: 'Spot the differences', text: 'Items only in the source show <b>new</b>. The comparison also flags deleted or renamed items so you handle them on purpose. Deploy everything or pick items.' },
+  { skill: '1.2.3', title: 'Automate deployments', text: 'Trigger deployments with the <b>Fabric REST API</b>: after a pull request merges, or nightly from Dev to Test.' },
+  { skill: '1.2.3', title: 'Four lifecycle stages', text: '<b>Develop</b> (.pbit, shared models, .pbip, Git) > <b>Validate</b> (XMLA, SemPy, DAX Studio, Tabular Editor) > <b>Deploy</b> (pipelines and rules) > <b>Monitor</b> (refresh, Monitoring hub).' },
+  { skill: '1.2.3', title: 'Scheduled refresh', text: 'Semantic model settings > turn on the schedule > daily or weekly times > set <b>failure notifications</b>. On-premises sources need a gateway; cloud sources do not. Refresh off-peak.' },
+  { skill: '1.2.3', title: 'Refresh from a pipeline', text: 'A pipeline with a semantic model refresh activity enforces order: refresh the lakehouse, transform, then refresh the model, with a failure branch that skips the refresh and sends an alert.' },
+  { skill: '1.2.3', title: 'Monitoring hub', text: 'Shows running and recent activities, refreshes included. Check status, duration and errors; refresh history shows scheduled, on-demand or pipeline runs. Typical failures: expired credential, source timeout, schema change.' },
 
   // 1.2.4 Impact analysis
   { skill: '1.2.4', title: 'Ask before you change', text: '<b>Impact analysis</b> shows which items depend on a lakehouse, warehouse, dataflow or semantic model, so you know what a change will break.' },
   { skill: '1.2.4', title: 'Two scopes', text: '<b>Child items</b>: one step downstream.<br><b>All downstream items</b>: the full chain, e.g. lakehouse > model > report > app.' },
   { skill: '1.2.4', title: 'Lineage view', text: 'The visual map of data flow. Use it to trace stale data upstream. It only shows items <b>you have permission to see</b>.' },
+  { skill: '1.2.4', title: 'Open impact analysis', text: 'From the item\'s card in <b>lineage view</b> or its details page. It lists affected workspaces and items and lets you <b>notify their contacts</b>.' },
+  { skill: '1.2.4', title: 'Data source scope', text: 'A data source offers only <b>child items</b>. Run impact analysis on those children to go further.' },
+  { skill: '1.2.4', title: 'Stale data in a report', text: 'Use lineage view to trace upstream: report > semantic model > its last refresh > the source. Impact analysis looks the other way, downstream.' },
 
   // 1.2.5 XMLA
   { skill: '1.2.5', title: 'The XMLA endpoint', text: 'Lets external tools talk to a semantic model. Default <b>read-only</b>; the capacity admin can enable <b>read-write</b>.' },
   { skill: '1.2.5', title: 'Read-write unlocks', text: 'Deploying model changes, scripted operations and <b>refreshing single partitions</b> from tools.' },
   { skill: '1.2.5', title: 'Who connects', text: '<b>Tabular Editor</b> (edit, BPA, OLS), <b>DAX Studio</b> (queries), <b>ALM Toolkit</b> (compare schemas), <b>SSMS</b>, and <b>SemPy</b> in notebooks.' },
+  { skill: '1.2.5', title: 'Requirements', text: 'Workspace on <b>Premium, Fabric capacity or PPU</b>. Connect with <code>powerbi://api.powerbi.com/v1.0/[tenant]/[workspace]</code>, then pick the model. Traffic is encrypted.' },
+  { skill: '1.2.5', title: 'Turning on read-write', text: 'A <b>capacity admin</b> sets it in the capacity\'s semantic model workload settings. "Write operations not allowed" means it is still read-only. The tenant XMLA setting must be on (default); Desktop-authored models need enhanced metadata.' },
+  { skill: '1.2.5', title: 'SemPy', text: 'Python library in Fabric notebooks (Runtime 1.2+) that reads models over XMLA: <code>list_tables</code>, <code>list_measures</code>, <code>list_relationship_violations</code>, <code>evaluate_measure</code>, <code>evaluate_dax</code>, <code>read_table</code>.' },
+  { skill: '1.2.5', title: 'SemPy or tools?', text: 'SemPy: scripted, repeatable checks before every deployment. DAX Studio, Tabular Editor and ALM Toolkit: interactive. All stop working if the XMLA endpoint is disabled.' },
+  { skill: '1.2.5', title: 'Built-in Best Practice Analyzer', text: 'Run it from a model\'s context menu: it generates a notebook that checks 60+ rules in five categories (Performance, DAX Expressions, Error Prevention, Maintenance, Formatting). No install needed.' },
 
   // 1.2.6 Reusable assets
   { skill: '1.2.6', title: '.pbit template', text: 'Report layout, model and queries with <b>no data</b>. Opening it asks for parameters and credentials. Great for a standard report.' },
   { skill: '1.2.6', title: '.pbids data source file', text: 'Holds the connection for <b>one</b> data source. The user just signs in and picks tables.' },
   { skill: '1.2.6', title: 'Shared semantic model', text: 'One central definition of measures. Reports connect to it instead of embedding their own, so "revenue" means one thing.' },
+  { skill: '1.2.6', title: 'Create a .pbit', text: 'File > Export > <b>Power BI template</b>, add a description. Small and easy to share because it holds no data. Parameters can be text, Boolean or date.' },
+  { skill: '1.2.6', title: 'Create a .pbids', text: 'File > Options and settings > Data source settings > pick the source > <b>Export PBIDS</b>. One data source only (more is an error). It may preset Import or DirectQuery; otherwise the user chooses.' },
+  { skill: '1.2.6', title: 'Thin reports', text: 'A report with visuals only, connected live to a shared model. Authors need <b>Build</b> permission and find models in the OneLake catalog or Get data > Power BI semantic models.' },
+  { skill: '1.2.6', title: 'Four file types', text: '<b>.pbix</b>: report and data in one package. <b>.pbit</b>: template, no data. <b>.pbids</b>: connection details only. <b>.pbip</b>: folder of text files for source control.' },
+  { skill: '1.2.6', title: 'Template or shared model?', text: 'Templates standardize at <b>development</b> (layout, queries). Shared models standardize at <b>consumption</b> (measures). Combine them: a template that connects to a shared model.' },
 ]);
