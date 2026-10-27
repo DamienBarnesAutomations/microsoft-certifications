@@ -33,7 +33,9 @@ function renderHub(cert) {
   const attempts = exams.forCert(cert.id).length;
 
   const meta = {
-    flashcards: `${Alpine.store('flashcardProgress').masteredCount(cert.id)} mastered`,
+    flashcards: DATA.getTeachCards(cert.id).length
+      ? `${DATA.getTeachCards(cert.id).filter((c) => Alpine.store('progress').isRead(cert.id, 'teach:' + c.id)).length} of ${DATA.getTeachCards(cert.id).length} cards read`
+      : `${Alpine.store('flashcardProgress').masteredCount(cert.id)} mastered`,
     test: attempts ? `${attempts} attempts · ${exams.averageScore(cert.id)}% average` : 'No attempts yet',
   };
 

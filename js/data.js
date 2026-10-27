@@ -102,7 +102,9 @@ function getCert(id) {
 
 function getCertTools(id) {
   const cert = getCert(id);
-  return cert ? TOOLS.filter((t) => cert.tools.includes(t.id)) : [];
+  if (!cert) return [];
+  return TOOLS.filter((t) => cert.tools.includes(t.id)).map((t) => (
+    id === 'dp600' && t.id === 'flashcards' ? { ...t, label: 'Learn', short: 'Learn', icon: '🎓' } : t));
 }
 
 // Full question pool across every cert that has one, each question tagged with its cert id.

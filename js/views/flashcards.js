@@ -4,7 +4,7 @@ const flashState = {
   deck: [],
   currentIdx: 0,
   flipped: false,
-  filters: { module: 'all', type: 'all', shuffle: true, picked: [] },
+  filters: { module: 'all', type: 'all', shuffle: true, picked: [], skipSeen: true },
   mode: 'path',
 };
 
@@ -24,6 +24,12 @@ function initFlashcards() {
   else renderFlashcardSetup();
 }
 
+// Certifications with teaching cards (DP-600) use the card screens only to give information:
+// no questions, no flipping, no ratings.
+function learnOnly(cert) {
+  return DATA.getTeachCards(cert).length > 0;
+}
+
 const FLASH_LABEL = 'font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;';
 
 function renderFlashcardSetup() {
@@ -31,13 +37,15 @@ function renderFlashcardSetup() {
   const container = document.getElementById('view-flashcards');
   const hasTeach = DATA.getTeachCards(cert).length > 0;
 
+  const learn = learnOnly(cert);
   container.innerHTML = `
-    <h1>${Alpine.store('ui').certInfo.code} Flashcards</h1>
-    <p class="subtitle">Choose what to study, then start.</p>
+    <h1>${Alpine.store('ui').certInfo.code} ${learn ? 'Learn' : 'Flashcards'}</h1>
+    <p class="subtitle">${learn ? 'Pick the topics you want to read about, then start.' : 'Choose what to study, then start.'}</p>
 
     <div class="glass-panel" style="width: 100%; margin-bottom: 16px;">
       <div id="flash-filter-block"></div>
-      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-top: 16px;">
+      ${learn ? '<label class="flash-shuffle" style="margin-top: 14px;"><input type="checkbox" id="flash-skip-seen"> Skip cards I have already read</label>' : ''}
+      <div style="display: ${learn ? 'none' : 'flex'}; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-top: 16px;">
         ${hasTeach ? `
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
           <label style="${FLASH_LABEL}">Mode</label>
@@ -65,18 +73,22 @@ function renderFlashcardSetup() {
       <div id="flash-count" class="flash-count"></div>
       <button class="btn btn-primary" id="btn-flash-start">Start</button>
     </div>
-    <div style="margin-top: 20px;"><button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger);">Reset flashcard progress</button></div>
+    <div style="margin-top: 20px;"><button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger);">${learn ? 'Mark all cards as unread' : 'Reset flashcard progress'}</button></div>
   `;
 
-  renderFlashcardFilters();
   const typeSel = document.getElementById('flash-type-filter');
-  typeSel.value = flashState.filters.type;
+  typeSel.value = learn ? 'all' : flashState.filters.type;
   typeSel.onchange = updateFlashSetupCount;
+  const skip = document.getElementById('flash-skip-seen');
+  if (skip) { skip.checked = flashState.filters.skipSeen; skip.onchange = updateFlashSetupCount; }
   const modeSel = document.getElementById('flash-mode');
   if (modeSel) { modeSel.value = flashState.mode; modeSel.onchange = updateFlashSetupCount; }
   const shuffle = document.getElementById('flash-shuffle');
   shuffle.checked = flashState.filters.shuffle;
   shuffle.onchange = updateFlashSetupCount;
+
+  // Built last: restoring the picker selection fires onChange, which reads the controls above.
+  renderFlashcardFilters();
 
   document.getElementById('btn-flash-start').onclick = () => {
     readFlashSetup();
@@ -84,10 +96,16 @@ function renderFlashcardSetup() {
     window.location.hash = `#/${cert}/flashcards/study`;
   };
   document.getElementById('btn-flash-reset').onclick = () => {
-    if (confirm('Are you sure you want to reset all flashcard mastery records? This cannot be undone.')) {
+    if (learn) {
+      if (!confirm('Mark every card as unread?')) return;
+      const progress = Alpine.store('progress');
+      Object.keys(progress.data).filter((k) => k.startsWith(cert + '/teach:')).forEach((k) => { delete progress.data[k]; });
+      localStorage.setItem('fabric_reading_progress', JSON.stringify(progress.data));
+    } else {
+      if (!confirm('Are you sure you want to reset all flashcard mastery records? This cannot be undone.')) return;
       Alpine.store('flashcardProgress').reset();
-      updateFlashSetupCount();
     }
+    updateFlashSetupCount();
   };
   updateFlashSetupCount();
 }
@@ -100,6 +118,8 @@ function readFlashSetup() {
   flashState.filters.module = mod ? mod.value : 'all';
   flashState.filters.type = document.getElementById('flash-type-filter').value;
   flashState.filters.shuffle = document.getElementById('flash-shuffle').checked;
+  const skipBox = document.getElementById('flash-skip-seen');
+  if (skipBox) flashState.filters.skipSeen = skipBox.checked;
   const modeSel = document.getElementById('flash-mode');
   flashState.mode = modeSel ? modeSel.value : 'path';
 }
@@ -109,7 +129,9 @@ function updateFlashSetupCount() {
   const n = computeFlashcardDeck().length;
   const picked = flashState.filters.picked.length;
   const what = picked ? `${picked} topic${picked === 1 ? '' : 's'}` : 'all topics';
-  document.getElementById('flash-count').textContent = `${n} card${n === 1 ? '' : 's'} from ${what}`;
+  document.getElementById('flash-count').textContent = learnOnly(currentCertId())
+    ? (n ? `${n} card${n === 1 ? '' : 's'} to read from ${what}` : `Nothing new in ${what}. Untick "skip" to read it again.`)
+    : `${n} card${n === 1 ? '' : 's'} from ${what}`;
   document.getElementById('btn-flash-start').disabled = n === 0;
 }
 
@@ -118,7 +140,7 @@ function renderFlashcardStudy() {
   const container = document.getElementById('view-flashcards');
   const picked = flashState.filters.picked.length;
   const what = picked ? `${picked} topic${picked === 1 ? '' : 's'}` : 'all topics';
-  const how = DATA.getTeachCards(cert).length ? (flashState.mode === 'path' ? 'Learn path' : 'Recall only') : 'Flashcards';
+  const how = learnOnly(cert) ? 'Learn' : 'Flashcards';
 
   container.innerHTML = `
     <div class="flash-study-head">
@@ -134,7 +156,7 @@ function renderFlashcardStudy() {
         <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);" id="flash-progress-text">0 / 0</div>
       </div>
 
-      <div style="display: flex; gap: 16px; font-size: 0.8rem; margin-bottom: 16px; color: var(--text-muted); flex-wrap: wrap;">
+      <div style="display: ${learnOnly(cert) ? 'none' : 'flex'}; gap: 16px; font-size: 0.8rem; margin-bottom: 16px; color: var(--text-muted); flex-wrap: wrap;">
         <span>✅ Mastered: <strong id="flash-cnt-mastered" style="color: var(--color-success);">0</strong></span>
         <span>🟡 Review: <strong id="flash-cnt-almost" style="color: var(--color-warning);">0</strong></span>
         <span>❌ Not Yet: <strong id="flash-cnt-notyet" style="color: var(--color-danger);">0</strong></span>
@@ -231,6 +253,22 @@ function computeFlashcardDeck() {
 
   const teach = DATA.getTeachCards(cert);
   const pathMode = teach.length > 0 && flashState.mode === 'path';
+
+  if (outline && teach.length) {
+    // Information only: the teaching cards, in exam-outline order.
+    const picked = flashState.filters.picked;
+    const seen = (c) => Alpine.store('progress').isRead(cert, 'teach:' + c.id);
+    const skills = [];
+    outline.domains.forEach((d) => d.topics.forEach((t) => t.skills.forEach((s) => skills.push(s.id))));
+    skills.forEach((id) => {
+      teach.filter((c) => c.skill === id && (!picked.length || picked.some((n) => DATA.skillInNode(c.skill, n))) && !(flashState.filters.skipSeen && seen(c)))
+        .forEach((c) => {
+          const topicId = c.skill.split('.').slice(0, 2).join('.');
+          deck.push({ ...c, moduleName: outline.titles[topicId], topic: outline.titles[c.skill] });
+        });
+    });
+    return deck;
+  }
 
   if (outline) {
     const picked = flashState.filters.picked;
@@ -345,6 +383,7 @@ function renderFlashcard() {
     if (activeBtn) activeBtn.classList.add('active');
   }
 
+  if (learnOnly(currentCertId())) updateFlashcardProgressUI();
   document.getElementById('btn-flash-prev').disabled = flashState.currentIdx === 0;
   document.getElementById('btn-flash-next').disabled = flashState.currentIdx === flashState.deck.length - 1;
 }
@@ -398,6 +437,13 @@ function navFlashcard(direction) {
 }
 
 function updateFlashcardProgressUI() {
+  if (learnOnly(currentCertId())) {
+    const n = flashState.deck.length;
+    const done = Math.min(flashState.currentIdx + 1, n);
+    document.getElementById('flash-progress-fill').style.width = n ? `${Math.round((done / n) * 100)}%` : '0%';
+    document.getElementById('flash-progress-text').textContent = n ? `${done} / ${n}` : '0 / 0';
+    return;
+  }
   const recallDeck = flashState.deck.filter((c) => c.type !== 'teach');
   const total = recallDeck.length;
   if (total === 0) {
