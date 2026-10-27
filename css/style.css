@@ -798,3 +798,10 @@ body.exam-active .main-content { margin-left: 0; padding: 0 16px 88px; }
 .teach-body { font-size: 1.1rem; font-weight: 400; line-height: 1.65; text-align: left; }
 .teach-body code { font-family: var(--font-mono); font-size: 0.9em; background: rgba(127,127,127,0.18); padding: 1px 5px; border-radius: 4px; }
 .badge-teach { background: rgba(20,184,166,0.18); color: var(--accent-teal); }
+
+/* Flashcard setup and study screens */
+.flash-start-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; bottom: 0; padding: 12px 0; background: var(--bg, var(--surface)); }
+.flash-count { font-size: 0.95rem; color: var(--text-secondary); }
+.flash-shuffle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-secondary); padding-bottom: 10px; }
+.flash-study-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.flash-study-sub { font-size: 0.85rem; color: var(--text-muted); }

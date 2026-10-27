@@ -4,40 +4,126 @@ const flashState = {
   deck: [],
   currentIdx: 0,
   flipped: false,
-  filters: { module: 'all', type: 'all', shuffle: true },
+  filters: { module: 'all', type: 'all', shuffle: true, picked: [] },
   mode: 'path',
 };
 
+// The last setup is remembered so the study screen can be reopened or reloaded directly.
+try {
+  const saved = JSON.parse(localStorage.getItem('flash_setup') || 'null');
+  if (saved) { Object.assign(flashState.filters, saved.filters); flashState.mode = saved.mode || 'path'; }
+} catch (e) { /* ignore */ }
+
+function saveFlashSetup() {
+  try { localStorage.setItem('flash_setup', JSON.stringify({ filters: flashState.filters, mode: flashState.mode })); } catch (e) { /* ignore */ }
+}
+
+// Two screens: #/<cert>/flashcards picks what to study; #/<cert>/flashcards/study shows the cards.
 function initFlashcards() {
+  if (Alpine.store('ui').params[0] === 'study') renderFlashcardStudy();
+  else renderFlashcardSetup();
+}
+
+const FLASH_LABEL = 'font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;';
+
+function renderFlashcardSetup() {
+  const cert = currentCertId();
   const container = document.getElementById('view-flashcards');
+  const hasTeach = DATA.getTeachCards(cert).length > 0;
 
   container.innerHTML = `
     <h1>${Alpine.store('ui').certInfo.code} Flashcards</h1>
+    <p class="subtitle">Choose what to study, then start.</p>
 
-    <div class="glass-panel" style="width: 100%; margin-bottom: 24px;">
-      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-        <div id="flash-filter-block" style="flex: 1 1 100%; min-width: 0;"></div>
-        <div id="flash-mode-field" style="display: none; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
-          <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Mode</label>
-          <select id="flash-mode">
-            <option value="path">Learn path: ideas, then recall</option>
-            <option value="recall">Recall only (shuffled)</option>
-          </select>
-        </div>
+    <div class="glass-panel" style="width: 100%; margin-bottom: 16px;">
+      <div id="flash-filter-block"></div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-top: 16px;">
+        ${hasTeach ? `
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
-          <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Type</label>
+          <label style="${FLASH_LABEL}">Mode</label>
+          <select id="flash-mode">
+            <option value="path">Learn path</option>
+            <option value="recall">Recall only</option>
+          </select>
+        </div>` : ''}
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
+          <label style="${FLASH_LABEL}">Type</label>
           <select id="flash-type-filter">
             <option value="all">All Types</option>
             <option value="term">Term</option>
             <option value="compare">Compare</option>
             <option value="scenario">Scenario</option>
             <option value="edge">Edge Cases</option>
-            <option value="teach">Lessons only</option>
+            ${hasTeach ? '<option value="teach">Lessons only</option>' : ''}
           </select>
         </div>
-        <button id="btn-flash-shuffle" class="btn btn-secondary">🔀 On</button>
-        <button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger); height: 42px;">Reset</button>
+        <label class="flash-shuffle"><input type="checkbox" id="flash-shuffle"> Shuffle</label>
       </div>
+    </div>
+
+    <div class="flash-start-row">
+      <div id="flash-count" class="flash-count"></div>
+      <button class="btn btn-primary" id="btn-flash-start">Start</button>
+    </div>
+    <div style="margin-top: 20px;"><button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger);">Reset flashcard progress</button></div>
+  `;
+
+  renderFlashcardFilters();
+  const typeSel = document.getElementById('flash-type-filter');
+  typeSel.value = flashState.filters.type;
+  typeSel.onchange = updateFlashSetupCount;
+  const modeSel = document.getElementById('flash-mode');
+  if (modeSel) { modeSel.value = flashState.mode; modeSel.onchange = updateFlashSetupCount; }
+  const shuffle = document.getElementById('flash-shuffle');
+  shuffle.checked = flashState.filters.shuffle;
+  shuffle.onchange = updateFlashSetupCount;
+
+  document.getElementById('btn-flash-start').onclick = () => {
+    readFlashSetup();
+    saveFlashSetup();
+    window.location.hash = `#/${cert}/flashcards/study`;
+  };
+  document.getElementById('btn-flash-reset').onclick = () => {
+    if (confirm('Are you sure you want to reset all flashcard mastery records? This cannot be undone.')) {
+      Alpine.store('flashcardProgress').reset();
+      updateFlashSetupCount();
+    }
+  };
+  updateFlashSetupCount();
+}
+
+// Copies the setup controls into flashState.
+function readFlashSetup() {
+  const picker = document.getElementById('flash-picker');
+  flashState.filters.picked = picker ? pickedTopics(picker) : [];
+  const mod = document.getElementById('flash-mod-filter');
+  flashState.filters.module = mod ? mod.value : 'all';
+  flashState.filters.type = document.getElementById('flash-type-filter').value;
+  flashState.filters.shuffle = document.getElementById('flash-shuffle').checked;
+  const modeSel = document.getElementById('flash-mode');
+  flashState.mode = modeSel ? modeSel.value : 'path';
+}
+
+function updateFlashSetupCount() {
+  readFlashSetup();
+  const n = computeFlashcardDeck().length;
+  const picked = flashState.filters.picked.length;
+  const what = picked ? `${picked} topic${picked === 1 ? '' : 's'}` : 'all topics';
+  document.getElementById('flash-count').textContent = `${n} card${n === 1 ? '' : 's'} from ${what}`;
+  document.getElementById('btn-flash-start').disabled = n === 0;
+}
+
+function renderFlashcardStudy() {
+  const cert = currentCertId();
+  const container = document.getElementById('view-flashcards');
+  const picked = flashState.filters.picked.length;
+  const what = picked ? `${picked} topic${picked === 1 ? '' : 's'}` : 'all topics';
+  const how = DATA.getTeachCards(cert).length ? (flashState.mode === 'path' ? 'Learn path' : 'Recall only') : 'Flashcards';
+
+  container.innerHTML = `
+    <div class="flash-study-head">
+      <a class="btn btn-secondary btn-sm" href="#/${cert}/flashcards">← Topics</a>
+      <span class="flash-study-sub">${how} · ${what}</span>
     </div>
 
     <div class="flashcards-layout">
@@ -99,32 +185,8 @@ function initFlashcards() {
     </div>
   `;
 
-  renderFlashcardFilters();
-  document.getElementById('flash-type-filter').onchange = buildFlashcardDeck;
-  if (DATA.getTeachCards(currentCertId()).length) {
-    document.getElementById('flash-mode-field').style.display = 'flex';
-    document.getElementById('flash-mode').value = flashState.mode;
-    document.getElementById('flash-mode').onchange = (e) => { flashState.mode = e.target.value; buildFlashcardDeck(); };
-  }
-
-  const shuffleBtn = document.getElementById('btn-flash-shuffle');
-  shuffleBtn.onclick = () => {
-    flashState.filters.shuffle = !flashState.filters.shuffle;
-    shuffleBtn.textContent = flashState.filters.shuffle ? '🔀 On' : '🔀 Off';
-    buildFlashcardDeck();
-  };
-
-  document.getElementById('btn-flash-reset').onclick = () => {
-    if (confirm('Are you sure you want to reset all flashcard mastery records? This cannot be undone.')) {
-      Alpine.store('flashcardProgress').reset();
-      updateFlashcardProgressUI();
-      renderFlashcard();
-    }
-  };
-
   setupFlashcardKeyboardControls();
   setupFlashcardSwipeGestures();
-
   buildFlashcardDeck();
 }
 
@@ -143,39 +205,35 @@ function renderFlashcardFilters() {
       opt.textContent = `${m.module}: ${m.title}`;
       modFilter.appendChild(opt);
     });
-    modFilter.onchange = buildFlashcardDeck;
+    modFilter.value = flashState.filters.module;
+    modFilter.onchange = updateFlashSetupCount;
     return;
   }
 
-  // The picker is long, so it sits in a collapsible panel (closed on phones) to keep the card in view.
-  block.innerHTML = `
-    <details class="flash-filter"${window.innerWidth >= 768 ? ' open' : ''}>
-      <summary id="flash-filter-summary">Choose topics: everything</summary>
-      <div id="flash-picker"></div>
-    </details>`;
+  block.innerHTML = '<div id="flash-picker"></div>';
   const picker = document.getElementById('flash-picker');
-  const summary = document.getElementById('flash-filter-summary');
   const cards = DATA.getOutlineFlashcards(cert);
   renderTopicPicker(picker, outline, (node) => cards.filter((c) => DATA.skillInNode(c.skill, node)).length,
-    'Topics to study', () => {
-      const n = pickedTopics(picker).length;
-      summary.textContent = n ? `Choose topics: ${n} selected` : 'Choose topics: everything';
-      buildFlashcardDeck();
-    });
+    'Topics to study', updateFlashSetupCount);
+
+  // Restore the previous selection, then let the picker sync its domain boxes.
+  const boxes = [...picker.querySelectorAll('input[data-topic]')].filter((b) => flashState.filters.picked.includes(b.dataset.topic));
+  boxes.forEach((b) => { b.checked = true; });
+  if (boxes.length) boxes[boxes.length - 1].dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-function buildFlashcardDeck() {
-  const typeVal = document.getElementById('flash-type-filter').value;
+// The cards for the current setup. Pure: it does not touch the screen.
+function computeFlashcardDeck() {
+  const typeVal = flashState.filters.type;
   const cert = currentCertId();
   const outline = DATA.getOutline(cert);
-
-  flashState.deck = [];
+  const deck = [];
 
   const teach = DATA.getTeachCards(cert);
   const pathMode = teach.length > 0 && flashState.mode === 'path';
 
   if (outline) {
-    const picked = pickedTopics(document.getElementById('flash-picker'));
+    const picked = flashState.filters.picked;
     const decorate = (c) => {
       const topicId = c.skill.split('.').slice(0, 2).join('.');
       return { ...c, moduleName: outline.titles[topicId], topic: outline.titles[c.skill] };
@@ -184,37 +242,41 @@ function buildFlashcardDeck() {
     const recall = DATA.getOutlineFlashcards(cert).filter((c) => wanted(c) && (typeVal === 'all' || c.type === typeVal));
 
     if (typeVal === 'teach') {
-      teach.filter(wanted).forEach((c) => flashState.deck.push(decorate(c)));
+      teach.filter(wanted).forEach((c) => deck.push(decorate(c)));
     } else if (pathMode) {
       // Outline order; per skill the not-yet-seen ideas come first, then that skill's recall cards.
       const seen = (c) => Alpine.store('progress').isRead(cert, 'teach:' + c.id);
       const skills = [];
       outline.domains.forEach((d) => d.topics.forEach((t) => t.skills.forEach((s) => skills.push(s.id))));
       skills.forEach((id) => {
-        if (typeVal === 'all') teach.filter((c) => c.skill === id && wanted(c) && !seen(c)).forEach((c) => flashState.deck.push(decorate(c)));
-        recall.filter((c) => c.skill === id).forEach((c) => flashState.deck.push(decorate(c)));
+        if (typeVal === 'all') teach.filter((c) => c.skill === id && wanted(c) && !seen(c)).forEach((c) => deck.push(decorate(c)));
+        recall.filter((c) => c.skill === id).forEach((c) => deck.push(decorate(c)));
       });
     } else {
-      recall.forEach((c) => flashState.deck.push(decorate(c)));
+      recall.forEach((c) => deck.push(decorate(c)));
     }
   } else {
-    const modVal = document.getElementById('flash-mod-filter').value;
+    const modVal = flashState.filters.module;
     DATA.getFlashcardModules(cert).forEach((mod, modIdx) => {
       if (modVal !== 'all' && parseInt(modVal) !== modIdx) return;
       mod.cards.forEach((c) => {
         if (typeVal !== 'all' && c.type !== typeVal) return;
-        flashState.deck.push({ ...c, moduleName: mod.module, moduleTitle: mod.title });
+        deck.push({ ...c, moduleName: mod.module, moduleTitle: mod.title });
       });
     });
   }
 
   if (flashState.filters.shuffle && !pathMode && typeVal !== 'teach') {
-    for (let i = flashState.deck.length - 1; i > 0; i--) {
+    for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [flashState.deck[i], flashState.deck[j]] = [flashState.deck[j], flashState.deck[i]];
+      [deck[i], deck[j]] = [deck[j], deck[i]];
     }
   }
+  return deck;
+}
 
+function buildFlashcardDeck() {
+  flashState.deck = computeFlashcardDeck();
   flashState.currentIdx = 0;
   flashState.flipped = false;
 
@@ -369,6 +431,7 @@ function updateFlashcardProgressUI() {
 function setupFlashcardKeyboardControls() {
   const handler = (e) => {
     if (Alpine.store('ui').tool !== 'flashcards') return;
+    if (!document.getElementById('active-flashcard')) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
     switch (e.key) {
