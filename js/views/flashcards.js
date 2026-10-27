@@ -4,14 +4,20 @@ const flashState = {
   deck: [],
   currentIdx: 0,
   flipped: false,
-  filters: { module: 'all', type: 'all', shuffle: true, picked: [], skipSeen: true },
+  filters: { module: 'all', type: 'all', shuffle: true, picked: [], skipSeen: false },
   mode: 'path',
 };
 
-// The last setup is remembered so the study screen can be reopened or reloaded directly.
+// The last setup is remembered so the study screen can be reopened or reloaded directly. "Skip cards
+// I have already read" is not restored: it starts unticked, so Learn shows everything that was picked
+// (older saved setups hold the previous default, true).
 try {
   const saved = JSON.parse(localStorage.getItem('flash_setup') || 'null');
-  if (saved) { Object.assign(flashState.filters, saved.filters); flashState.mode = saved.mode || 'path'; }
+  if (saved) {
+    const { skipSeen, ...filters } = saved.filters || {};
+    Object.assign(flashState.filters, filters);
+    flashState.mode = saved.mode || 'path';
+  }
 } catch (e) { /* ignore */ }
 
 function saveFlashSetup() {
