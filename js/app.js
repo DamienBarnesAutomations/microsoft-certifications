@@ -87,9 +87,6 @@ function handleRouting() {
       else renderStudySelector(cert.id);
       break;
     }
-    case 'learn':
-      renderLearn();
-      break;
     case 'cards':
       renderConceptCards();
       break;

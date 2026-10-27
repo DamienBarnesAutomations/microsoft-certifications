@@ -792,35 +792,9 @@ body.exam-active .main-content { margin-left: 0; padding: 0 16px 88px; }
 .mock-legend .mock-tile { min-height: 24px; min-width: 24px; cursor: default; }
 .question-text pre { background: rgba(127,127,127,0.12); padding: 10px 12px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.5; margin-top: 10px; white-space: pre; }
 
-/* Learn mode */
-.learn-progress { margin: 16px 0 8px; }
-.learn-domain { margin: 28px 0 4px; font-size: 1.15rem; }
-.learn-topic { margin: 16px 0 4px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.learn-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--surface-border); text-decoration: none; color: inherit; }
-.learn-row:hover { background: var(--surface-hover); }
-.learn-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--surface-border); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
-.learn-row.is-learned .learn-check { background: var(--color-success); border-color: var(--color-success); color: #fff; }
-.learn-row-title { flex: 1; min-width: 0; }
-.learn-row.is-missing { opacity: 0.55; }
-.learn-row-go { font-size: 0.75rem; color: var(--text-muted); }
-.learn-back { display: inline-block; margin-bottom: 8px; color: var(--accent-teal); text-decoration: none; font-weight: 600; }
-.learn-crumb { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.lesson-title { margin: 6px 0 12px; }
-.lesson-summary { font-size: 1.05rem; line-height: 1.6; padding: 12px 14px; border-left: 3px solid var(--accent-indigo); background: rgba(99,102,241,0.07); border-radius: 0 8px 8px 0; margin-bottom: 8px; }
-.lesson-section { margin-top: 22px; line-height: 1.7; }
-.lesson-section h2 { font-size: 1.05rem; margin-bottom: 8px; }
-.lesson-section h3 { font-size: 0.95rem; margin: 14px 0 4px; }
-.lesson-section ul, .lesson-section ol { margin: 6px 0 6px 22px; }
-.lesson-section p { margin: 8px 0; }
-.lesson-section pre { background: rgba(127,127,127,0.12); padding: 10px 12px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.5; }
-.lesson-section code { font-family: var(--font-mono); font-size: 0.88em; background: rgba(127,127,127,0.15); padding: 1px 5px; border-radius: 4px; }
-.lesson-section pre code { background: none; padding: 0; }
-.lesson-section table { border-collapse: collapse; width: 100%; font-size: 0.9rem; display: block; overflow-x: auto; }
-.lesson-section th, .lesson-section td { border: 1px solid var(--surface-border); padding: 6px 10px; text-align: left; }
-.lesson-traps { border-left: 3px solid var(--color-warning); padding-left: 14px; }
-.lesson-q { margin-bottom: 22px; }
-.lesson-q-actions { margin: 8px 0; }
-.lesson-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
-.lesson-nav { display: flex; justify-content: space-between; gap: 10px; margin: 28px 0 8px; }
-.flash-note { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.8; }
-.flash-note a { color: var(--accent-teal); }
+/* Teaching cards in the flashcard deck */
+.flashcard.is-teach .card-face-front { border-top: 3px solid var(--accent-teal); }
+.teach-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 14px; }
+.teach-body { font-size: 1.1rem; font-weight: 400; line-height: 1.65; text-align: left; }
+.teach-body code { font-family: var(--font-mono); font-size: 0.9em; background: rgba(127,127,127,0.18); padding: 1px 5px; border-radius: 4px; }
+.badge-teach { background: rgba(20,184,166,0.18); color: var(--accent-teal); }

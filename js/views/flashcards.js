@@ -5,7 +5,7 @@ const flashState = {
   currentIdx: 0,
   flipped: false,
   filters: { module: 'all', type: 'all', shuffle: true },
-  showUnlearned: false,
+  mode: 'path',
 };
 
 function initFlashcards() {
@@ -17,6 +17,13 @@ function initFlashcards() {
     <div class="glass-panel" style="width: 100%; margin-bottom: 24px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
         <div id="flash-filter-block" style="flex: 1 1 100%; min-width: 0;"></div>
+        <div id="flash-mode-field" style="display: none; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
+          <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Mode</label>
+          <select id="flash-mode">
+            <option value="path">Learn path: ideas, then recall</option>
+            <option value="recall">Recall only (shuffled)</option>
+          </select>
+        </div>
         <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px;">
           <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Type</label>
           <select id="flash-type-filter">
@@ -25,14 +32,13 @@ function initFlashcards() {
             <option value="compare">Compare</option>
             <option value="scenario">Scenario</option>
             <option value="edge">Edge Cases</option>
+            <option value="teach">Lessons only</option>
           </select>
         </div>
         <button id="btn-flash-shuffle" class="btn btn-secondary">🔀 On</button>
         <button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger); height: 42px;">Reset</button>
       </div>
     </div>
-
-    <div id="flash-lock-note"></div>
 
     <div class="flashcards-layout">
       <div style="width:100%; display: flex; align-items:center; gap: 16px; margin-bottom: 12px;">
@@ -60,7 +66,7 @@ function initFlashcards() {
               <div class="card-text-container">
                 <div class="card-text" id="flash-card-front-text">Front content...</div>
               </div>
-              <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Tap or press Space to flip</div>
+              <div id="flash-flip-hint" style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Tap or press Space to flip</div>
             </div>
 
             <div class="card-face card-face-back">
@@ -95,6 +101,11 @@ function initFlashcards() {
 
   renderFlashcardFilters();
   document.getElementById('flash-type-filter').onchange = buildFlashcardDeck;
+  if (DATA.getTeachCards(currentCertId()).length) {
+    document.getElementById('flash-mode-field').style.display = 'flex';
+    document.getElementById('flash-mode').value = flashState.mode;
+    document.getElementById('flash-mode').onchange = (e) => { flashState.mode = e.target.value; buildFlashcardDeck(); };
+  }
 
   const shuffleBtn = document.getElementById('btn-flash-shuffle');
   shuffleBtn.onclick = () => {
@@ -160,18 +171,32 @@ function buildFlashcardDeck() {
 
   flashState.deck = [];
 
+  const teach = DATA.getTeachCards(cert);
+  const pathMode = teach.length > 0 && flashState.mode === 'path';
+
   if (outline) {
     const picked = pickedTopics(document.getElementById('flash-picker'));
-    const only = Alpine.store('ui').params[0];
-    const gated = DATA.getLessons(cert).length > 0 && !flashState.showUnlearned && !only;
-    DATA.getOutlineFlashcards(cert).forEach((c) => {
-      if (only && c.skill !== only) return;
-      if (typeVal !== 'all' && c.type !== typeVal) return;
-      if (gated && !isLessonLearned(cert, c.skill)) return;
-      if (picked.length && !picked.some((n) => DATA.skillInNode(c.skill, n))) return;
+    const decorate = (c) => {
       const topicId = c.skill.split('.').slice(0, 2).join('.');
-      flashState.deck.push({ ...c, moduleName: outline.titles[topicId], topic: outline.titles[c.skill] });
-    });
+      return { ...c, moduleName: outline.titles[topicId], topic: outline.titles[c.skill] };
+    };
+    const wanted = (c) => !picked.length || picked.some((n) => DATA.skillInNode(c.skill, n));
+    const recall = DATA.getOutlineFlashcards(cert).filter((c) => wanted(c) && (typeVal === 'all' || c.type === typeVal));
+
+    if (typeVal === 'teach') {
+      teach.filter(wanted).forEach((c) => flashState.deck.push(decorate(c)));
+    } else if (pathMode) {
+      // Outline order; per skill the not-yet-seen ideas come first, then that skill's recall cards.
+      const seen = (c) => Alpine.store('progress').isRead(cert, 'teach:' + c.id);
+      const skills = [];
+      outline.domains.forEach((d) => d.topics.forEach((t) => t.skills.forEach((s) => skills.push(s.id))));
+      skills.forEach((id) => {
+        if (typeVal === 'all') teach.filter((c) => c.skill === id && wanted(c) && !seen(c)).forEach((c) => flashState.deck.push(decorate(c)));
+        recall.filter((c) => c.skill === id).forEach((c) => flashState.deck.push(decorate(c)));
+      });
+    } else {
+      recall.forEach((c) => flashState.deck.push(decorate(c)));
+    }
   } else {
     const modVal = document.getElementById('flash-mod-filter').value;
     DATA.getFlashcardModules(cert).forEach((mod, modIdx) => {
@@ -183,9 +208,7 @@ function buildFlashcardDeck() {
     });
   }
 
-  renderFlashcardLockNote(cert, outline);
-
-  if (flashState.filters.shuffle) {
+  if (flashState.filters.shuffle && !pathMode && typeVal !== 'teach') {
     for (let i = flashState.deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [flashState.deck[i], flashState.deck[j]] = [flashState.deck[j], flashState.deck[i]];
@@ -223,18 +246,30 @@ function renderFlashcard() {
   document.getElementById('flash-card-badge-front').style.display = 'inline-block';
   document.getElementById('flash-card-badge-back').style.display = 'inline-block';
 
+  const isTeach = card.type === 'teach';
+  const badgeText = isTeach ? 'LEARN' : card.type.toUpperCase();
   document.getElementById('flash-card-badge-front').className = `card-badge badge-${card.type}`;
-  document.getElementById('flash-card-badge-front').textContent = card.type.toUpperCase();
+  document.getElementById('flash-card-badge-front').textContent = badgeText;
   document.getElementById('flash-card-badge-back').className = `card-badge badge-${card.type}`;
-  document.getElementById('flash-card-badge-back').textContent = card.type.toUpperCase();
+  document.getElementById('flash-card-badge-back').textContent = badgeText;
+  flipContainer.classList.toggle('is-teach', isTeach);
+  document.getElementById('flash-flip-hint').style.display = isTeach ? 'none' : 'block';
+  document.getElementById('flash-ratings-bar').style.display = isTeach ? 'none' : '';
 
   document.getElementById('flash-card-module-front').textContent = card.moduleName;
   document.getElementById('flash-card-module-back').textContent = `${card.moduleName} • ${card.topic}`;
 
   document.getElementById('flash-card-counter').textContent = `${flashState.currentIdx + 1} / ${flashState.deck.length}`;
 
-  document.getElementById('flash-card-front-text').textContent = card.front;
-  document.getElementById('flash-card-back-text').innerHTML = card.back;
+  if (isTeach) {
+    document.getElementById('flash-card-front-text').innerHTML = `<div class="teach-title">${card.front}</div><div class="teach-body">${card.back}</div>`;
+    document.getElementById('flash-card-back-text').innerHTML = '';
+    const key = 'teach:' + card.id;
+    if (!Alpine.store('progress').isRead(currentCertId(), key)) Alpine.store('progress').toggle(currentCertId(), key);
+  } else {
+    document.getElementById('flash-card-front-text').textContent = card.front;
+    document.getElementById('flash-card-back-text').innerHTML = card.back;
+  }
 
   const prevRating = Alpine.store('flashcardProgress').data[card.id];
   document.querySelectorAll('.rating-btn').forEach((btn) => {
@@ -254,6 +289,8 @@ function renderFlashcard() {
 
 function flipActiveFlashcard() {
   const flipContainer = document.getElementById('active-flashcard');
+  const current = flashState.deck[flashState.currentIdx];
+  if (current && current.type === 'teach') { navFlashcard(1); return; }
   if (flipContainer && flashState.deck.length > 0) {
     flipContainer.classList.toggle('flipped');
     flashState.flipped = !flashState.flipped;
@@ -262,7 +299,7 @@ function flipActiveFlashcard() {
 
 function rateActiveFlashcard(rating) {
   const card = flashState.deck[flashState.currentIdx];
-  if (!card) return;
+  if (!card || card.type === 'teach') return;
 
   Alpine.store('flashcardProgress').rate(card.id, rating);
   updateFlashcardProgressUI();
@@ -299,7 +336,8 @@ function navFlashcard(direction) {
 }
 
 function updateFlashcardProgressUI() {
-  const total = flashState.deck.length;
+  const recallDeck = flashState.deck.filter((c) => c.type !== 'teach');
+  const total = recallDeck.length;
   if (total === 0) {
     document.getElementById('flash-progress-fill').style.width = '0%';
     document.getElementById('flash-progress-text').textContent = '0 / 0';
@@ -309,7 +347,7 @@ function updateFlashcardProgressUI() {
   let ratedCount = 0, mastered = 0, almost = 0, notyet = 0;
   const progress = Alpine.store('flashcardProgress').data;
 
-  flashState.deck.forEach((c) => {
+  recallDeck.forEach((c) => {
     const r = progress[c.id];
     if (r) {
       ratedCount++;
@@ -385,22 +423,4 @@ function setupFlashcardSwipeGestures() {
       else navFlashcard(-1);
     }
   }, { passive: true });
-}
-
-// Explains why some cards are hidden (their lesson is unread) or which single skill is shown.
-function renderFlashcardLockNote(cert, outline) {
-  const note = document.getElementById('flash-lock-note');
-  if (!note) return;
-  const only = Alpine.store('ui').params[0];
-  if (only && outline) {
-    note.innerHTML = `<div class="flash-note">Showing cards for <b>${outline.titles[only] || only}</b>. <a href="#/${cert}/flashcards">Show all unlocked cards</a> · <a href="#/${cert}/learn/${only}">Open lesson</a></div>`;
-    return;
-  }
-  if (!DATA.getLessons(cert).length) { note.innerHTML = ''; return; }
-  const cards = DATA.getOutlineFlashcards(cert);
-  const unlocked = cards.filter((c) => isLessonLearned(cert, c.skill)).length;
-  note.innerHTML = `<div class="flash-note">${flashState.showUnlearned ? 'Showing every card.' : unlocked + ' of ' + cards.length + ' cards unlocked by lessons you have learned.'}
-    <a href="#/${cert}/learn">Open lessons</a> ·
-    <label><input type="checkbox" id="flash-unlearned" ${flashState.showUnlearned ? 'checked' : ''}> include unlearned skills</label></div>`;
-  document.getElementById('flash-unlearned').onchange = (e) => { flashState.showUnlearned = e.target.checked; buildFlashcardDeck(); };
 }

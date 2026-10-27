@@ -32,10 +32,7 @@ function renderHub(cert) {
   const exams = Alpine.store('examHistory');
   const attempts = exams.forCert(cert.id).length;
 
-  const outline = DATA.getOutline(cert.id);
-  const learned = outline && DATA.getLessons(cert.id).length ? outlineSkills(outline).filter((s) => isLessonLearned(cert.id, s.id)).length : 0;
   const meta = {
-    learn: outline ? `${learned} of ${outlineSkills(outline).length} lessons learned` : '',
     flashcards: `${Alpine.store('flashcardProgress').masteredCount(cert.id)} mastered`,
     test: attempts ? `${attempts} attempts · ${exams.averageScore(cert.id)}% average` : 'No attempts yet',
   };
