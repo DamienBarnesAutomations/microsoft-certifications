@@ -241,13 +241,41 @@ function renderFlashcardFilters() {
   block.innerHTML = '<div id="flash-picker"></div>';
   const picker = document.getElementById('flash-picker');
   const cards = learnOnly(cert) ? DATA.getTeachCards(cert) : DATA.getOutlineFlashcards(cert);
-  renderTopicPicker(picker, outline, (node) => cards.filter((c) => DATA.skillInNode(c.skill, node)).length,
-    'Topics to study', updateFlashSetupCount);
+  const inNode = (node) => cards.filter((c) => DATA.skillInNode(c.skill, node));
+  renderTopicPicker(picker, outline, (node) => inNode(node).length, 'Topics to study', updateFlashSetupCount,
+    learnOnly(cert) ? learnProgress(cert, inNode) : recallProgress(inNode));
 
   // Restore the previous selection, then let the picker sync its domain boxes.
   const boxes = [...picker.querySelectorAll('input[data-topic]')].filter((b) => flashState.filters.picked.includes(b.dataset.topic));
   boxes.forEach((b) => { b.checked = true; });
   if (boxes.length) boxes[boxes.length - 1].dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// Per-topic progress for the picker. Learn counts the teaching cards read; recall decks count the
+// cards rated Got it (green) and Not yet (red). inNode(nodeId) returns the cards under an outline node.
+function learnProgress(cert, inNode) {
+  const progress = Alpine.store('progress');
+  return {
+    unit: 'cards read',
+    of(node) {
+      const cards = inNode(node);
+      const good = cards.filter((c) => progress.isRead(cert, 'teach:' + c.id)).length;
+      return { total: cards.length, good, tip: `${good} of ${cards.length} cards read` };
+    },
+  };
+}
+
+function recallProgress(inNode) {
+  const ratings = Alpine.store('flashcardProgress').data;
+  return {
+    unit: 'cards rated Got it (green) and Not yet (red)',
+    of(node) {
+      const cards = inNode(node);
+      const n = (r) => cards.filter((c) => ratings[c.id] === r).length;
+      const good = n('got_it'), almost = n('almost'), bad = n('not_yet');
+      return { total: cards.length, good, bad, tip: `${good} got it · ${almost} almost · ${bad} not yet · ${cards.length - good - almost - bad} unrated` };
+    },
+  };
 }
 
 // The cards for the current setup. Pure: it does not touch the screen.

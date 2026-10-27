@@ -91,12 +91,20 @@ function renderExamFilters() {
   const picker = document.getElementById('exam-picker');
   const summary = document.getElementById('exam-filter-summary');
   const pool = getExamQuestionsPool(cert);
-  renderTopicPicker(picker, outline, (node) => pool.filter((q) => DATA.skillInNode(q.skill, node)).length,
-    'Pick topics', () => {
-      const n = pickedTopics(picker).length;
-      summary.textContent = n ? `Topics: ${n} selected` : 'Topics: everything';
-      updateExamPoolCount();
-    });
+  const inNode = (node) => pool.filter((q) => DATA.skillInNode(q.skill, node));
+  const queue = Alpine.store('questionQueue');
+  const progress = {
+    unit: 'questions answered right (green) and wrong (red)',
+    of(node) {
+      const c = queue.counts(inNode(node).map((q) => q.id));
+      return { total: c.total, good: c.right, bad: c.wrong, tip: `${c.right} right · ${c.wrong} wrong · ${c.unseen} not seen` };
+    },
+  };
+  renderTopicPicker(picker, outline, (node) => inNode(node).length, 'Pick topics', () => {
+    const n = pickedTopics(picker).length;
+    summary.textContent = n ? `Topics: ${n} selected` : 'Topics: everything';
+    updateExamPoolCount();
+  }, progress);
 }
 
 function examFilterValue() {

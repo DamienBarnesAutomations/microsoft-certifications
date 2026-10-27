@@ -808,3 +808,19 @@ body.exam-active .main-content { margin-left: 0; padding: 0 16px 88px; }
 .flash-shuffle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-secondary); padding-bottom: 10px; }
 .flash-study-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .flash-study-sub { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Per-topic progress: a bar under each domain and a strip along the bottom of each topic chip.
+   Green is done (read, right, mastered), red is wrong or not yet; the rest of the track is still to do. */
+.topic-legend { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+.topic-bar { position: relative; display: flex; height: 4px; background: var(--surface-border); border-radius: 2px; overflow: hidden; }
+.topic-bar i { display: block; height: 100%; }
+.topic-bar-good { background: var(--color-success); }
+.topic-bar-bad { background: var(--color-danger); }
+.topic-count.is-done { color: var(--color-success); }
+.topic-domain-head { flex-wrap: wrap; row-gap: 4px; }
+.topic-domain-head .topic-bar { flex: 0 0 100%; }
+.topic-chip { position: relative; overflow: hidden; }
+.topic-chip .topic-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0; }
+.topic-chip:has(input:checked) .topic-bar { background: rgba(255, 255, 255, 0.3); }
+.topic-chip:has(input:checked) .topic-count.is-done { color: #fff; }
+.topic-count, .topic-weight { white-space: nowrap; }
