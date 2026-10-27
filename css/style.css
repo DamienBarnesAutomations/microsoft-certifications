@@ -795,8 +795,11 @@ body.exam-active .main-content { margin-left: 0; padding: 0 16px 88px; }
 /* Teaching cards in the flashcard deck */
 .flashcard.is-teach .card-face-front { border-top: 3px solid var(--accent-teal); }
 .teach-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 14px; }
-.teach-body { font-size: 1.1rem; font-weight: 400; line-height: 1.65; text-align: left; }
+.teach-body { font-size: 1.1rem; font-weight: 400; line-height: 1.65; text-align: left; overflow-wrap: anywhere; }
 .teach-body code { font-family: var(--font-mono); font-size: 0.9em; background: rgba(127,127,127,0.18); padding: 1px 5px; border-radius: 4px; }
+/* Learn cards are read, not flipped, and some hold a few lines of code: give them more height on phones. */
+.flashcard.is-teach { height: 440px; }
+@media (min-width: 768px) { .flashcard.is-teach { height: 380px; } }
 .badge-teach { background: rgba(20,184,166,0.18); color: var(--accent-teal); }
 
 /* Flashcard setup and study screens */
