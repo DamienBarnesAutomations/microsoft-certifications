@@ -78,6 +78,7 @@ const MODULE_CONFIG = {
 // Every study tool the app has. `id` doubles as the route segment (#/<cert>/<id>) and the
 // suffix of its view section (#view-<id>).
 const TOOLS = [
+  { id: 'learn', label: 'Learn', short: 'Learn', icon: '🎓' },
   { id: 'study', label: 'Study Guides', short: 'Guides', icon: '📖' },
   { id: 'cards', label: 'Concept Cards', short: 'Cards', icon: '🗂️' },
   { id: 'flashcards', label: 'Flashcards', short: 'Flash', icon: '⚡' },
@@ -91,7 +92,7 @@ const TOOLS = [
 // reachable again by adding their ids here. DP-700 and DP-600 have flashcards.
 const CERT_DETAILS = [
   { code: 'DP-700', id: 'dp700', title: 'Fabric Data Engineer', tools: ['flashcards', 'test'] },
-  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['flashcards', 'test'] },
+  { code: 'DP-600', id: 'dp600', title: 'Fabric Analytics Engineer', tools: ['learn', 'flashcards', 'test'] },
   { code: 'DP-300', id: 'dp300', title: 'Azure Database Administrator', tools: ['test'] },
   { code: 'DP-750', id: 'dp750', title: 'Azure Databricks Data Engineer (Preview)', tools: [] },
 ];
@@ -163,6 +164,11 @@ function getConceptCardData(certCode) {
 }
 
 // Flashcard decks organised by module; no certification uses this now that DP-600 and DP-700 have outlines.
+// Short lessons per outline skill (DP-600), written in lessons/*.js.
+function getLessons(certId) {
+  return { dp600: window.DP600_LESSONS }[certId] || [];
+}
+
 function getFlashcardModules() {
   return [];
 }
@@ -185,6 +191,7 @@ const DATA = {
   getConceptCardData,
   getFlashcardModules,
   getOutlineFlashcards,
+  getLessons,
 };
 
 window.DATA = DATA;

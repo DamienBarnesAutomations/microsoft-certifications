@@ -5,6 +5,7 @@ const flashState = {
   currentIdx: 0,
   flipped: false,
   filters: { module: 'all', type: 'all', shuffle: true },
+  showUnlearned: false,
 };
 
 function initFlashcards() {
@@ -30,6 +31,8 @@ function initFlashcards() {
         <button id="btn-flash-reset" class="btn btn-danger btn-sm" style="border: 1px solid var(--color-danger); height: 42px;">Reset</button>
       </div>
     </div>
+
+    <div id="flash-lock-note"></div>
 
     <div class="flashcards-layout">
       <div style="width:100%; display: flex; align-items:center; gap: 16px; margin-bottom: 12px;">
@@ -159,8 +162,12 @@ function buildFlashcardDeck() {
 
   if (outline) {
     const picked = pickedTopics(document.getElementById('flash-picker'));
+    const only = Alpine.store('ui').params[0];
+    const gated = DATA.getLessons(cert).length > 0 && !flashState.showUnlearned && !only;
     DATA.getOutlineFlashcards(cert).forEach((c) => {
+      if (only && c.skill !== only) return;
       if (typeVal !== 'all' && c.type !== typeVal) return;
+      if (gated && !isLessonLearned(cert, c.skill)) return;
       if (picked.length && !picked.some((n) => DATA.skillInNode(c.skill, n))) return;
       const topicId = c.skill.split('.').slice(0, 2).join('.');
       flashState.deck.push({ ...c, moduleName: outline.titles[topicId], topic: outline.titles[c.skill] });
@@ -175,6 +182,8 @@ function buildFlashcardDeck() {
       });
     });
   }
+
+  renderFlashcardLockNote(cert, outline);
 
   if (flashState.filters.shuffle) {
     for (let i = flashState.deck.length - 1; i > 0; i--) {
@@ -376,4 +385,22 @@ function setupFlashcardSwipeGestures() {
       else navFlashcard(-1);
     }
   }, { passive: true });
+}
+
+// Explains why some cards are hidden (their lesson is unread) or which single skill is shown.
+function renderFlashcardLockNote(cert, outline) {
+  const note = document.getElementById('flash-lock-note');
+  if (!note) return;
+  const only = Alpine.store('ui').params[0];
+  if (only && outline) {
+    note.innerHTML = `<div class="flash-note">Showing cards for <b>${outline.titles[only] || only}</b>. <a href="#/${cert}/flashcards">Show all unlocked cards</a> · <a href="#/${cert}/learn/${only}">Open lesson</a></div>`;
+    return;
+  }
+  if (!DATA.getLessons(cert).length) { note.innerHTML = ''; return; }
+  const cards = DATA.getOutlineFlashcards(cert);
+  const unlocked = cards.filter((c) => isLessonLearned(cert, c.skill)).length;
+  note.innerHTML = `<div class="flash-note">${flashState.showUnlearned ? 'Showing every card.' : unlocked + ' of ' + cards.length + ' cards unlocked by lessons you have learned.'}
+    <a href="#/${cert}/learn">Open lessons</a> ·
+    <label><input type="checkbox" id="flash-unlearned" ${flashState.showUnlearned ? 'checked' : ''}> include unlearned skills</label></div>`;
+  document.getElementById('flash-unlearned').onchange = (e) => { flashState.showUnlearned = e.target.checked; buildFlashcardDeck(); };
 }
